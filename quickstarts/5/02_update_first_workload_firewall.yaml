@@ -1,0 +1,42 @@
+kind: workload
+name: server
+spec:
+  containers:
+    - args: []
+      cpu: 50m
+      env: []
+      image: "cplnquickstarts/service-to-service-quick-start:1.1"
+      memory: 128Mi
+      name: service-to-service-quick-start
+      port: 8080
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          httpHeaders: []
+          path: /
+          port: 8080
+          scheme: HTTP
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 1000
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    timeoutSeconds: 30
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []

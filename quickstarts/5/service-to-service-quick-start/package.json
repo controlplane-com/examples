@@ -1,0 +1,18 @@
+{
+  "name": "cpln_app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "build": "npm i",
+    "start": "node app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": "14.16.0"
+  },
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
