@@ -171,7 +171,7 @@ resource "cpln_workload" "terraform-cp-workload-toolbox-example" {
       period_seconds        = 10
       timeout_seconds       = 2
       failure_threshold     = 4
-      success_threshold     = 2
+      success_threshold     = 1
       initial_delay_seconds = 1
     }
 
@@ -239,7 +239,7 @@ resource "cpln_workload" "terraform-cp-workload-01-example" {
       period_seconds        = 10
       timeout_seconds       = 2
       failure_threshold     = 4
-      success_threshold     = 2
+      success_threshold     = 1
       initial_delay_seconds = 1
     }
 
