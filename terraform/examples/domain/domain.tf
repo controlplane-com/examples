@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     cpln = {
-      version = "1.0.1"
+      version = "1.0.2"
       source   = "controlplane.com/com/cpln"
     }
     google = {
