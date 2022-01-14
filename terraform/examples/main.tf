@@ -10,7 +10,7 @@ terraform {
 # REQUIRED
 variable "org" {
   type    = string
-  default = "tesla"
+  default = ""
 }
 
 # OPTIONAL
