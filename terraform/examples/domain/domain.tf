@@ -55,7 +55,7 @@ variable "google_dns_zone" {
 
 variable "domain_name" {
   type    = string
-  default = "demo.globalvirtualcloud.com"
+  default = ""
 }
 
 variable "domain_name_description" {
@@ -90,7 +90,7 @@ resource "google_dns_record_set" "ns" {
   type         = "NS"
   ttl          = 1800
 
-  rrdatas = ["ns1.cpln.io.", "ns2.cpln.io.", "ns3.cpln.io.", "ns4.cpln.io."]
+  rrdatas = ["ns1.cpln.cloud.", "ns2.cpln.cloud.", "ns1.cpln.live.", "ns2.cpln.live."]
 }
 
 resource "google_dns_record_set" "txt" {

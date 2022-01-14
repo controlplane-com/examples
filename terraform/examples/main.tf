@@ -2,31 +2,31 @@ terraform {
   required_providers {
     cpln = {
       version = "1.0.2"
-      source   = "controlplane.com/com/cpln"
+      source  = "controlplane.com/com/cpln"
     }
   }
 }
 
 # REQUIRED
-variable org {
+variable "org" {
   type    = string
-  default = ""
+  default = "tesla"
 }
 
 # OPTIONAL
-variable endpoint {
+variable "endpoint" {
   type    = string
   default = "https://api.cpln.io"
 }
 
 # OPTIONAL
-variable profile {
+variable "profile" {
   type    = string
   default = "default"
 }
 
 # OPTIONAL
-variable token {
+variable "token" {
   type    = string
   default = ""
 }
@@ -39,19 +39,21 @@ provider "cpln" {
   token    = var.token
 }
 
-variable domain_name {
-  type    = string
-  default = "domain.example.com"
-}
+# Uncomment section below if adding a domain
+# variable "domain_name" {
+#   type    = string
+#   default = "domain.example.com"
+# }
 
-module "domain" {
-  source      = "./domain"
-  org         = var.org
-  domain_name = var.domain_name
-}
+# Uncomment module below if adding a domain
+# module "domain" {
+#   source      = "./domain"
+#   org         = var.org
+#   domain_name = var.domain_name
+# }
 
 # Resource declaration must begin with 'cpln_' to match with the name of the provider
-# Available resources:
+# Sample resources:
 # 1) GVC      -> 'cpln_gvc'
 # 2) Workload -> 'cpln_workload'
 # 3) Domain   -> 'cpln_domain' (Example .tf file within the /examples/domain folder. Example below uses it as a terraform module)
@@ -62,10 +64,10 @@ resource "cpln_gvc" "terraform-cp-gvc-example" {
   name        = "terraform-gvc"
   description = "GVC created using terraform"
 
-  domain = module.domain.domain_name
+  # Uncomment line below if adding a domain
+  # domain = module.domain.domain_name
 
-  # Available locations: aws-eu-central-1, aws-us-west-2, azure-eastus2, gcp-us-east1
-  # locations = ["aws-eu-central-1", "aws-us-west-2"]
+  # Sample locations: aws-eu-central-1, aws-us-west-2, azure-eastus2, gcp-us-east1
   locations = ["gcp-us-east1"]
 
   tags = {
@@ -93,28 +95,29 @@ resource "cpln_workload" "terraform-cp-workload-01-example" {
     memory = "128Mi"
     cpu    = "50m"
 
-    # env = {
-    #   env-name-01 = "env-value-01",
-    #   env-name-02 = "env-value-02",
-    # }
+    env = {
+      env-name-01 = "env-value-01",
+      env-name-02 = "env-value-02",
+    }
 
-    # args = ["arg-01", "arg-02"]
+    args = ["arg-01", "arg-02"]
 
-    # readiness_probe {
+    readiness_probe {
 
-    #   tcp_socket {
-    #     port = 8181
-    #   }
+      tcp_socket {
+        port = 8181
+      }
 
-    #   period_seconds        = 11
-    #   timeout_seconds       = 2
-    #   failure_threshold     = 4
-    #   success_threshold     = 2
-    #   initial_delay_seconds = 1
-    # }
+      period_seconds        = 10
+      timeout_seconds       = 1
+      failure_threshold     = 3
+      success_threshold     = 1
+      initial_delay_seconds = 0
+    }
+
+    # Uncomment section below to configure a liveness probe
 
     # liveness_probe {
-
     #   http_get {
     #     path   = "/"
     #     port   = 8181
@@ -124,48 +127,40 @@ resource "cpln_workload" "terraform-cp-workload-01-example" {
     #     }
     #   }
 
-    #   period_seconds        = 9
-    #   timeout_seconds       = 5
-    #   failure_threshold     = 2
-    #   success_threshold     = 3
-    #   initial_delay_seconds = 2
+    #   period_seconds        = 10
+    #   timeout_seconds       = 1
+    #   failure_threshold     = 3
+    #   success_threshold     = 1
+    #   initial_delay_seconds = 0
     # }
   }
 
-  # container {
-  #   name = "tf-workload-01-container-02"
-  #   image  = "gcr.io/knative-samples/helloworld-go"
-  #   memory = "128Mi"
-  #   cpu    = "50m"
 
-  #   args = ["arg-01", "arg-02"]
-  # }
+  options {
+    capacity_ai     = true
+    timeout_seconds = 5
 
-  # options {
-  #   capacity_ai     = true
-  #   timeout_seconds = 5
+    autoscaling {
+      metric          = "concurrency"
+      target          = 100
+      max_scale       = 5
+      min_scale       = 1
+      max_concurrency = 500
+    }
+  }
 
-  #   autoscaling {
-  #     metric          = "concurrency"
-  #     target          = 100
-  #     max_scale       = 6
-  #     min_scale       = 2
-  #     max_concurrency = 500
-  #   }
-  # }
-
-  # firewall_spec {
-  #   external {
-  #     inbound_allow_cidr      = ["0.0.0.0/0"]
-  #     outbound_allow_cidr     = ["0.0.0.0/0"]
-  #     outbound_allow_hostname = ["*.controlplane.com", "*.cpln.io"]
-  #   }
-  #   internal {
-  #     # Allowed Types: "none", "same-gvc", "same-org", "workload-list"
-  #     inbound_allow_type     = "none"
-  #     inbound_allow_workload = []
-  #   }
-  # }
+  firewall_spec {
+    external {
+      inbound_allow_cidr  = ["0.0.0.0/0"]
+      outbound_allow_cidr = ["0.0.0.0/0"]
+      # outbound_allow_hostname = ["*.controlplane.com", "*.cpln.io"]
+    }
+    internal {
+      # Allowed Types: "none", "same-gvc", "same-org", "workload-list"
+      inbound_allow_type     = "none"
+      inbound_allow_workload = []
+    }
+  }
 }
 
 
@@ -175,6 +170,6 @@ resource "cpln_workload" "terraform-cp-workload-01-example" {
 #   value = cpln_gvc.terraform-cp-gvc-example
 # }
 
-output "terraform-cp-workload-01-example" {
-  value = cpln_workload.terraform-cp-workload-01-example
-}
+# output "terraform-cp-workload-01-example" {
+#   value = cpln_workload.terraform-cp-workload-01-example
+# }

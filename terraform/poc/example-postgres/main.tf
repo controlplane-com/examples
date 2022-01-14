@@ -76,8 +76,7 @@ resource "cpln_gvc" "terraform-gvc-example" {
   name        = "terraform-gvc"
   description = "GVC created using terraform"
 
-  # Available locations: aws-eu-central-1, aws-us-west-2, azure-eastus2, gcp-us-east1
-  # locations = ["aws-eu-central-1", "aws-us-west-2"]
+  # Sample locations: aws-eu-central-1, aws-us-west-2, azure-eastus2, gcp-us-east1
   locations = ["aws-us-west-2"]
 
   tags = {
