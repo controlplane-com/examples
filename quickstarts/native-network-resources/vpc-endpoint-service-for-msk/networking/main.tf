@@ -184,6 +184,10 @@ output "init" {
   })
 }
 
+## Using ecs/Fargate to configure the MSK cluster is not recommended, because it can 
+## also be done via an ec2 instance, and because a bastion host is needed for 
+## validation anyway.
+
 #resource "aws_ecs_cluster" "msk-setup-cluster" {
 #  name = "msk-setup-cluster"
 #  tags = {

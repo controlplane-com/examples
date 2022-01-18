@@ -23,6 +23,6 @@ variable "name-prefix"{
 
 variable "allowed-principal-arn" {
   type = string
-  description = "The ARN of a principal that is allowed to discover the service endpoint. Typically this is Control Plane's AWS account ARN."
+  description = "The ARN of a principal allowed to discover the service endpoint. Typically this is Control Plane's AWS account ARN."
   default = "arn:aws:iam::855244404579:root"
 }

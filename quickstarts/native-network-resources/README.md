@@ -26,7 +26,7 @@ Open a shell to the directory: vpc-endpoint-service-for-msk and run the
 create-infrastructure.sh script. E.g. 
 
 ```shell
-./create-infrastructure.sh <your-msk-cluster-name-here> -r us-east-1 -b kafka.t3.small
+./manage-infrastructure.sh apply <your-msk-cluster-name-here> -r us-east-1 -b kafka.t3.small
 ```
 
 The script will ask you to confirm the planned infrastructure additions twice, once for
@@ -71,3 +71,8 @@ create-infrastructure.sh produces a t2.micro ec2 instance that allows for easy a
 to the MSK cluster via the Kafka CLI. If you wish, you can terminate this instance now.
 But unless you have another way to access the cluster for administrative purposes,
 Control Plane recommends that you leave the instance in place.
+
+### When you're finished, destroy the infrastructure
+```shell
+   ./manage-infrastructure.sh destroy <your-msk-cluster-name-here> -r us-east-1
+```
