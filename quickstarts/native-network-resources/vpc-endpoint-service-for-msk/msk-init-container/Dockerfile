@@ -20,4 +20,4 @@ RUN wget $KAFKA_URL -O ${KAFKA_TMP_DEST} && \
     rm -rf ${KAFKA_TMP_DEST}
    
 COPY client.properties /opt/client.properties
-COPY configure-brokers.sh /opt/configure-brokers.sh
+COPY configure-brokers-for-nlb-based-access.sh /opt/configure-brokers-for-nlb-based-access.sh

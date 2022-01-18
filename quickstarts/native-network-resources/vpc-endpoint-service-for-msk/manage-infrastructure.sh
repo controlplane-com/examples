@@ -14,9 +14,16 @@
 
 REGION="us-east-1"
 BROKER_INSTANCE_TYPE="kafka.t3.small"
+ACTION=""
 
 usage () {
-  echo "Usage: create-infrastructure <cluster> [ -r | --region ] [ -b | --broker-instance-type ] 
+  echo "Usage: manage-infrastructure <action> <cluster> [ --apply ] [ --destroy ] [ -r | --region ] [ -b | --broker-instance-type ] 
+  
+  <action> should be one of the following:
+  * apply
+  * destroy
+  
+  <cluster> can be any valid AWS tag value.
   
   Options:
   -r, --region                The AWS region in which to create the infrastructure.
@@ -24,7 +31,7 @@ usage () {
   exit 2
 }
 
-ARGS=$(getopt -a -n "create-infrastructure" -o r:b:k: --long "region:,broker-instance-type:,key-pair-name" "$@")
+ARGS=$(getopt -a -n "create-infrastructure" -o r:b:k: --long "region:,broker-instance-type:,apply,destroy" "$@")
 eval set -- "$ARGS"
 
 while :
@@ -35,7 +42,8 @@ do
   --) shift; break;;
   esac
 done
-CLUSTER_NAME="$@"
+CLUSTER_NAME=$(echo "$@" | awk '{printf $2}')
+ACTION=$(echo "$@" | awk '{printf $1}')
 
 if [ "$CLUSTER_NAME" == "" ]
   then usage
@@ -51,16 +59,33 @@ fi
 #       usage
 #fi
 
-cd msk-cluster || exit
-terraform init
-terraform apply \
-  -var="broker-instance-type=$BROKER_INSTANCE_TYPE" \
-  -var="name=$CLUSTER_NAME" \
-  -var="aws-region=$REGION"
-
-cd ../networking || exit
-terraform init
-terraform apply \
-  -var="name=$CLUSTER_NAME" \
-  -var="aws-region=$REGION" 
+case "$ACTION" in
+apply)  
+  cd msk-cluster || exit
+  terraform init
+  terraform apply \
+    -var="broker-instance-type=$BROKER_INSTANCE_TYPE" \
+    -var="name=$CLUSTER_NAME" \
+    -var="aws-region=$REGION"
+  
+  cd ../networking || exit
+  terraform init
+  terraform apply \
+    -var="name=$CLUSTER_NAME" \
+    -var="aws-region=$REGION";;
+  
+destroy)
+  cd networking || exit
+  terraform init
+  terraform destroy \
+    -var="name=$CLUSTER_NAME" \
+    -var="aws-region=$REGION"
+    
+  cd ../msk-cluster || exit
+  terraform init
+  terraform destroy \
+    -var="broker-instance-type=$BROKER_INSTANCE_TYPE" \
+    -var="name=$CLUSTER_NAME" \
+    -var="aws-region=$REGION";;
+esac
 
