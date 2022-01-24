@@ -1,7 +1,7 @@
 # Quick Start #5 - Service to Service Calls
 
 
-Available at Docker Hub: cplnquickstarts/service-to-service-quick-start:1.0
+Available at Docker Hub: cplnquickstarts/service-to-service-quick-start:1.1
 
 
 Use pack to build:
