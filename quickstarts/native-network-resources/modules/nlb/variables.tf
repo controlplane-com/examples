@@ -1,4 +1,4 @@
-﻿# Copyright 2022 Control Plan Corporation
+﻿# Copyright 2022 Control Plane Corporation
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ variable "targets" {
     internal-port = number
     external-port = number
   }))
+  default = {}
   description = "A map of objects containing listener ip addresses and port numbers"
 }
 
