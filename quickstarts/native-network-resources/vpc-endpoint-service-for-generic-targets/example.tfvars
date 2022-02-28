@@ -8,11 +8,17 @@ subnet-ids = [
 ]
 targets = {
   test-rds = {
-    FQDN = "test-db.crjdpuq65iea.us-east-2.rds.amazonaws.com"
+    FQDN = "test-rds.crjdpuq65iea.us-east-2.rds.amazonaws.com"
     internal-port = 5432
     external-port = 5432
   }
+  test-opensearch-dashboards = {
+    FQDN = "vpc-test-5o6p56cmvabyxvijz5oniuehge.us-east-2.es.amazonaws.com"
+    internal-port = 443
+    external-port = 1000
+  }
 }
+internal-nlb = false
 public-subnet-cidr = "172.31.53.0/24"
 private-subnets = {
   "subnet-0" = {
@@ -28,5 +34,5 @@ private-subnets = {
     availability-zone = "us-east-2c"
   }
 }
-polling-cron-expression = "*/5 * * * ? *"
+polling-schedule-expression = "rate(1 minute)"
 vpc-id = "vpc-0086679a620a05e2b"
