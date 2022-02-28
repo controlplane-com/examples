@@ -1,12 +1,8 @@
 ﻿# Purpose #
-Native network resources exist to save you as much money as possible on network 
-egress costs.
+Using Control Plane's wormhole technology, network traffic is first routed through the wider internet, then to the targeted resource.
+If you have an extremely high traffic volume, this can cause egress fees to pile up quickly.
 
-Network resources connected using Control Plane's Wormhole technology, and which
-receive a high traffic volume can quickly generate a correspondingly high egress bill.
-Native network resources are directly connected to workloads running on Control Plane,
-therefore outbound traffic to those resources is not billed at the standard egress 
-rate.
+Native network resources save money on network egress, by keeping traffic within a cloud-provider's network.
 
 # Prerequisites #
 All of the guides require:
@@ -18,7 +14,7 @@ All of the guides require:
 ## AWS MSK (Managed Streaming for Apache Kafka) ##
 ### Disclaimer ###
 While the infrastructure set up in this quick start is production-ready, Control Plane
-recommends that you choose an appropriate [backend](terraform.io/language/settings/backends)
+recommends that you choose an appropriate [backend](https://terraform.io/language/settings/backends)
 for terraform so that the state can be shared and re-used by your team.
 
 ### Create the infrastructure

@@ -14,7 +14,7 @@
 
 resource "aws_lb" "aws-nlb" {
   name = "${var.name-prefix}-nlb"
-  internal = true
+  internal = var.internal
   load_balancer_type = "network"
   subnets = var.subnet-ids
   tags = var.tags

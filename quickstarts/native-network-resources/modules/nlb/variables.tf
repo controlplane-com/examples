@@ -17,6 +17,12 @@ variable "name-prefix" {
   description = "A name summarizing the resources to be fronted by the NLB / endpoint service"
 }
 
+variable "internal" {
+  type = bool
+  description = "True if the NLB should be internal only. False if it should be exposed to the internet."
+  default = true
+}
+
 variable "vpc-id" {
   type = string
   description = "The VPC hosting the network resources"

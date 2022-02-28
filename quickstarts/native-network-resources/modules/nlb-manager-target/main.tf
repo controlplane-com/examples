@@ -45,7 +45,7 @@ resource "aws_lb_listener" "aws-lb-listener" {
 
 resource "aws_cloudwatch_event_rule" "schedule" {
   name = "${var.name}-schedule-rule"
-  schedule_expression = "cron(${var.polling-cron-expression})"
+  schedule_expression = "${var.polling-schedule-expression}"
   tags = {
     Parent = var.name
     FQDN = var.target.FQDN

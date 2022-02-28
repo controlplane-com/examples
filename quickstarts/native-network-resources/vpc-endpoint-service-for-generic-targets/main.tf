@@ -40,6 +40,7 @@ module "nlb" {
   subnet-ids = var.subnet-ids
   include-all-resources-in-one-target-group = false
   include-all-resources-in-separate-target-groups = false
+  internal = var.internal-nlb
 }
 
 module "nlb-manager-target" {
@@ -50,7 +51,7 @@ module "nlb-manager-target" {
   target = each.value
   lambda-arn = module.nlb-manager-lambda.lambda.arn
   lambda-name = module.nlb-manager-lambda.lambda.function_name
-  polling-cron-expression = var.polling-cron-expression
+  polling-schedule-expression = var.polling-schedule-expression
 }
 
 module "endpoint-service" {

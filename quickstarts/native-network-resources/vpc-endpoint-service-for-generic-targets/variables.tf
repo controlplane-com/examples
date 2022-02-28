@@ -22,6 +22,12 @@ variable "vpc-id" {
   description = "The name of the VPC containing the RDS instance(s)"
 }
 
+variable "internal-nlb" {
+  type = bool
+  description = "True if the corresponding NLB should be internal only, false if it should be public."
+  default = true
+}
+
 variable "subnet-ids" {
   type = list(string)
   description = "A list of subnet ids in which the targets reside."
@@ -42,10 +48,10 @@ variable "targets" {
   description = "A map of objects containing RDS instance ip addresses and port numbers"
 }
 
-variable "polling-cron-expression"{
+variable "polling-schedule-expression"{
   type = string
-  description = "A cron expression that determines how often the lambda function will execute per target group. For formatting information, see this guide: https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions"
-  default = "* * * * ? *"
+  description = "An expression that determines how often the lambda function will execute per target group. For formatting information, see this guide: https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html"
+  default = "rate(1 minute)"
 }
 
 variable "public-subnet-cidr" {

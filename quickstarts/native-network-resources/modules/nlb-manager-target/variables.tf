@@ -41,7 +41,7 @@ variable "target" {
   description = "The target to which the NLB should serve traffic"
 }
 
-variable "polling-cron-expression"{
+variable "polling-schedule-expression"{
   type = string
   description = "A cron expression that determines how often the lambda function will execute per target group. For formatting information, see this guide: https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions"
 }
