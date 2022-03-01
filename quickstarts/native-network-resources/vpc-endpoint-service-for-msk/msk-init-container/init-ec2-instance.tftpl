@@ -33,7 +33,8 @@ wget $${KAFKA_URL} -O $${KAFKA_TMP_DEST} && \
     mkdir -p $${KAFKA_WORKDIR} && \
     tar -xzf $${KAFKA_TMP_DEST} --strip-components=1 -C $${KAFKA_WORKDIR} && \
     rm -rf $${KAFKA_TMP_DEST}
-    
+
+
 %{ for b in broker-hosts ~}
 configure-broker "${b}" ${index(broker-hosts, b)+1}
 %{ endfor ~}
