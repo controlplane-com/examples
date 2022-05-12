@@ -3,7 +3,8 @@
 
 # Quick Start Examples
 
-- Service-to-Service quick start
+- [Service-to-Service Quick Start](./quickstarts/5/)
+- [Native Network Resources](./quickstarts/native-network-resources/)
 
 
 # Terraform - Provider and Examples
