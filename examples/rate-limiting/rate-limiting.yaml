@@ -1,0 +1,149 @@
+kind: secret
+name: ratelimit-config
+description: ratelimit-config
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    domain: cpln
+    descriptors:
+      - key: authorization
+        rate_limit:
+          unit: minute
+          requests_per_unit: 10
+---
+kind: identity
+name: ratelimit
+description: ratelimit
+tags: {}
+---
+kind: policy
+name: ratelimit-config
+description: ratelimit-config
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/ratelimit/identity/ratelimit
+targetKind: secret
+targetLinks:
+  - //secret/ratelimit-config
+---
+kind: workload
+name: ratelimit
+description: ratelimit
+tags:
+  cpln/protocol: http2
+spec:
+  type: serverless
+  containers:
+    - name: ratelimit
+      args:
+        - "-c"
+        - >-
+          mkdir -p /data/ratelimit && echo ''"${CONFIG}"'' >
+          /data/ratelimit/config && /bin/ratelimit
+      command: sh
+      cpu: 150m
+      env:
+        - name: CONFIG
+          value: "cpln://secret/ratelimit-config.payload"
+        - name: GRPC_HOST
+          value: "::"
+        - name: HOST
+          value: "::"
+        - name: LOG_LEVEL
+          value: debug
+        - name: REDIS_SOCKET_TYPE
+          value: tcp
+        - name: REDIS_URL
+          value: "redis.ratelimit.cpln.local:6379"
+        - name: RUNTIME_IGNOREDOTFILES
+          value: "true"
+        - name: RUNTIME_ROOT
+          value: /data
+        - name: RUNTIME_SUBDIRECTORY
+          value: ratelimit
+        - name: RUNTIME_WATCH_ROOT
+          value: "false"
+        - name: USE_STATSD
+          value: "false"
+      image: "envoyproxy/ratelimit:5b6e65da"
+      memory: 128Mi
+      port: 8081
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 8080
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 1000
+      maxScale: 5
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    spot: true
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+    internal:
+      inboundAllowType: none
+      inboundAllowWorkload: []
+  identityLink: //gvc/ratelimit/identity/ratelimit
+---
+kind: workload
+name: redis
+description: redis
+tags:
+  cpln/protocol: tcp
+spec:
+  type: serverless
+  containers:
+    - name: redis
+      cpu: 500m
+      image: redis
+      memory: 512Mi
+      port: 6379
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 6379
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 1000
+      maxScale: 5
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 60
+    capacityAI: false
+    debug: false
+    spot: true
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
