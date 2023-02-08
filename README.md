@@ -1,7 +1,7 @@
 
 <p align="center">
   <a href="https://controlplane.com">
-    <img alt="ControlPlane" title="ControlPlane" src="controlplane-logo.svg" width="400" style="color: black">
+    <img alt="Control Plane" title="Control Plane" src="controlplane-logo.svg" width="400" style="color: black">
   </a>
 </p>
 
@@ -13,7 +13,7 @@
 
 # Control Plane Examples Monorepo
 
-This repository contains various examples that we refer to in our guides and documentation. You can use them to easily get started with ControlPlane and adapt them to your own needs.
+This repository contains various examples that we refer to in our guides and documentation. You can use them to easily get started with Control Plane and adapt them to your own needs.
 
 
 # Quick Start Examples
