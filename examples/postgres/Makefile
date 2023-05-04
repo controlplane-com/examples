@@ -12,6 +12,6 @@ build-manifest:
 	rm ./manifest.yaml || "true"
 	cd src && ./build-manifest.sh >> ../manifest.yaml
 
-push-manifest: build-manifest
-	cd src && ./push-manifest.sh ../manifest.yaml || "true"
+apply-manifest: build-manifest
+	cd src && ./apply-manifest.sh ../manifest.yaml || "true"
 	rm ./manifest.yaml
