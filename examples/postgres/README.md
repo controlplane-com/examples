@@ -1,29 +1,31 @@
 
 # Postgres Workload Example
 
-## Prerequisites
-
-1. The [Control Plane CLI](https://cpln-docs-test.web.app/quickstart/quick-start-3-cli)
-2. make
-3. docker
+This example demonstrates how to run Postgres on Control Plane
 
 ## Usage
 
-### Build and Push the Workload
+### Building the Image
 
-To build and deploy the database image:
-1. Build and push the docker image to your preferred registry. e.g. `REPOSITORY=kylecupp TAG=0.1.0 make push-image`
-2. Edit `parameters.yaml`, providing arguments for the following parameters:
-   - `IMAGE`: The URI of the image you deployed in step 1
+This example relies on an extension of the base `postgres` docker image. Before deploying a workload, you must build and push the Dockerfile in this project image to your preferred registry. Once you do, make a note of the image URI and use it below, in the `IMAGE` parameter
+
+### Generating the YAML manifest
+
+1. Edit `parameters.yaml`, providing arguments for the following parameters:
+   - `IMAGE`: The URI of the docker image in this example after it has been pushed to a registry (e.g. `kylecupp/postgres-agent:1.0.0`)
    - `WORKLOAD_NAME`: A unique name for the database workload and its related resources
    - `POSTGRES_ARCHIVE_URI` (**optional**): This should be the URI of a Postgresql archive produced by `pg_dump`, stored in S3. **Note: The URI must be of the form: s3://BUCKET/PATH_TO_ARCHIVE**
    - `ORG`: The name of the Control Plane Organization to which the database will be deployed
    - `GVC`: The name of the Control Plane GVC to which the database will be deployed
    - `POSTGRES_USER`: The name of the default database user
    - `POSTGRES_PASSWORD`: The password for the default database user
-3. Run `make build-manifest`. This will produce a file named `manifest.yaml`.
-4. Inspect `manifest.yaml` to ensure it matches your expectations. Repeat steps 2 and 3 if necessary.
-5. Push the manifest to your org/gvc by running `make apply-manifest`
+2. Run `make build-manifest`. This will produce a file named `manifest.yaml`.
+3. Inspect `manifest.yaml` to ensure it matches your expectations. Repeat steps 1 and 2 if necessary.
+4. (Optional) Apply `manifest.yaml` using `cpln apply`
+
+### CI/CD
+
+Once the YAML file has been generated, you can customize it if needed and use it in your CI/CD pipelines. 
 
 ### (Optional) Allow the Workload Access to S3
 

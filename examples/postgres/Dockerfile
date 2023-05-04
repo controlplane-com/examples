@@ -8,5 +8,6 @@ RUN apt-get update && \
     ./aws/install
 
 COPY src/cpln-entrypoint.sh /usr/local/bin/cpln-entrypoint.sh
+RUN chmod a+x /usr/local/bin/cpln-entrypoint.sh
 
-ENTRYPOINT ["cpln-entrypoint.sh"]
+ENTRYPOINT ["cpln-entrypoint.sh", "postgres"]

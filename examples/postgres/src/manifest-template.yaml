@@ -60,7 +60,7 @@ spec:
         - name: PGDATA
           value: "/var/lib/postgresql/data/pg_data"
         - name: POSTGRES_DB
-          value: test
+          value: $POSTGRES_DB
         - name: POSTGRES_PASSWORD
           value: cpln://secret/$WORKLOAD_NAME-credentials.password
         - name: POSTGRES_USER
@@ -99,8 +99,8 @@ spec:
     autoscaling:
       metric: cpu
       target: 95
-      maxScale: 5
-      minScale: 5
+      maxScale: 1
+      minScale: 1
       maxConcurrency: 0
       scaleToZeroDelay: 300
     timeoutSeconds: 5
