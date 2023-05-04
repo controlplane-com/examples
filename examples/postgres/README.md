@@ -12,7 +12,7 @@ This example relies on an extension of the base `postgres` docker image. Before 
 ### Generating the YAML manifest
 
 1. Edit `parameters.yaml`, providing arguments for the following parameters:
-   - `IMAGE`: The URI of the docker image in this example after it has been pushed to a registry (e.g. `kylecupp/postgres-agent:1.0.0`)
+   - `IMAGE`: The URI of the docker image in this example after it has been pushed to a registry (e.g. `kylecupp/postgres-agent`)
    - `WORKLOAD_NAME`: A unique name for the database workload and its related resources
    - `POSTGRES_ARCHIVE_URI` (**optional**): This should be the URI of a Postgresql archive produced by `pg_dump`, stored in S3. **Note: The URI must be of the form: s3://BUCKET/PATH_TO_ARCHIVE**
    - `ORG`: The name of the Control Plane Organization to which the database will be deployed
