@@ -1,0 +1,117 @@
+kind: volumeset
+name: $WORKLOAD_NAME-vs
+description: $WORKLOAD_NAME-vs
+spec:
+  autoscaling:
+    maxCapacity: 1000
+    minFreePercentage: 1
+    scalingFactor: 1.1
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+  snapshots:
+    createFinalSnapshot: true
+    retentionDuration: 7d
+
+---
+kind: secret
+name: $WORKLOAD_NAME-credentials
+description: ''
+tags: {}
+type: dictionary
+data:
+  password: $POSTGRES_PASSWORD
+  username: $POSTGRES_USER
+
+---
+kind: identity
+name: $WORKLOAD_NAME-identity
+description: $WORKLOAD_NAME-identity
+
+---
+kind: policy
+name: $WORKLOAD_NAME-access
+description: $WORKLOAD_NAME-access
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+      - use
+      - view
+    principalLinks:
+      - /org/$ORG/gvc/$GVC/identity/$WORKLOAD_NAME-identity
+targetKind: secret
+targetLinks:
+  - /org/$ORG/secret/$WORKLOAD_NAME-credentials
+
+---
+kind: workload
+name: $WORKLOAD_NAME
+description: $WORKLOAD_NAME
+spec:
+  type: stateful
+  containers:
+    - cpu: 1000m
+      memory: 512Mi
+      env:
+        - name: POSTGRES_ARCHIVE_URI
+          value: $POSTGRES_ARCHIVE_URI
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pg_data"
+        - name: POSTGRES_DB
+          value: test
+        - name: POSTGRES_PASSWORD
+          value: cpln://secret/$WORKLOAD_NAME-credentials.password
+        - name: POSTGRES_USER
+          value: cpln://secret/$WORKLOAD_NAME-credentials.username
+      name: stateful
+      image: $IMAGE
+      ports:
+        - number: 5432
+          protocol: tcp
+      volumes:
+        - uri: cpln://volumeset/$WORKLOAD_NAME-vs
+          path: "/var/lib/postgresql/data"
+          recoveryPolicy: retain
+      inheritEnv: false
+      livenessProbe:
+        tcpSocket:
+          port: 5432
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 1
+        successThreshold: 1
+        initialDelaySeconds: 0
+      readinessProbe:
+        tcpSocket:
+          port: 5432
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 1
+        successThreshold: 1
+        initialDelaySeconds: 0
+  identityLink: /org/$ORG/gvc/$GVC/identity/$WORKLOAD_NAME-identity
+  defaultOptions:
+    debug: false
+    suspend: false
+    capacityAI: false
+    autoscaling:
+      metric: cpu
+      target: 95
+      maxScale: 5
+      minScale: 5
+      maxConcurrency: 0
+      scaleToZeroDelay: 300
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  supportDynamicTags: false
+
