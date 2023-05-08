@@ -13,7 +13,7 @@ install_deps() {
 
 db_has_been_restored() {
   if [ ! -f "$PGDATA/CPLN_RESTORED" ]; then
-    return 0
+    return 1
   fi
 
   if ! grep -q "\-> $1$" "$PGDATA/CPLN_RESTORED"; then
