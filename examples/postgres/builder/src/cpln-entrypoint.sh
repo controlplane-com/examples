@@ -31,7 +31,7 @@ restore_db() {
   done
 
 
-	if ! db_has_been_restored "$2"; then
+	if ! db_has_been_restored "$1"; then
 	  echo "It appears db '$1' has not yet been restored from S3. Attempting to restore $1 from $2"
 	  install_deps
 	  docker_setup_db #Ensures $POSTGRES_DB exists (defined in the entrypoint script from the postgres docker image)
