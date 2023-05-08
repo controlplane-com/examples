@@ -106,6 +106,7 @@ bindings:
 targetKind: secret
 targetLinks:
   - //secret/postgres-poc-credentials
+  - //secret/postgres-poc-entrypoint-script
 
 ---
 kind: workload
@@ -142,7 +143,7 @@ spec:
       volumes:
         - uri: cpln://volumeset/postgres-poc-vs
           path: "/var/lib/postgresql/data"
-        - uri: cpln://secret/postgres-poc-entrypoint
+        - uri: cpln://secret/postgres-poc-entrypoint-script
           path: "/usr/local/bin/cpln-entrypoint.sh"
       inheritEnv: false
       livenessProbe:
