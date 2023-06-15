@@ -1,0 +1,111 @@
+kind: gvc
+name: nats
+---
+kind: identity
+name: nats
+description: Auto-managed identity for the workload "nats"
+---
+kind: policy
+name: nats
+description: Auto-created policy for the workload "nats"
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/nats/identity/nats
+targetKind: secret
+targetLinks:
+  - //secret/nats-config
+---
+kind: secret
+name: nats-config
+description: nats-config
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+    debug: true
+    trace: false
+
+    # Each server can connect to clients on the internal port 4222
+    # this is exposed to any workload in the gvc using the workload firewallConfig
+    port: 4222
+    http: 8222
+
+    # the HOSTNAME environment variable is used to provide unique names
+    server_name: $HOSTNAME
+    listen: 0.0.0.0:4222
+    http: 0.0.0.0:8222
+
+    # Persistent JetStream data store
+    jetstream = {
+      # Each server persists messages
+      # at /data/nats-server mounted in volumes below
+      store_dir: "/data/nats-server/"
+    }
+
+    # Cluster formation
+    cluster = {
+      name: "nats"
+      listen: "0.0.0.0:6222"
+
+      # Servers can connect to one another at 
+      # the following routes
+      # direct endpoints are discovered using their published server_name above
+      routes = [
+        "nats://ruser:T0pS3cr3t@nats:6222"
+      ]
+    }
+---
+kind: volumeset
+name: nats
+description: nats
+tags: {}
+spec:
+  fileSystemType: xfs
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+---
+kind: workload
+name: nats
+description: nats
+spec:
+  type: stateful
+  containers:
+    - name: nats
+      args:
+        - '-js'
+        - '-c'
+        - /etc/nats/nats.conf
+      cpu: 100m
+      image: 'nats:latest'
+      memory: 256Mi
+      ports:
+        - number: 4222
+          protocol: tcp
+        - number: 6222
+          protocol: tcp
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 8222
+          scheme: HTTP
+      volumes:
+        # map the config file where nats.io expects it to be
+        - path: /etc/nats/nats.conf
+          uri: 'cpln://secret/nats-config'
+        
+        # unique persistent storage for each server in the cluster
+        - path: /data/nats-server
+          uri: 'cpln://volumeset/nats'
+  defaultOptions:
+    capacityAI: false
+    autoscaling:
+      metric: disabled
+      minScale: 3
+    timeoutSeconds: 5
+  firewallConfig:
+    internal:
+      inboundAllowType: same-gvc
+  identityLink: //identity/nats
