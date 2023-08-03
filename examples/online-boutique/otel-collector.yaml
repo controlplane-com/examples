@@ -2,20 +2,6 @@ kind: identity
 name: otel-collector-online-boutique
 tags: {}
 ---
-kind: policy
-name: otel-collector-online-boutique
-tags: {}
-origin: default
-bindings:
-  - permissions:
-      - reveal
-    principalLinks:
-      - //gvc/online-boutique/identity/otel-collector-online-boutique
-targetKind: secret
-targetLinks:
-  - //secret/datadog-config
-  - //secret/otel-collector-config
----
 kind: secret
 name: otel-collector-config
 description: otel-collector-config
@@ -58,6 +44,20 @@ data:
   # Do not set DD_API_KEY_VALUE and DD_SITE_VALUE below inside quotation mark
   DD_API_KEY: __DD_API_KEY_VALUE__
   DD_SITE: __DD_SITE_VALUE__
+---
+kind: policy
+name: otel-collector-online-boutique
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/online-boutique/identity/otel-collector-online-boutique
+targetKind: secret
+targetLinks:
+  - //secret/datadog-config
+  - //secret/otel-collector-config
 ---
 kind: workload
 name: otel-collector
