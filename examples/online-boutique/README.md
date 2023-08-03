@@ -38,9 +38,13 @@ Step 2 - Configure Tracing
 You can as well configure your otel-collector in this stage to use the tracing backend of your choice.
 3. Apply the `otel-collector.yaml` file using the `cpln apply >_` option in the upper right corner.
 
-##### cleanup:
+### Autoscaling:
 
-###### cli
+To trigger autoscaling, increase the number of users by changing the environment variable `USERS` for `loadgenerator` workload, either in the UI or in the `online-boutique.yaml` file and reapply it.
+
+### cleanup:
+
+#### cli
 
 ```bash
 cpln delete --gvc online-boutique -f ./online-boutique.yaml
