@@ -13,8 +13,8 @@ bindings:
       - //gvc/online-boutique/identity/otel-collector-online-boutique
 targetKind: secret
 targetLinks:
-  - /org/gitops/secret/datadog-config
-  - /org/gitops/secret/otel-collector-config
+  - //secret/datadog-config
+  - //secret/otel-collector-config
 ---
 kind: secret
 name: otel-collector-config
