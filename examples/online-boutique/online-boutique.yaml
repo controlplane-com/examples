@@ -1,0 +1,795 @@
+kind: gvc
+name: online-boutique
+spec:
+  staticPlacement:
+    locationLinks: []
+  tracing:
+    provider:
+      otel:
+        endpoint: 'otel-collector.online-boutique.cpln.local:4317'
+    sampling: 100
+---
+kind: volumeset
+name: redis-volume
+description: redis-volume
+spec:
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+---
+kind: secret
+name: redis-boutique-conf
+description: redis-boutique-conf
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: port 6389
+---
+kind: identity
+name: redis-identity
+description: redis-identity
+tags: {}
+---
+kind: policy
+name: redis-cart
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/online-boutique/identity/redis-identity
+targetKind: secret
+targetLinks:
+  - //secret/redis-boutique-conf
+---
+kind: workload
+name: adservice
+description: adservice
+spec:
+  type: serverless
+  containers:
+    - name: server
+      cpu: 300m
+      env:
+        - name: PORT
+          value: '9555'
+      image: 'gcr.io/google-samples/microservices-demo/adservice:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 20
+        periodSeconds: 15
+        successThreshold: 1
+        tcpSocket:
+          port: 9555
+        timeoutSeconds: 1
+      memory: 300Mi
+      ports:
+        - number: 9555
+          protocol: grpc
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 20
+        periodSeconds: 15
+        successThreshold: 1
+        tcpSocket:
+          port: 9555
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/frontend
+  localOptions: []
+  supportDynamicTags: false
+---
+kind: workload
+name: cartservice
+description: cartservice
+spec:
+  type: serverless
+  containers:
+    - name: server
+      cpu: 300m
+      env:
+        - name: REDIS_ADDR
+          value: 'redis-cart:6389'
+      image: 'gcr.io/google-samples/microservices-demo/cartservice:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 7070
+        timeoutSeconds: 1
+      memory: 128Mi
+      ports:
+        - number: 7070
+          protocol: grpc
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 7070
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname:
+        - redis-cart.online-boutique.cpln.local
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/checkoutservice
+        - //workload/frontend
+  localOptions: []
+  supportDynamicTags: false
+---
+kind: workload
+name: checkoutservice
+description: checkoutservice
+spec:
+  type: serverless
+  containers:
+    - name: server
+      cpu: 200m
+      env:
+        - name: CART_SERVICE_ADDR
+          value: 'cartservice.online-boutique.cpln.local:7070'
+        - name: CURRENCY_SERVICE_ADDR
+          value: 'currencyservice.online-boutique.cpln.local:7000'
+        - name: EMAIL_SERVICE_ADDR
+          value: 'emailservice.online-boutique.cpln.local:8080'
+        - name: PAYMENT_SERVICE_ADDR
+          value: 'paymentservice.online-boutique.cpln.local:50051'
+        - name: PORT
+          value: '5050'
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: 'productcatalogservice.online-boutique.cpln.local:3550'
+        - name: SHIPPING_SERVICE_ADDR
+          value: 'shippingservice.online-boutique.cpln.local:50051'
+      image: 'gcr.io/google-samples/microservices-demo/checkoutservice:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 5050
+        timeoutSeconds: 1
+      memory: 128Mi
+      ports:
+        - number: 5050
+          protocol: grpc
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 5050
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/frontend
+  localOptions: []
+  supportDynamicTags: false
+---
+kind: workload
+name: currencyservice
+description: currencyservice
+spec:
+  type: serverless
+  containers:
+    - name: server
+      cpu: 200m
+      env:
+        - name: DISABLE_PROFILER
+          value: '1'
+        - name: PORT
+          value: '7000'
+      image: 'gcr.io/google-samples/microservices-demo/currencyservice:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 7000
+        timeoutSeconds: 1
+      memory: 128Mi
+      ports:
+        - number: 7000
+          protocol: grpc
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 7000
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/checkoutservice
+        - //workload/frontend
+  localOptions: []
+  supportDynamicTags: false
+---
+kind: workload
+name: emailservice
+description: emailservice
+spec:
+  type: serverless
+  containers:
+    - name: server
+      cpu: 200m
+      env:
+        - name: DISABLE_PROFILER
+          value: '1'
+        - name: PORT
+          value: '8080'
+      image: 'gcr.io/google-samples/microservices-demo/emailservice:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 8080
+        timeoutSeconds: 1
+      memory: 128Mi
+      ports:
+        - number: 8080
+          protocol: grpc
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 8080
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/checkoutservice
+  localOptions: []
+  supportDynamicTags: false
+---
+kind: workload
+name: frontend
+description: frontend
+spec:
+  type: standard
+  containers:
+    - name: server
+      cpu: 200m
+      env:
+        - name: AD_SERVICE_ADDR
+          value: 'adservice.online-boutique.cpln.local:9555'
+        - name: CART_SERVICE_ADDR
+          value: 'cartservice.online-boutique.cpln.local:7070'
+        - name: CHECKOUT_SERVICE_ADDR
+          value: 'checkoutservice.online-boutique.cpln.local:5050'
+        - name: CURRENCY_SERVICE_ADDR
+          value: 'currencyservice.online-boutique.cpln.local:7000'
+        - name: ENABLE_PROFILER
+          value: '0'
+        - name: PORT
+          value: '8080'
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: 'productcatalogservice.online-boutique.cpln.local:3550'
+        - name: RECOMMENDATION_SERVICE_ADDR
+          value: 'recommendationservice.online-boutique.cpln.local:8080'
+        - name: SHIPPING_SERVICE_ADDR
+          value: 'shippingservice.online-boutique.cpln.local:50051'
+      image: 'gcr.io/google-samples/microservices-demo/frontend:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          httpHeaders:
+            - name: Cookie
+              value: shop_session-id=x-liveness-probe
+          path: /_healthz
+          port: 8080
+          scheme: HTTP
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      memory: 128Mi
+      ports:
+        - number: 8080
+          protocol: http
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          httpHeaders:
+            - name: Cookie
+              value: shop_session-id=x-readiness-probe
+          path: /_healthz
+          port: 8080
+          scheme: HTTP
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 5
+      metric: rps
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 10
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 60
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/loadgenerator
+  localOptions: []
+  securityOptions:
+    filesystemGroupId: 1000
+  supportDynamicTags: false
+---
+kind: workload
+name: loadgenerator
+description: loadgenerator
+spec:
+  type: standard
+  containers:
+    - name: main
+      cpu: 500m
+      env:
+        - name: FRONTEND_ADDR
+          value: 'frontend.online-boutique.cpln.local:8080'
+        - name: USERS
+          value: '3'
+      image: 'gcr.io/google-samples/microservices-demo/loadgenerator:v0.8.0'
+      inheritEnv: false
+      memory: 512Mi
+      ports: []
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+    internal:
+      inboundAllowType: none
+      inboundAllowWorkload: []
+  supportDynamicTags: false
+---
+kind: workload
+name: paymentservice
+description: paymentservice
+spec:
+  type: serverless
+  containers:
+    - name: server
+      cpu: 200m
+      env:
+        - name: DISABLE_PROFILER
+          value: '1'
+        - name: PORT
+          value: '50051'
+      image: 'gcr.io/google-samples/microservices-demo/paymentservice:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 50051
+        timeoutSeconds: 1
+      memory: 128Mi
+      ports:
+        - number: 50051
+          protocol: grpc
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 50051
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/checkoutservice
+  localOptions: []
+  supportDynamicTags: false
+---
+kind: workload
+name: productcatalogservice
+description: productcatalogservice
+spec:
+  type: serverless
+  containers:
+    - name: server
+      cpu: 200m
+      env:
+        - name: DISABLE_PROFILER
+          value: '1'
+        - name: PORT
+          value: '3550'
+      image: 'gcr.io/google-samples/microservices-demo/productcatalogservice:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 3550
+        timeoutSeconds: 1
+      memory: 128Mi
+      ports:
+        - number: 3550
+          protocol: grpc
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 3550
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/checkoutservice
+        - //workload/frontend
+        - //workload/recommendationservice
+  localOptions: []
+  supportDynamicTags: false
+---
+kind: workload
+name: recommendationservice
+description: recommendationservice
+spec:
+  type: serverless
+  containers:
+    - name: server
+      cpu: 200m
+      env:
+        - name: DISABLE_PROFILER
+          value: '1'
+        - name: PORT
+          value: '8080'
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: 'productcatalogservice.online-boutique.cpln.local:3550'
+      image: 'gcr.io/google-samples/microservices-demo/recommendationservice:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 8080
+        timeoutSeconds: 1
+      memory: 450Mi
+      ports:
+        - number: 8080
+          protocol: http
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 8080
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/frontend
+  localOptions: []
+  supportDynamicTags: false
+---
+kind: workload
+name: redis-cart
+description: redis
+spec:
+  type: stateful
+  containers:
+    - name: redis
+      args:
+        - /etc/redis/redis.conf
+      cpu: 75m
+      image: 'redis:alpine'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 6389
+        timeoutSeconds: 1
+      memory: 150Mi
+      ports:
+        - number: 6389
+          protocol: tcp
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 6389
+        timeoutSeconds: 1
+      volumes:
+        - path: /data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/redis-volume'
+        - path: /etc/redis/redis.conf
+          recoveryPolicy: retain
+          uri: 'cpln://secret/redis-boutique-conf'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 10
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/cartservice
+  identityLink: //identity/redis-identity
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+  supportDynamicTags: false
+---
+kind: workload
+name: shippingservice
+description: shippingservice
+spec:
+  type: serverless
+  containers:
+    - name: server
+      cpu: 200m
+      env:
+        - name: DISABLE_PROFILER
+          value: '1'
+        - name: PORT
+          value: '50051'
+      image: 'gcr.io/google-samples/microservices-demo/shippingservice:v0.8.0'
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 50051
+        timeoutSeconds: 1
+      memory: 128Mi
+      ports:
+        - number: 50051
+          protocol: grpc
+      readinessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 0
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 50051
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/checkoutservice
+        - //workload/frontend
+  localOptions: []
+  supportDynamicTags: false
