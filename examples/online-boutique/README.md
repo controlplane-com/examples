@@ -26,7 +26,7 @@ You can as well configure your otel-collector in this stage to use the tracing b
 cpln apply --gvc online-boutique -f ./otel-collector.yaml
 ```
 
-### ui
+#### ui
 
 Step 1 - Deploy online-boutique
 
@@ -51,7 +51,7 @@ cpln delete --gvc online-boutique -f ./online-boutique.yaml
 cpln delete --gvc online-boutique -f ./otel-collector.yaml
 ```
 
-###### ui
+#### ui
 
 1. delete the gvc `online-collector`.
 1. delete the policy `otel-collector-online-boutique`.
