@@ -415,7 +415,7 @@ spec:
   defaultOptions:
     autoscaling:
       maxConcurrency: 0
-      maxScale: 10
+      maxScale: 5
       metric: rps
       minScale: 1
       scaleToZeroDelay: 300
