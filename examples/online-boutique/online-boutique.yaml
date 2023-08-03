@@ -176,7 +176,7 @@ spec:
         - name: CURRENCY_SERVICE_ADDR
           value: 'currencyservice.online-boutique.cpln.local:7000'
         - name: EMAIL_SERVICE_ADDR
-          value: 'emailservice.online-boutique.cpln.local:5000'
+          value: 'emailservice.online-boutique.cpln.local:8080'
         - name: PAYMENT_SERVICE_ADDR
           value: 'paymentservice.online-boutique.cpln.local:50051'
         - name: PORT
