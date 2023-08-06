@@ -42,8 +42,8 @@ tags: {}
 type: dictionary
 data:
   # Do not set DD_API_KEY_VALUE and DD_SITE_VALUE below inside quotation mark
-  DD_API_KEY: __DD_API_KEY_VALUE__
-  DD_SITE: __DD_SITE_VALUE__
+  DD_API_KEY: ___DD_API_KEY_VALUE___
+  DD_SITE: ___DD_SITE_VALUE___
 ---
 kind: policy
 name: otel-collector-online-boutique

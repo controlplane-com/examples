@@ -2,7 +2,7 @@
 
 ### online-boutique with tracing
 
-This example creates an [Online Boutique](https://github.com/GoogleCloudPlatform/microservices-demo) microserices demo-application on Control Plane.
+This example creates an [Online Boutique](https://github.com/GoogleCloudPlatform/microservices-demo) microservices demo-application on Control Plane.
 
 Control Plane has native integration with OTLP to collect tracing data for workloads. In this example, we are using the otel-collector workload and shipping tracing data collected by Control Plane to Data Dog. You can choose to configure the otel-collector with your preferred backend for tracing or skip Step 2 completely.
 
@@ -19,8 +19,18 @@ cpln gvc add-location online-boutique --location aws-us-east-2
 
 Step 2 - Configure Tracing
 
-1. Replace `DD_API_KEY` and `DD_SITE` with your Datadog values for the secret object `datadog-config` in `otel-collector.yaml`. 
-You can as well configure your otel-collector in this stage to use the tracing backend of your choice.
+1. Replace `___DD_API_KEY_VALUE___` and `___DD_SITE_VALUE___` with the respective values from the `datadog-config` secret object found in `otel-collector.yaml`. Additionally, you can configure your otel-collector at this stage to utilize the tracing backend of your preference. EXAMPLE:
+```YAML
+---
+kind: secret
+name: datadog-config
+description: datadog-config
+tags: {}
+type: dictionary
+data:
+  DD_API_KEY: f32jfio43m2fimifigslsl2
+  DD_SITE: us5.datadoghq.com
+```
 2. Apply `otel-collector.yaml` to Control Plane
 ```bash
 cpln apply --gvc online-boutique -f ./otel-collector.yaml
@@ -34,8 +44,18 @@ Step 1 - Deploy online-boutique
 2. Apply the `online-boutique.yaml` file using the `cpln apply >_` option in the upper right corner.
 
 Step 2 - Configure Tracing 
-1. Replace `DD_API_KEY` and `DD_SITE` with your Datadog values for the secret object `datadog-config` in `otel-collector.yaml`. 
-You can as well configure your otel-collector in this stage to use the tracing backend of your choice.
+1. Replace `___DD_API_KEY_VALUE___` and `___DD_SITE_VALUE___` with the respective values from the `datadog-config` secret object found in `otel-collector.yaml`. Additionally, you can configure your otel-collector at this stage to utilize the tracing backend of your preference. EXAMPLE:
+```YAML
+---
+kind: secret
+name: datadog-config
+description: datadog-config
+tags: {}
+type: dictionary
+data:
+  DD_API_KEY: f32jfio43m2fimifigslsl2
+  DD_SITE: us5.datadoghq.com
+```
 3. Apply the `otel-collector.yaml` file using the `cpln apply >_` option in the upper right corner.
 
 ### Autoscaling:
