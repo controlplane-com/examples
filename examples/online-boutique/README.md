@@ -10,7 +10,12 @@ This example deploys the applications in two locations: `gcp-us-east1` and `aws-
 
 ### Steps to run this example:
 
+#### Requirements
+* [Control Plane Account](https://controlplane.com)
+
 #### cli
+
+If you haven't already installed the Control Plane CLI, [click here](https://docs.controlplane.com/reference/cli) to do so.
 
 Step 1 - Deploy online-boutique 
 
