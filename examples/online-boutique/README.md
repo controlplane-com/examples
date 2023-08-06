@@ -6,15 +6,17 @@ This example creates an [Online Boutique](https://github.com/GoogleCloudPlatform
 
 Control Plane has native integration with OTLP to collect tracing data for workloads. In this example, we are using the otel-collector workload and shipping tracing data collected by Control Plane to Data Dog. You can choose to configure the otel-collector with your preferred backend for tracing or skip Step 2 completely.
 
+This example deploys the applications in two locations: `aws-eu-central-1` and `azure-eastus2`. You can customize the command to use locations of your preference, but at least one location is required.
+
 ### Steps to run this example:
 
 #### cli
 
-Step 1 - Deploy online-boutique
+Step 1 - Deploy online-boutique 
 
 ```bash
 cpln apply --gvc online-boutique -f ./online-boutique.yaml
-cpln gvc add-location online-boutique --location aws-us-east-2
+cpln gvc add-location online-boutique --location aws-us-east-2 --location azure-eastus2
 ```
 
 Step 2 - Configure Tracing
@@ -67,8 +69,8 @@ To trigger autoscaling, increase the number of users by changing the environment
 #### cli
 
 ```bash
-cpln delete --gvc online-boutique -f ./online-boutique.yaml
 cpln delete --gvc online-boutique -f ./otel-collector.yaml
+cpln delete --gvc online-boutique -f ./online-boutique.yaml
 ```
 
 #### ui
