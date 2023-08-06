@@ -21,7 +21,7 @@ cpln gvc add-location online-boutique --location aws-us-east-2 --location azure-
 
 Step 2 - Configure Tracing
 
-1. Replace `___DD_API_KEY_VALUE___` and `___DD_SITE_VALUE___` with the respective values from the `datadog-config` secret object found in `otel-collector.yaml`. Additionally, you can configure your otel-collector at this stage to utilize the tracing backend of your preference. EXAMPLE:
+1. Replace `___DD_API_KEY_VALUE___` and `___DD_SITE_VALUE___` with the respective values(Can be found in your Datadog account) from the `datadog-config` secret object found in `otel-collector.yaml`. Additionally, you can configure your otel-collector at this stage to utilize the tracing backend of your preference. EXAMPLE:
 ```YAML
 ---
 kind: secret
@@ -46,7 +46,7 @@ Step 1 - Deploy online-boutique
 2. Apply the `online-boutique.yaml` file using the `cpln apply >_` option in the upper right corner.
 
 Step 2 - Configure Tracing 
-1. Replace `___DD_API_KEY_VALUE___` and `___DD_SITE_VALUE___` with the respective values from the `datadog-config` secret object found in `otel-collector.yaml`. Additionally, you can configure your otel-collector at this stage to utilize the tracing backend of your preference. EXAMPLE:
+1. Replace `___DD_API_KEY_VALUE___` and `___DD_SITE_VALUE___` with the respective values (Can be found in your Datadog account) from the `datadog-config` secret object found in `otel-collector.yaml`. Additionally, you can configure your otel-collector at this stage to utilize the tracing backend of your preference. EXAMPLE:
 ```YAML
 ---
 kind: secret
