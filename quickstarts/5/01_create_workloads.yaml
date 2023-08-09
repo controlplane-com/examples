@@ -8,7 +8,9 @@ spec:
       image: "cplnquickstarts/service-to-service-quick-start:1.1"
       memory: 128Mi
       name: service-to-service-quick-start
-      port: 8080
+      ports:
+        - number: 8080
+          protocol: http
       readinessProbe:
         failureThreshold: 3
         httpGet:
@@ -51,7 +53,9 @@ spec:
       image: 'cplnquickstarts/service-to-service-quick-start:1.1'
       memory: 128Mi
       name: service-to-service-quick-start
-      port: 8080
+      ports:
+        - number: 8080
+          protocol: http
       readinessProbe:
         failureThreshold: 3
         httpGet:

@@ -1,3 +1,6 @@
 ﻿**/.terraform.lock*
 **/terraform.tfstate*
 **/.terraform/
+
+examples/onboarding/dotnet/bin/
+examples/onboarding/dotnet/obj/

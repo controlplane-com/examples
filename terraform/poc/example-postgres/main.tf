@@ -2,7 +2,7 @@ terraform {
   required_providers {
     cpln = {
       source = "controlplane-com/cpln"
-      version = "1.0.7"
+      version = "~> 1.0" # This constraint means use any version in the 1.x range
     }
   }
 }

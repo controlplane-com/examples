@@ -35,8 +35,6 @@ targetLinks:
 kind: workload
 name: ratelimit
 description: ratelimit
-tags:
-  cpln/protocol: http2
 spec:
   type: serverless
   containers:
@@ -73,7 +71,9 @@ spec:
           value: "false"
       image: "envoyproxy/ratelimit:5b6e65da"
       memory: 128Mi
-      port: 8081
+      ports:
+        - number: 8081
+          protocol: http2
       readinessProbe:
         failureThreshold: 3
         initialDelaySeconds: 60
@@ -109,8 +109,6 @@ spec:
 kind: workload
 name: redis
 description: redis
-tags:
-  cpln/protocol: tcp
 spec:
   type: serverless
   containers:
@@ -118,7 +116,9 @@ spec:
       cpu: 500m
       image: redis
       memory: 512Mi
-      port: 6379
+      ports:
+        - number: 6379
+          protocol: tcp
       readinessProbe:
         failureThreshold: 3
         initialDelaySeconds: 0
