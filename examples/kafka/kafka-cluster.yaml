@@ -403,7 +403,7 @@ spec:
     autoscaling:
       maxConcurrency: 0
       maxScale: 3
-      metric: cpu
+      metric: disabled
       minScale: 3
       scaleToZeroDelay: 300
       target: 95
