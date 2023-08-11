@@ -4,3 +4,5 @@
 
 examples/onboarding/dotnet/bin/
 examples/onboarding/dotnet/obj/
+
+.DS_Store
