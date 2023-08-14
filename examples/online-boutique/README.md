@@ -12,7 +12,7 @@ This example deploys the applications in two locations: `gcp-us-east1` and `aws-
 
 #### Requirements
 * [Control Plane Account](https://controlplane.com)
-* DataDog Account
+* Datadog Account
 
 #### cli
 
@@ -52,7 +52,6 @@ Step 1 - Deploy online-boutique
 2. Apply the `online-boutique.yaml` file using the `cpln apply >_` option in the upper right corner.
 
 Step 2 - Configure Tracing (Optional)
-
 1. Replace `___DD_API_KEY_VALUE___` and `___DD_SITE_VALUE___` with the respective values (Can be found in your Datadog account) from the `datadog-config` secret object found in `otel-collector.yaml`. Additionally, you can configure your otel-collector at this stage to utilize the tracing backend of your preference. EXAMPLE:
 ```YAML
 ---
