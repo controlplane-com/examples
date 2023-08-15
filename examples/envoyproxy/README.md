@@ -6,10 +6,10 @@ Creates an envoyproxy ingress gateway which routes traffic to different internal
 
 #### Routing Rules
 
-all requests starting with `/v1/blog/${id}/notes` -> `notes` workload
+All requests starting with `/v1/blog/${id}/notes` -> `notes` workload
 POST requests starting with `/v1/blog/${id}/comments` -> `addcomments` workload
 GET requests starting with `/v1/blog/${id}/comments` -> `getcomments` workload
-any other request -> `default` workload
+Any other request -> `default` workload
 
 #### Steps to run this example:
 
@@ -33,10 +33,10 @@ We'll obtain the endpoint for the envoyproxy workload and use it to test out the
 
 ```bash
 export ENDPOINT="https://envoyproxy-rw677jxx694cg.cpln.app"
-curl  $ENDPOINT/v1/blog/12345/notes/
-curl $ENDPOINT/v1/blog/12345/comments/foo
-curl -X POST $ENDPOINT/v1/blog/12345/comments/foo
-curl -X POST $ENDPOINT/any
+curl -L  $ENDPOINT/v1/blog/12345/notes/
+curl -L $ENDPOINT/v1/blog/12345/comments/foo
+curl -L -X POST $ENDPOINT/v1/blog/12345/comments/foo
+curl -L -X POST $ENDPOINT/any
 ```
 
 Output
