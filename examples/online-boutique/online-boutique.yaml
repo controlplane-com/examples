@@ -1,13 +1,5 @@
 kind: gvc
 name: online-boutique
-spec:
-  staticPlacement:
-    locationLinks: []
-  tracing:
-    provider:
-      otel:
-        endpoint: 'otel-collector.online-boutique.cpln.local:4317'
-    sampling: 100
 ---
 kind: volumeset
 name: redis-volume
@@ -380,7 +372,7 @@ spec:
           value: 'recommendationservice.online-boutique.cpln.local:8080'
         - name: SHIPPING_SERVICE_ADDR
           value: 'shippingservice.online-boutique.cpln.local:50051'
-      image: 'gcr.io/google-samples/microservices-demo/frontend:v0.8.0'
+      image: 'igorchyts/online-boutique-frontend:v0.8.0-cpln'
       inheritEnv: false
       livenessProbe:
         failureThreshold: 3
@@ -438,7 +430,7 @@ spec:
   localOptions: []
   securityOptions:
     filesystemGroupId: 1000
-  supportDynamicTags: false
+  supportDynamicTags: true
 ---
 kind: workload
 name: loadgenerator

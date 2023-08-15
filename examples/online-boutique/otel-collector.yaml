@@ -1,3 +1,12 @@
+kind: gvc
+name: online-boutique
+spec:
+  tracing:
+    provider:
+      otel:
+        endpoint: 'otel-collector.online-boutique.cpln.local:4317'
+    sampling: 100
+---
 kind: identity
 name: otel-collector-online-boutique
 tags: {}
@@ -17,6 +26,7 @@ data:
 
     processors:
       batch:
+        send_batch_size: 500
 
     exporters:
       datadog:
