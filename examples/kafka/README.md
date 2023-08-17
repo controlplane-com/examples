@@ -37,7 +37,7 @@ cpln apply --gvc kafka-cluster-example -f ./kafka-client.yaml
 export kafka_client_replica=$(cpln workload get-replicas kafka-client --gvc kafka-cluster-example --location aws-us-east-2 -o json | jq -r '.items[0]')
 
 # Connect to the replica of kafka-client
-cpln workload connect kafka-client --location aws-us-east-2 --replica $kafka_client_replica --container kafka --shell bash --org gitops --gvc kafka-cluster-example
+cpln workload connect kafka-client --location aws-us-east-2 --replica $kafka_client_replica --container kafka --shell bash --gvc kafka-cluster-example
 ``` 
 3. Write and Consume messages from topic `controlplane` from `kafka-client` workload
 ```BASH
