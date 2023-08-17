@@ -1,0 +1,235 @@
+kind: gvc
+name: clickhouse-example
+description: clickhouse
+tags: {}
+spec:
+  loadBalancer:
+    dedicated: false
+  staticPlacement:
+    locationLinks:
+      - //location/aws-us-east-2
+
+---
+kind: volumeset
+name: clickhouse-cluster-data
+description: clickhouse-cluster-data
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+
+---
+kind: identity
+name: clickhouse-cluster-identity
+tags: {}
+
+---
+kind: secret
+name: clickhouse-keeper-configuration
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: >-
+    <clickhouse>
+
+        <logger>
+            <level>debug</level>
+            <console>true</console>
+            <log remove="remove"/>
+            <errorlog remove="remove"/>
+        </logger>
+
+        <query_log>
+            <database>system</database>
+            <table>query_log</table>
+        </query_log>
+
+        <listen_host>0.0.0.0</listen_host>
+        <interserver_http_host>workload-placeholder-id-placeholder.workload-placeholder</interserver_http_host>
+
+        <remote_servers>
+            <my_cluster>
+                <shard>
+                    <replica>
+                        <host>workload-placeholder-0.workload-placeholder</host>
+                        <port>9000</port>
+                    </replica>
+                    <replica>
+                        <host>workload-placeholder-1.workload-placeholder</host>
+                        <port>9000</port>
+                    </replica>
+                </shard>
+            </my_cluster>
+        </remote_servers>
+
+        <keeper_server>
+            <tcp_port>2181</tcp_port>
+            <server_id>id-placeholder</server_id>
+            <log_storage_path>/var/lib/clickhouse/coordination/log</log_storage_path>
+            <snapshot_storage_path>/var/lib/clickhouse/coordination/snapshots</snapshot_storage_path>
+
+            <coordination_settings>
+                <operation_timeout_ms>10000</operation_timeout_ms>
+                <session_timeout_ms>30000</session_timeout_ms>
+                <raft_logs_level>trace</raft_logs_level>
+            </coordination_settings>
+
+            <raft_configuration>
+                <server>
+                    <id>0</id>
+                    <hostname>workload-placeholder-0.workload-placeholder</hostname>
+                    <port>9234</port>
+                </server>
+                <server>
+                    <id>1</id>
+                    <hostname>workload-placeholder-1.workload-placeholder</hostname>
+                    <port>9234</port>
+                </server>
+                <server>
+                    <id>2</id>
+                    <hostname>workload-placeholder-2.workload-placeholder</hostname>
+                    <port>9234</port>
+                </server>
+            </raft_configuration>
+        </keeper_server>
+
+        <macros>
+            <cluster>my_cluster</cluster>
+            <shard>01</shard>
+            <replica>workload-placeholder-id-placeholder.workload-placeholder</replica>
+        </macros>
+
+    </clickhouse>
+
+---
+kind: secret
+name: clickhouse-cluster-scripts
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: >-
+    #!/bin/bash
+
+    set -o errexit
+
+    set -o nounset
+
+    set -o pipefail
+
+    cp /configs/keeper_server_config.xml /etc/clickhouse-server/config.d/keeper_server_config.xml
+
+    export CLICKHOUSE_KEEPER_CONFIG_FILE=/etc/clickhouse-server/config.d/keeper_server_config.xml
+
+    replace_placeholder() {
+        local placeholder="${1:?missing placeholder value}"
+        local password="${2:?missing password value}"
+        sed -i "s/$placeholder/$password/g" "$CLICKHOUSE_KEEPER_CONFIG_FILE"
+    }
+
+    # Get pod ID and workload Name
+
+    POD_ID=$(echo "$POD_NAME" | rev | cut -d'-' -f 1 | rev)
+
+    WORKLOAD_NAME=$(echo $CPLN_WORKLOAD | sed 's|.*/workload/\([^/]*\)$|\1|')
+
+    # Replace placeholders in config
+
+    replace_placeholder "id-placeholder" ${POD_ID}
+
+    replace_placeholder "workload-placeholder" ${WORKLOAD_NAME}
+
+---
+kind: policy
+name: clickhouse-cluster-policy
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/clickhouse-example/identity/clickhouse-cluster-identity
+targetKind: secret
+targetLinks:
+  - //secret/clickhouse-cluster-scripts
+  - //secret/clickhouse-keeper-configuration
+
+---
+kind: workload
+name: clickhouse-cluster
+description: clickhouse-cluster
+spec:
+  type: stateful
+  containers:
+    - name: clickhouse-cluster
+      args:
+        - '-c'
+        - >-
+          cp /scripts/clickhouse-keeper-init.sh /tmp/ && chmod +x /tmp/clickhouse-keeper-init.sh &&
+          /tmp/clickhouse-keeper-init.sh && /entrypoint.sh
+      command: /bin/bash
+      cpu: 200m
+      image: clickhouse/clickhouse-server:23.7
+      inheritEnv: false
+      memory: 1000Mi
+      ports:
+        - number: 8123
+          protocol: http
+        - number: 9000
+          protocol: tcp
+        - number: 9009
+          protocol: tcp
+        # Keeper cluster ports
+        - number: 9234
+          protocol: tcp
+        - number: 2181
+          protocol: tcp 
+      readinessProbe:
+        failureThreshold: 10
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 9234
+        timeoutSeconds: 5
+      volumes:
+        - path: /var/lib/clickhouse
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/clickhouse-cluster-data'
+        - path: /configs/keeper_server_config.xml
+          recoveryPolicy: retain
+          uri: 'cpln://secret/clickhouse-keeper-configuration'
+        - path: /scripts/clickhouse-keeper-init.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/clickhouse-cluster-scripts'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: disabled
+      minScale: 3
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  identityLink: //identity/clickhouse-cluster-identity
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+  supportDynamicTags: false
