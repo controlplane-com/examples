@@ -5,7 +5,7 @@
 This example sets up a ClickHouse cluster with 3 replicas, featuring the following configuration:
 * ClickHouse Keeper cluster with 3 replicas
 * ClickHouse Cluster with 1 Shard and 2 Replicas (1S_2R)
-* A persistent disk of 20 GB
+* A persistent disk of 10 GB
 * Deploy to AWS us-east-2 location
 
 Note: This configuration will be created for this example. To modify the configuration to suit your needs, edit the `clickhouse-cluster.yaml` file.
