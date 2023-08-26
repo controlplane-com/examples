@@ -69,12 +69,34 @@ spec:
           value: 'cpln://secret/elasticsearch-secrets.ELASTIC_PASSWORD'
       image: 'docker.elastic.co/elasticsearch/elasticsearch:8.9.1'
       inheritEnv: false
+      livenessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - 'curl -s http://localhost:9200'
+        failureThreshold: 3
+        initialDelaySeconds: 60
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 3
       memory: 2Gi
       ports:
         - number: 9200
           protocol: http
         - number: 9300
           protocol: tcp
+      readinessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - 'curl -s http://localhost:9200'
+        failureThreshold: 3
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
       volumes:
         - path: /usr/share/elasticsearch/config-custom/elasticsearch.yml
           recoveryPolicy: retain
