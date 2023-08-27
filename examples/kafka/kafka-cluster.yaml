@@ -270,20 +270,18 @@ name: kafka-cluster-kraft-cluster-id
 tags: {}
 type: dictionary
 data:
-  encoding: base64
-  kraft-cluster-id: YmtkRHRTMVJzZjUzNnNpN0JHTTBKWQ==
+  kraft-cluster-id: bkdDtS1Rsf536si7BGM0JY
 ---
 kind: secret
 name: kafka-cluster-user-passwords
 tags: {}
 type: dictionary
 data:
-  encoding: base64
-  client-passwords: ZmtvcjNEcm81Mm9vZEE=
-  system-user-password: ZmtvcjNEcm81Mm9vZEE=
-  zookeeper-password: ZmQzMnBwM0tLM0pkMw==
-  inter-broker-password: SGZjZ0NIcDMyZQ==
-  controller-password: YXlkOGlKd3FYZQ==
+  client-passwords: fkor3Dro52oodA
+  system-user-password: fkor3Dro52oodA
+  zookeeper-password: fd32pp3KK3Jd3
+  inter-broker-password: HfcgCHp32e
+  controller-password: ayd8iJwqXe
 ---
 kind: policy
 name: kafka-cluster-policy
