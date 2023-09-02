@@ -1,0 +1,132 @@
+kind: gvc
+name: elasticsearch
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-us-east-2
+---
+kind: identity
+name: elasticsearch
+---
+kind: volumeset
+name: es-data
+description: es-data
+spec:
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+---
+kind: secret
+name: elasticsearch-config
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+
+    cluster.name: "cpln-cluster"
+    network.host: 0.0.0.0
+    node.store.allow_mmap: false
+    discovery.type: single-node
+    xpack.security.enabled: true
+---
+kind: secret
+name: elasticsearch-secrets
+type: dictionary
+data:
+  ELASTIC_PASSWORD: 34f#@F43d2k87mbv43
+---
+kind: policy
+name: elasticsearch-policy
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/elasticsearch/identity/elasticsearch
+targetKind: secret
+targetLinks:
+  - //secret/elasticsearch-config
+  - //secret/elasticsearch-secrets
+---
+kind: workload
+name: elasticsearch
+description: elasticsearch
+spec:
+  type: stateful
+  containers:
+    - name: elasticsearch
+      args:
+        - '-c'
+        - >-
+          cp /usr/share/elasticsearch/config-custom/elasticsearch.yml
+          /usr/share/elasticsearch/config/elasticsearch.yml &&
+          /usr/local/bin/docker-entrypoint.sh
+      command: /bin/bash
+      cpu: 500m
+      env:
+        - name: ELASTIC_PASSWORD
+          value: 'cpln://secret/elasticsearch-secrets.ELASTIC_PASSWORD'
+      image: 'docker.elastic.co/elasticsearch/elasticsearch:8.9.1'
+      inheritEnv: false
+      livenessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - 'curl -s http://localhost:9200'
+        failureThreshold: 3
+        initialDelaySeconds: 60
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 3
+      memory: 2Gi
+      ports:
+        - number: 9200
+          protocol: http
+        - number: 9300
+          protocol: tcp
+      readinessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - 'curl -s http://localhost:9200'
+        failureThreshold: 3
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      volumes:
+        - path: /usr/share/elasticsearch/config-custom/elasticsearch.yml
+          recoveryPolicy: retain
+          uri: 'cpln://secret/elasticsearch-config'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: disabled
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 30
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/elasticsearch
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+  supportDynamicTags: false

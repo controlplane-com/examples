@@ -1,3 +1,12 @@
+kind: gvc
+name: online-boutique
+spec:
+  tracing:
+    provider:
+      otel:
+        endpoint: 'otel-collector.online-boutique.cpln.local:4317'
+    sampling: 100
+---
 kind: identity
 name: otel-collector-online-boutique
 tags: {}
@@ -16,7 +25,17 @@ data:
           http:
 
     processors:
+      filter/httpmetrics:
+        spans:
+          exclude:
+            match_type: strict
+            attributes:
+              - key: upstream_cluster.name
+                value: "inbound|9090||"
+
       batch:
+        timeout: 5s
+        send_batch_size: 500
 
     exporters:
       datadog:
@@ -32,7 +51,7 @@ data:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [batch]
+          processors: [filter/httpmetrics, batch]
           exporters: [datadog]
 ---
 kind: secret
@@ -74,7 +93,7 @@ spec:
           value: 'cpln://secret/datadog-config.DD_API_KEY'
         - name: DD_SITE
           value: 'cpln://secret/datadog-config.DD_SITE'
-      image: 'otel/opentelemetry-collector-contrib:0.82.0'
+      image: 'otel/opentelemetry-collector-contrib:0.83.0'
       inheritEnv: false
       memory: 200Mi
       ports:
