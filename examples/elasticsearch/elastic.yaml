@@ -98,6 +98,9 @@ spec:
         successThreshold: 1
         timeoutSeconds: 3
       volumes:
+        - path: /usr/share/elasticsearch/data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/es-data'
         - path: /usr/share/elasticsearch/config-custom/elasticsearch.yml
           recoveryPolicy: retain
           uri: 'cpln://secret/elasticsearch-config'
@@ -129,4 +132,6 @@ spec:
     maxSurgeReplicas: 25%
     maxUnavailableReplicas: '1'
     minReadySeconds: 0
+  securityOptions:
+    filesystemGroupId: 1000
   supportDynamicTags: false
