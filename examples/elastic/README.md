@@ -78,7 +78,7 @@ This example sets up a 3 replica Elasticsearch cluster, featuring the following 
 * mTLS is enforced by default with Control Plane outside of Elastic configuration
 * Deploy to AWS us-east-2 location
 
-Note: This configuration will be created for this example. To modify the configuration to suit your needs, please edit the [elasticsearch-cluster.yaml](elasticsearch.yaml) file.
+Note: This configuration will be created for this example. To modify the configuration to suit your needs, please edit the [elasticsearch-cluster.yaml](elasticsearch-cluster.yaml) file.
 
 ### Steps to run this example:
 
