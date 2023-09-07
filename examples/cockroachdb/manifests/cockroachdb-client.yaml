@@ -1,0 +1,46 @@
+kind: workload
+name: cockroachdb-client
+description: cockroachdb-client
+spec:
+  type: standard
+  containers:
+    - name: cockroachdb-client
+      args:
+        - '-c'
+        - >-
+          curl
+          https://binaries.cockroachdb.com/cockroach-v21.2.8.linux-amd64.tgz |
+          tar -xz && cp -i cockroach-v21.2.8.linux-amd64/cockroach
+          /usr/local/bin/ ; rm -fr cockroach-v21.2.8.linux-amd64 && sleep 10000
+      command: /bin/bash
+      cpu: 150m
+      image: 'cockroachdb/cockroach:v23.1.8'
+      inheritEnv: false
+      memory: 200Mi
+      ports:
+        - number: 4200
+          protocol: http
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  localOptions: []
+  supportDynamicTags: false

@@ -1,0 +1,113 @@
+kind: gvc
+name: cockroachdb-uswest
+description: cockroachdb-uswest
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-us-west-2
+---
+kind: identity
+name: cockroachdb-uswest
+tags: {}
+---
+kind: volumeset
+name: cockroach-data
+description: cockroach-data
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+---
+kind: policy
+name: cockroachdb-uswest
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/cockroachdb-uswest/identity/cockroachdb-uswest
+targetKind: secret
+targetLinks:
+  - //secret/cockroachdb-start-script
+---
+kind: workload
+name: cockroachdb
+description: Cockroachdb
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: cockroachdb
+      args:
+        - '-c'
+        - >-
+          /cockroach/scripts/cockroach-start.sh
+      command: /bin/bash
+      cpu: '500m'
+      env:
+        - name: COCKROACH_CHANNEL
+          value: kubernetes-multiregion
+        - name: GOMAXPROCS
+          value: '2'
+        - name: MEMORY_LIMIT_MIB
+          value: '4000'
+        - name: COCKROACH_PORT
+          value: '26261'
+      image: 'cockroachdb/cockroach:v23.1.8'
+      inheritEnv: false
+      memory: 2Gi
+      ports:
+        - number: 8080
+          protocol: http
+        - number: 26261
+          protocol: tcp
+      readinessProbe:
+        failureThreshold: 2
+        httpGet:
+          httpHeaders: []
+          path: /health?ready=0
+          port: 8080
+          scheme: HTTP
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      volumes:
+        - path: /cockroach/cockroach-data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/cockroach-data'
+        - path: /cockroach/scripts/cockroach-start.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/cockroachdb-start-script'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/cockroachdb-uswest
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+  supportDynamicTags: false
