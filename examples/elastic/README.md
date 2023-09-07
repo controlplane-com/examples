@@ -97,7 +97,7 @@ It will take a few minutes for Elasticsearch to get to ready state.
 
 #### Connect to Elasticsearch
 
-The Elasticsearch instances we created can be accessed by any workload within your **GVC**. The connection between the client and server uses mTLS encryption. To test the connection to the database, run the following command from one of the workloads in your ORG:
+The Elasticsearch instances we created can be accessed by any workload within your **GVC**. The connection between the client and server uses mTLS encryption. To test the connection to the database, run the following command from one of the workloads in the GVC:
 
 ```BASH
 # For loadbalanced request
