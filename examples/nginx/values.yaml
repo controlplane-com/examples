@@ -1,0 +1,39 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+gvc: nginx-example
+
+image:
+  repository: nginx
+  tag: latest
+
+nameOverride: nginx
+
+proxyWorkload:
+  name: nginx
+  port: 80
+  capacityAI: false
+  timeoutSeconds: 5
+
+resources:
+  cpu: 100m
+  memory: 128Mi
+
+autoscaling:
+  minScale: 1
+  maxScale: 1
+  maxConcurrency: 1000
+
+locations:
+  - path: /
+    workload: default
+    port: 8080
+    regexModifier: ""
+  - path: /user
+    port: 8080
+    workload: user
+    regexModifier: "^~"
+  - path: /unknown
+    port: 8080
+    workload: unknown
+    regexModifier: "^~"

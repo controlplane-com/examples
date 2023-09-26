@@ -1,0 +1,116 @@
+kind: workload
+name: {{ .Values.proxyWorkload.name }}
+tags:
+  {{- include "nginx.tags" . | nindent 4 }}
+spec:
+  type: serverless
+  identityLink: //identity/{{ .Values.proxyWorkload.name }}
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: {{ .Values.autoscaling.maxConcurrency }}
+      maxScale: {{ .Values.autoscaling.maxScale }}
+      metric: cpu
+      minScale: {{ .Values.autoscaling.minScale }}
+      scaleToZeroDelay: 300
+      target: 50
+    capacityAI: {{ .Values.proxyWorkload.capacityAI }}
+    debug: false
+    suspend: false
+    timeoutSeconds: {{ .Values.proxyWorkload.timeoutSeconds }}
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+  containers:
+    - name: {{ .Chart.Name }}
+      image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+      {{- toYaml .Values.resources | nindent 6 }}
+      ports:
+        - number: {{ .Values.proxyWorkload.port | int }}
+          protocol: http
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 80
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 80
+      volumes:
+        - path: /etc/nginx/nginx.conf
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.proxyWorkload.name }}-conf'
+---
+kind: workload
+name: default
+description: default
+spec:
+  type: serverless
+  containers:
+    - name: httpbin
+      cpu: 50m
+      env:
+        - name: TARGET
+          value: $(CPLN_WORKLOAD)
+      image: gcr.io/knative-samples/helloworld-go
+      memory: 128Mi
+      ports:
+        - number: 8080
+          protocol: http
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 8080
+          scheme: HTTP
+  firewallConfig:
+    internal:
+      inboundAllowType: workload-list
+      # allow access from envoyproxy internally
+      inboundAllowWorkload:
+        - //gvc/{{ .Values.gvc }}/workload/{{ .Values.proxyWorkload.name }}
+---
+kind: workload
+name: user
+description: user
+spec:
+  type: serverless
+  
+  containers:
+    - name: httpbin
+      cpu: 50m
+      env:
+        - name: TARGET
+          value: $(CPLN_WORKLOAD)
+      image: gcr.io/knative-samples/helloworld-go
+      memory: 128Mi
+      ports:
+        - number: 8080
+          protocol: http
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 8080
+          scheme: HTTP
+  firewallConfig:
+    internal:
+      inboundAllowType: workload-list
+      # allow access from envoyproxy internally
+      inboundAllowWorkload:
+        - //gvc/{{ .Values.gvc }}/workload/{{ .Values.proxyWorkload.name }}
+---
+kind: identity
+name: {{ .Values.proxyWorkload.name }}
+description: Identity for the workload "nginx" used to grant access to the nginx-conf secret
+
+---
+kind: policy
+name: {{ .Values.proxyWorkload.name }}
+description: Allow the workload to use the secret envoy-config
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.gvc }}/identity/{{ .Values.proxyWorkload.name }}
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.proxyWorkload.name }}-conf
