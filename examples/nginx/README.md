@@ -1,6 +1,6 @@
 ## nginx custom routing example
 
-Creates an nginx proxy which routes traffic to different internally accessable workloads for different request paths and http methods.
+Creates an nginx proxy which routes traffic to different internally accessable workloads for different request paths.
 
 ### Default Routing Rules
 
@@ -14,14 +14,20 @@ Creates an nginx proxy which routes traffic to different internally accessable w
 
 **HELM**
 
-update the `values.yaml` file as needed.
+The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) must be installed.
 
-If you change the `gvc` parameter, also update the GVC for the commands below.
+1. Clone this repo and update the `values.yaml` file as needed.
 
-```bash
-helm template . | cpln apply --gvc nginx-example -f -
+   If you change the `gvc` parameter, also update the GVC for the commands below.
 
-```
+2. If the GVC does not exist, create it and select location(s).
+
+3. Run the command below from this directory.
+
+   ```bash
+   helm template . | cpln apply --gvc nginx-example -f -
+
+   ```
 
 ### Cleanup
 
