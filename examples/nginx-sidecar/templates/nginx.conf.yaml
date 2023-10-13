@@ -1,0 +1,34 @@
+kind: secret
+name: {{ .Values.proxyWorkload.name }}-conf
+description: {{ .Values.proxyWorkload.name }}-conf
+tags:
+  {{- include "nginx.tags" . | nindent 4 }}
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+    user nginx;
+    worker_processes auto;
+
+    events {
+      worker_connections 1024;
+    }
+
+    http {
+      underscores_in_headers on;
+      server {
+        listen 8080 default_server;
+
+        location /health {
+          return 200 '{"success":true,"message":"OK"}';
+        }
+        location / {
+          proxy_pass http://localhost:{{ .Values.targetContainer.port | int }};
+          proxy_set_header Host $host;
+          proxy_set_header X-Forwarded-Proto "https";
+          proxy_set_header X-Forwarded-Scheme "https";
+          proxy_set_header Forwarded "for=127.0.0.1;host=$host;proto=https;scheme=https";
+        }
+
+      }
+    }

@@ -1,0 +1,30 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+gvc: nginx-sidecar
+
+image:
+  repository: nginx
+  tag: latest
+
+nameOverride: nginx
+
+proxyWorkload:
+  name: nginx
+  port: 8080
+  capacityAI: false
+  timeoutSeconds: 5
+
+targetContainer:
+  name: httpbin
+  image: kennethreitz/httpbin
+  port: 80
+
+resources:
+  cpu: 100m
+  memory: 128Mi
+
+autoscaling:
+  minScale: 1
+  maxScale: 1
+  maxConcurrency: 1000
