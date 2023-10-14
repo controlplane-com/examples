@@ -1,4 +1,4 @@
-## nginx custom routing example
+## nginx sidecar example
 
 Creates an nginx proxy which runs as a sidecar to a workload, intercepts requests and rewrites the X-FORWARDED-PROTO header from `http` to `https` before forwarding the request to the local workload container.
 
