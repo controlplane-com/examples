@@ -1,7 +1,7 @@
 kind: workload
 name: {{ .Values.proxyWorkload.name }}
 tags:
-  {{- include "nginx.tags" . | nindent 4 }}
+  {{- include "nginx.tags" . | nindent 2 }}
   cpln/checksum: {{ include (print $.Template.BasePath "/nginx.conf.yaml") . | sha256sum }}
 spec:
   type: serverless
