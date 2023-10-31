@@ -17,13 +17,16 @@ These names will be `kafka-cluster-0`, `kafka-cluster-1` and `kafka-cluster-2` a
 
 If you haven't already installed the Control Plane CLI, [click here](https://docs.controlplane.com/reference/cli) to do so.
 
-#### Deploy Kafka Cluster
+#### Deploy Kafka Cluster with kafka-exporter
 
 ```bash
-cpln apply --gvc kafka-cluster-example -f ./kafka-cluster.yaml
+cpln apply --gvc kafka-cluster-example -f ./kafka-cluster-exporter.yaml
 cpln gvc add-location kafka-cluster-example --location aws-us-east-2
 ```
 It will take a few minutes for Kafka cluster to get to ready state.
+
+Note: If you prefer not to include kafka-exporter for reading kafka custom metrics in your deployment, then apply `kafka-cluster.yaml` instead. 
+
 
 #### Test Kafka Cluster with Kafka Client
 
@@ -61,9 +64,11 @@ kafka-console-consumer.sh --bootstrap-server kafka-cluster:9092 --topic controlp
 #### Deploy Kafka Cluster
 
 1. Create a GVC named `kafka-cluster-example` and assign the location(s) that you would like to use.
-2. Apply the `kafka-cluster.yaml` file using the `cpln apply >_` option in the upper right corner.
+2. Apply the `kafka-cluster-exporter.yaml` file using the `cpln apply >_` option in the upper right corner.
 
 It will take a few minutes for Kafka cluster to get to ready state.
+
+Note: If you prefer not to include kafka-exporter for reading kafka custom metrics in your deployment, then apply `kafka-cluster.yaml` instead. 
 
 #### Test Kafka Cluster with Kafka Client
 
