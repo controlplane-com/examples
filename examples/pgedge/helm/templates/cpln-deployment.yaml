@@ -1,0 +1,101 @@
+kind: gvc
+name: pgedge01
+description: pgedge01
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-eu-central-1
+---
+kind: identity
+name: pgedge01
+tags: {}
+---
+kind: volumeset
+name: pgedge-data
+description: pgedge-data
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 20
+  performanceClass: general-purpose-ssd
+---
+kind: policy
+name: pgedge01
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/pgedge01/identity/pgedge01
+targetKind: secret
+targetLinks:
+  - //secret/pgedge-start-script
+---
+kind: workload
+name: pgedge
+description: pgedge
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: pgedge
+      args:
+        - '-c'
+        - >-
+          cp /scripts/bootstrap-cpln.sh /usr/local/bin/bootstrap-cpln.sh &&
+          chmod +x /usr/local/bin/bootstrap-cpln.sh && /usr/local/bin/forever.sh
+      command: /bin/bash
+      env:
+        - name: NODE01
+          value: 'pgedge.pgedge01.cpln.local'
+        - name: NODE02
+          value: 'pgedge.pgedge02.cpln.local'
+        - name: PORT01
+          value: '1321'
+        - name: PORT02
+          value: '1322'
+      cpu: '1500m'
+      image: '//image/pgedge:v0.35'
+      inheritEnv: false
+      memory: 3000Mi
+      ports:
+        - number: 1321
+          protocol: tcp
+      volumes:
+        - path: /opt/pgedge
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/pgedge-data'
+        - path: /scripts/bootstrap-cpln.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgedge-start-script'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/pgedge01
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+  supportDynamicTags: false

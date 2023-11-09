@@ -6,6 +6,11 @@ spec:
       otel:
         endpoint: 'otel-collector.online-boutique.cpln.local:4317'
     sampling: 100
+  staticPlacement:
+    locationLinks:
+      - //location/aws-us-west-2
+      - //location/gcp-me-west1
+      - //location/azure-eastus2
 ---
 kind: identity
 name: otel-collector-online-boutique
@@ -61,8 +66,8 @@ tags: {}
 type: dictionary
 data:
   # Do not set DD_API_KEY_VALUE and DD_SITE_VALUE below inside quotation mark
-  DD_API_KEY: ___DD_API_KEY_VALUE___
-  DD_SITE: ___DD_SITE_VALUE___
+  DD_API_KEY: 0578cf4ee49f9b133bca64a8f1dccb42
+  DD_SITE: us3.datadoghq.com
 ---
 kind: policy
 name: otel-collector-online-boutique
