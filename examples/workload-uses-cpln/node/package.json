@@ -1,0 +1,16 @@
+{
+  "name": "ubuntu-uses-cpln",
+  "version": "1.0.0",
+  "description": "An example of updating the workload within the app using cpln",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "Control Plane Corp.",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "express": "latest"
+  }
+}
