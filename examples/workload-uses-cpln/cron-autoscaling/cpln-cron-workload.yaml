@@ -1,0 +1,69 @@
+kind: identity
+name: cpln-cron
+gvc: ${GVC}
+description: cpln-cron
+---
+kind: policy
+name: cpln-cron
+description: cpln-cron
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - edit
+    principalLinks:
+      - //gvc/${GVC}/identity/cpln-cron
+target: all
+targetKind: workload
+---
+kind: workload
+name: scale-down
+gvc: ${GVC}
+description: scale-down
+spec:
+  type: cron
+  containers:
+    - name: cpln
+      cpu: 50m
+      env:
+        - name: TARGET
+          value: '2'
+        - name: WORKLOAD
+          value: default
+      image: gcr.io/cpln-build/cpln:v1.3.2
+      memory: 128Mi
+  identityLink: //identity/cpln-cron
+  job:
+    concurrencyPolicy: Forbid
+    historyLimit: 5
+    restartPolicy: Never
+    # change to suit your needs this is in UTC
+    schedule: '0 5 * * *'
+  localOptions: []
+  supportDynamicTags: false
+---
+kind: workload
+name: scale-up
+gvc: ${GVC}
+description: scale-up
+spec:
+  type: cron
+  containers:
+    - name: cpln
+      cpu: 50m
+      env:
+        - name: TARGET
+          value: '2'
+        - name: WORKLOAD
+          value: default
+      image: gcr.io/cpln-build/cpln:v1.3.2
+      memory: 128Mi
+  identityLink: //identity/cpln-cron
+  job:
+    concurrencyPolicy: Forbid
+    historyLimit: 5
+    restartPolicy: Never
+    # change to suit your needs this is in UTC
+    schedule: '0 21 * * *'
+  localOptions: []
+  supportDynamicTags: false
