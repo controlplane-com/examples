@@ -1,0 +1,97 @@
+kind: gvc
+name: load-test-client
+description: load-test-client
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-eu-central-1
+      - //location/aws-us-west-2
+      - //location/azure-eastus2
+      - //location/gcp-us-east1
+---
+
+kind: secret
+name: load-test-script
+description: load-test-script
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+    import http from 'k6/http';
+    import { sleep } from 'k6';
+
+    export default function () {
+      http.get('http://server.load-test-server.cpln.local:8080');
+    }
+---
+
+kind: identity
+name: load-test-client
+description: load-test-client
+tags: {}
+---
+
+kind: policy
+name: load-test-client
+description: load-test-client
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - use
+      - reveal
+    principalLinks:
+      - //gvc/load-test-client/identity/load-test-client
+targetKind: secret
+targetLinks:
+  - //secret/load-test-script
+---
+
+kind: workload
+name: load-test-cron
+description: load-test-cron
+spec:
+  type: cron
+  containers:
+    - name: agent
+      args:
+        - '-c'
+        - k6 run --vus 100 --duration 5m /load-test/payload
+      command: /bin/sh
+      volumes:
+        - path: /load-test
+          recoveryPolicy: retain
+          uri: 'cpln://secret/load-test-script'
+      cpu: 500m
+      image: 'grafana/k6:0.47.0'
+      inheritEnv: false
+      memory: 512Mi
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: true
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: none
+      inboundAllowWorkload: []
+  identityLink: //identity/load-test-client
+  job:
+    concurrencyPolicy: Forbid
+    historyLimit: 10
+    restartPolicy: Never
+    schedule: '0 0 1 1 *'
+  localOptions: []
+  supportDynamicTags: false

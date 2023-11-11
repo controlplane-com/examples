@@ -1,0 +1,52 @@
+kind: gvc
+name: load-test-server
+description: load-test-server
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-eu-central-1
+      - //location/aws-us-west-2
+      - //location/azure-eastus2
+      - //location/gcp-us-east1
+---
+
+kind: workload
+name: server
+description: server
+spec:
+  type: standard
+  containers:
+    - name: agent
+      cpu: 250m
+      image: 'kylecupp/agent:0.7.0'
+      inheritEnv: false
+      memory: 256Mi
+      ports:
+        - number: 8080
+          protocol: http
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 5
+      metric: cpu
+      minScale: 2
+      scaleToZeroDelay: 300
+      target: 50
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowCIDR: []
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  localOptions: []
+  supportDynamicTags: false
+
+
