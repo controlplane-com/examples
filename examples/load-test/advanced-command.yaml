@@ -1,0 +1,13 @@
+{
+    "type": "runCronWorkload",
+    "spec":{
+        "location":"aws-us-west-2",
+        "containerOverrides":[
+            {
+                "name":"agent",
+                "command": "/bin/sh",
+                "args": ["-c", "k6 run --vus 100 --duration 15m /load-test/payload"]
+            }
+        ]
+    }
+}

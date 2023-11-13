@@ -1,0 +1,6 @@
+{
+    "type": "runCronWorkload",
+    "spec":{
+        "location":"aws-us-west-2"
+    }
+}
