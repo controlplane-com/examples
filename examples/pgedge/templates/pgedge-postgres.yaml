@@ -1,0 +1,7 @@
+kind: secret
+name: pgedge-postgres
+description: pgedge-postgres secret
+type: dictionary
+data:
+  POSTGRES_PASSWORD: {{ .Values.postgres.password }}
+  POSTGRES_DB: {{ .Values.postgres.dbname }}

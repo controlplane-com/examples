@@ -1,0 +1,43 @@
+# Default values for pgedge.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  # custom image
+  repository: //image/pgedge-cpln:v0.1.1
+
+pgedge:
+  - name: pgedge01
+    enable: true
+    port: 5432
+    location: aws-us-east-2
+    diskCapacity: 20 # In Gigabytes
+    memory: 3000Mi
+    cpu: 1.5
+  - name: pgedge02
+    enable: true
+    port: 5432
+    location: gcp-us-east1
+    diskCapacity: 20 # In Gigabytes
+    memory: 3000Mi
+    cpu: 1.5
+  - name: pgedge03
+    enable: disable
+    port: 5432
+    location: aws-eu-central-1
+    diskCapacity: 20 # In Gigabytes
+    memory: 3000Mi
+    cpu: 1.5
+
+postgres:  
+  password: 'ji2jd32d2'
+  dbname: demo
+
+pgadmin:
+  gvc: pgedge01
+  enable: true
+  email: user@cpln.com
+  password: admin
+  memory: 300Mi
+  cpu: 150m
+  inboundCidr: 0.0.0.0/0
