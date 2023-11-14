@@ -313,7 +313,7 @@ spec:
           /tmp/kafka-init.sh && /opt/bitnami/scripts/kafka/entrypoint.sh
           /opt/bitnami/scripts/kafka/run.sh
       command: /bin/bash
-      cpu: 300m
+      cpu: 500m
       env:
         - name: BITNAMI_DEBUG
           value: 'true'
@@ -365,7 +365,7 @@ spec:
         tcpSocket:
           port: 9093
         timeoutSeconds: 5
-      memory: 600Mi
+      memory: 900Mi
       ports:
         - number: 9092
           protocol: tcp
@@ -425,6 +425,7 @@ spec:
     maxSurgeReplicas: 25%
     maxUnavailableReplicas: '1'
     minReadySeconds: 0
+    scalingPolicy: Parallel
   securityOptions:
     filesystemGroupId: 1001
   supportDynamicTags: false
