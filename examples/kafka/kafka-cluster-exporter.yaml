@@ -448,6 +448,7 @@ spec:
     maxSurgeReplicas: 25%
     maxUnavailableReplicas: '1'
     minReadySeconds: 0
+    scalingPolicy: Parallel
   securityOptions:
     filesystemGroupId: 1001
   supportDynamicTags: false
