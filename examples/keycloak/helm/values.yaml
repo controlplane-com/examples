@@ -1,0 +1,37 @@
+# Default values for keycloak 22.0.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: keycloak/keycloak:22.0
+
+keycloak:
+  name: keycloak # Used for naming of Workload, Identity, Policy
+  replicas: '2'
+  gvc: keycloak
+  location: gcp-me-west1
+  memory: 1050Gi
+  cpu: 550m
+  tcp_port: 7800
+  http_port: 8080
+  inboundCidr: 0.0.0.0/0
+  env:
+    KC_FEATURES: 'docker,account3,token-exchange,web-authn,client-secret-rotation,admin-fine-grained-authz,scripts,step-up-authentication,update-email,impersonation'
+    KC_HOSTNAME_URL: 'https://tenant1.edgek.website/auth'
+    KC_LOG_LEVEL: info
+    KC_PROXY: passthrough
+    KEYCLOAK_ADMIN: kcadmin
+    KEYCLOAK_ADMIN_PASSWORD: 'ffd3kon6g4433k2'
+
+database:
+  create: true # If set to false, the database will be configured below. If set to true, a Postgres workload database will be Created with configuration below.
+  engine: postgres
+  username: kcadmin
+  password: 'fdffe322hk6'
+  dbname: keycloak22
+  port: 5432
+  hostname: your-database-url-here # Used only when create=false
+  image: postgres:15 # Used only when create=true
+
+
+

@@ -1,0 +1,108 @@
+kind: secret
+name: keycloak-db
+description: keycloak-db
+type: dictionary
+data:
+  {{- if .Values.database.create }}
+  KC_DB: postgres
+  {{- else }}
+  KC_DB: {{ .Values.database.engine }}
+  {{- end }}
+  KC_DB_USERNAME: {{ .Values.database.username }}
+  KC_DB_PASSWORD: {{ .Values.database.password }}
+  KC_DB_URL_DATABASE: {{ .Values.database.dbname }}
+  KC_DB_URL_PORT: '{{ .Values.database.port }}'
+  {{- if .Values.database.create }}
+  KC_DB_URL_HOST: keycloak-db.{{ .Values.keycloak.gvc }}.cpln.local
+  {{- else }}
+  KC_DB_URL_HOST: {{ .Values.database.hostname }}
+  {{- end }}
+
+{{- if .Values.database.create }}
+---
+kind: identity
+name: keycloak-db
+gvc: {{ .Values.keycloak.gvc }}
+description: keycloak-db identity
+---
+kind: policy
+name: keycloak-db
+description: keycloak-db access policy
+bindings:
+  - permissions:
+      - reveal
+      - use
+      - view
+    principalLinks:
+      - //gvc/{{ .Values.keycloak.gvc }}/identity/keycloak-db
+targetKind: secret
+targetLinks:
+  - //secret/keycloak-db
+---
+kind: volumeset
+name: keycloak-db-vs
+gvc: {{ .Values.keycloak.gvc }}
+description: keycloak-db-vs
+spec:
+  autoscaling:
+    maxCapacity: 1000
+    minFreePercentage: 1
+    scalingFactor: 1.1
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+  snapshots:
+    createFinalSnapshot: true
+    retentionDuration: 7d
+---
+kind: workload
+name: keycloak-db
+gvc: {{ .Values.keycloak.gvc }}
+description: keycloak-db postgres
+spec:
+  type: stateful
+  containers:
+    - cpu: 250m
+      memory: 512Mi
+      env:
+        - name: PGDATA #The location postgres stores the db. This can be anything other than /var/lib/postgresql/data, but it must be inside the mount point for the volume set
+          value: "/var/lib/postgresql/data/pg_data"
+        - name: POSTGRES_DB #The name of the initial db
+          value: 'cpln://secret/keycloak-db.KC_DB_URL_DATABASE'
+        - name: POSTGRES_PASSWORD
+          value: 'cpln://secret/keycloak-db.KC_DB_PASSWORD'
+        - name: POSTGRES_USER
+          value: 'cpln://secret/keycloak-db.KC_DB_USERNAME'
+      name: postgres
+      image: {{ .Values.database.image }}
+      ports:
+        - number: {{ .Values.database.port }}
+          protocol: tcp
+      volumes:
+        - uri: cpln://volumeset/keycloak-db-vs
+          path: "/var/lib/postgresql/data"
+      inheritEnv: false
+      livenessProbe:
+        tcpSocket:
+          port: {{ .Values.database.port }}
+        failureThreshold: 1
+      readinessProbe:
+        tcpSocket:
+          port: {{ .Values.database.port }}
+        failureThreshold: 1
+  identityLink: //identity/keycloak-db
+  defaultOptions:
+    capacityAI: false
+    autoscaling:
+      metric: cpu
+      target: 95
+      maxScale: 1
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+    internal:
+      inboundAllowType: same-gvc
+{{- end }}
+

@@ -1,0 +1,103 @@
+kind: workload
+name: keycloak
+description: keycloak
+tags: {}
+spec:
+  type: standard
+  containers:
+    - name: keycloak
+      cpu: '1'
+      env:
+        - name: KC_DB
+          value: postgres
+        - name: KC_DB_PASSWORD
+          value: 'cpln://secret/common-secrets-coreos-dev.f_postgres_password'
+        - name: KC_DB_POOL_INITIAL_SIZE
+          value: '5'
+        - name: KC_DB_POOL_MAX_SIZE
+          value: '20'
+        - name: KC_DB_POOL_MIN_SIZE
+          value: '5'
+        - name: KC_DB_URL_DATABASE
+          value: kc21
+        - name: KC_DB_URL_HOST
+          value: 'cpln://secret/common-cm-coreos-dev.f_postgres_host'
+        - name: KC_DB_URL_PORT
+          value: 'cpln://secret/common-cm-coreos-dev.f_postgres_port'
+        - name: KC_DB_USERNAME
+          value: 'cpln://secret/common-secrets-coreos-dev.f_postgres_user'
+        - name: KC_FEATURES
+          value: >-
+            docker,account3,token-exchange,web-authn,client-secret-rotation,admin-fine-grained-authz,scripts,step-up-authentication,update-email,impersonation
+        - name: KC_HOSTNAME_STRICT
+          value: 'false'
+        - name: KC_HOSTNAME_STRICT_HTTPS
+          value: 'false'
+        - name: KC_HTTP_ENABLED
+          value: 'true'
+        - name: KC_HTTP_PORT
+          value: '8080'
+        - name: KC_PROXY
+          value: passthrough
+        - name: KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_LEGACY_LOGOUT_REDIRECT_URI
+          value: 'true'
+        - name: >-
+            KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_SUPPRESS_LOGOUT_CONFIRMATION_SCREEN
+          value: 'true'
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: http/protobuf
+        - name: OTEL_JAVAAGENT_ENABLE
+          value: 'true'
+        - name: OTEL_SERVICE_NAME
+          value: cpln-keycloak
+        - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+          value: 'true'
+        - name: f_keycloak_database
+          value: kc21
+      image: >-
+        217425097687.dkr.ecr.ap-south-1.amazonaws.com/platform-coreos/keycloak:f2d8eaaf-1889-57354
+      inheritEnv: true
+      memory: 2Gi
+      ports:
+        - number: 8080
+          protocol: http
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: disabled
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: true
+    debug: false
+    suspend: true
+    timeoutSeconds: 30
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 3.6.213.217/32
+        - 3.7.27.185/32
+        - 89.139.225.119/32
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: /org/delhivery/gvc/coreos-dev/identity/nonprod
+  localOptions:
+    - autoscaling:
+        maxConcurrency: 0
+        maxScale: 1
+        metric: disabled
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      location: /org/delhivery/location/aws-us-west-2
+      suspend: true
+      timeoutSeconds: 30
+  supportDynamicTags: false

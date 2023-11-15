@@ -1,0 +1,237 @@
+kind: workload
+name: keycloak
+description: keycloak
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: keycloak
+      args:
+        - '-c'
+        - >-
+          cp /configs/cache-ispn-tcpping.xml /opt/keycloak/conf/cache-ispn-tcpping.xml
+          && /opt/keycloak/bin/kc.sh build --cache-config-file=cache-ispn-tcpping.xml &&
+          /opt/keycloak/bin/kc.sh start --optimized
+      command: /bin/bash
+      cpu: 550m
+      env:
+        - name: KC_CACHE
+          value: ispn
+        - name: KC_CACHE_CONFIG_FILE
+          value: cache-ispn-tcpping.xml
+        - name: KC_DB
+          value: postgres
+        - name: KC_DB_PASSWORD
+          value: 'cpln://secret/common-secrets-coreos-dev.f_postgres_password'
+        - name: KC_DB_POOL_INITIAL_SIZE
+          value: '5'
+        - name: KC_DB_POOL_MAX_SIZE
+          value: '20'
+        - name: KC_DB_POOL_MIN_SIZE
+          value: '5'
+        - name: KC_DB_URL_DATABASE
+          value: kc21
+        - name: KC_DB_URL_HOST
+          value: 'cpln://secret/common-cm-coreos-dev.f_postgres_host'
+        - name: KC_DB_URL_PORT
+          value: 'cpln://secret/common-cm-coreos-dev.f_postgres_port'
+        - name: KC_DB_USERNAME
+          value: 'cpln://secret/common-secrets-coreos-dev.f_postgres_user'
+        - name: KC_FEATURES
+          value: >-
+            docker,account3,token-exchange,web-authn,client-secret-rotation,admin-fine-grained-authz,scripts,step-up-authentication,update-email,impersonation
+        - name: KC_HEALTH_ENABLED
+          value: 'true'
+        - name: KC_HOSTNAME_STRICT
+          value: 'false'
+        - name: KC_HOSTNAME_URL
+          value: 'https://delhivery1.cpln.fxtrt.io/auth'
+        - name: KC_HTTP_ENABLED
+          value: 'true'
+        - name: KC_HTTP_PORT
+          value: '8080'
+        - name: KC_HTTP_RELATIVE_PATH
+          value: /auth
+        - name: KC_INITIAL_HOSTS
+          value: >-
+            keycloak-0.keycloak[7800],keycloak-1.keycloak[7800]
+        - name: KC_LOG_LEVEL
+          value: info
+        - name: KC_METRICS_ENABLED
+          value: 'true'
+        - name: KC_PROXY
+          value: passthrough
+        - name: KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_LEGACY_LOGOUT_REDIRECT_URI
+          value: 'true'
+        - name: >-
+            KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_SUPPRESS_LOGOUT_CONFIRMATION_SCREEN
+          value: 'true'
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: http/protobuf
+        - name: OTEL_JAVAAGENT_ENABLE
+          value: 'true'
+        - name: OTEL_SERVICE_NAME
+          value: cpln-keycloak
+        - name: PROXY_ADDRESS_FORWARDING
+          value: 'true'
+        - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+          value: 'true'
+        - name: f_keycloak_database
+          value: kc21
+      image: >-
+        217425097687.dkr.ecr.ap-south-1.amazonaws.com/platform-coreos/keycloak:f2d8eaaf-1889-57354
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 20
+        httpGet:
+          httpHeaders: []
+          path: /auth/health/live
+          port: 8080
+          scheme: HTTP
+        initialDelaySeconds: 20
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      memory: 1050Mi
+      ports:
+        - number: 8080
+          protocol: http
+        - number: 7800
+          protocol: tcp
+      readinessProbe:
+        failureThreshold: 20
+        httpGet:
+          httpHeaders: []
+          path: /auth/health/ready
+          port: 8080
+          scheme: HTTP
+        initialDelaySeconds: 20
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      volumes:
+        - path: /configs/cache-ispn-tcpping.xml
+          recoveryPolicy: retain
+          uri: 'cpln://secret/keycloak-cache-config'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 2
+      metric: disabled
+      minScale: 2
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 60
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 3.6.213.217/32
+        - 3.7.27.185/32
+        - 89.139.225.119/32
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //gvc/coreos-dev/identity/nonprod
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: Parallel
+  supportDynamicTags: false
+---
+kind: secret
+name: keycloak-cache-config
+description: keycloak-cache-config
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: >+
+    <infinispan                                                                                                                        
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"                                                                                       
+            xsi:schemaLocation="urn:infinispan:config:11.0 http://www.infinispan.org/schemas/infinispan-config-11.0.xsd"                                
+            xmlns="urn:infinispan:config:11.0">                                                                                                                        
+                                                                                                                            
+        <jgroups>                                                                                                               
+          <stack name="tcpping" extends="tcp"> 
+            <TCP bind_port="7800"/>                                                                                                                       
+            <TCPPING             
+              initial_hosts="${env.KC_INITIAL_HOSTS}"                                   
+              port_range="0"                                                                                                                                 
+              stack.combine="REPLACE"                                                                                                                        
+              stack.position="MPING"                                                                                                                        
+              />                                                                                                                        
+          </stack>                                                                                                                        
+        </jgroups>  
+
+        <cache-container name="keycloak" statistics="true">
+            <transport lock-timeout="60000" stack="tcpping"/>
+            <local-cache name="realms">
+                <encoding>
+                    <key media-type="application/x-java-object"/>
+                    <value media-type="application/x-java-object"/>
+                </encoding>
+                <memory max-count="10000"/>
+            </local-cache>
+            <local-cache name="users">
+                <encoding>
+                    <key media-type="application/x-java-object"/>
+                    <value media-type="application/x-java-object"/>
+                </encoding>
+                <memory max-count="20000"/>
+            </local-cache>
+            <distributed-cache name="sessions" owners="2">
+                <expiration lifespan="-1"/>
+            </distributed-cache>
+            <distributed-cache name="authenticationSessions" owners="2">
+                <expiration lifespan="-1"/>
+            </distributed-cache>
+            <distributed-cache name="offlineSessions" owners="2">
+                <expiration lifespan="-1"/>
+            </distributed-cache>
+            <distributed-cache name="clientSessions" owners="2">
+                <expiration lifespan="-1"/>
+            </distributed-cache>
+            <distributed-cache name="offlineClientSessions" owners="2">
+                <expiration lifespan="-1"/>
+            </distributed-cache>
+            <distributed-cache name="loginFailures" owners="2">
+                <expiration lifespan="-1"/>
+            </distributed-cache>
+            <local-cache name="authorization">
+                <encoding>
+                    <key media-type="application/x-java-object"/>
+                    <value media-type="application/x-java-object"/>
+                </encoding>
+                <memory max-count="20000"/>
+            </local-cache>
+            <replicated-cache name="work">
+                <expiration lifespan="-1"/>
+            </replicated-cache>
+            <local-cache name="keys">
+                <encoding>
+                    <key media-type="application/x-java-object"/>
+                    <value media-type="application/x-java-object"/>
+                </encoding>
+                <expiration max-idle="3600000"/>
+                <memory max-count="1000"/>
+            </local-cache>
+            <distributed-cache name="actionTokens" owners="2">
+                <encoding>
+                    <key media-type="application/x-java-object"/>
+                    <value media-type="application/x-java-object"/>
+                </encoding>
+                <expiration max-idle="-1" lifespan="-1" interval="300000"/>
+                <memory max-count="-1"/>
+            </distributed-cache>
+        </cache-container>
+    </infinispan>
+

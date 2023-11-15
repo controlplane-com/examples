@@ -1,0 +1,124 @@
+kind: workload
+name: keycloak-stateful
+description: keycloak
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: keycloak
+      args:
+        - '-c'
+        - >-
+          cp /configs/cache-ispn-tcpping.xml /opt/keycloak/conf/cache-ispn.xml
+          && /opt/keycloak/bin/kc.sh build --cache-config-file=cache-ispn.xml &&
+          /opt/keycloak/bin/kc.sh start --optimized
+      command: /bin/bash
+      cpu: 500m
+      env:
+        - name: KC_CACHE
+          value: ispn
+        - name: KC_CACHE_CONFIG_FILE
+          value: cache-ispn.xml
+        - name: KC_DB
+          value: postgres
+        - name: KC_DB_PASSWORD
+          value: 'cpln://secret/common-secrets-coreos-dev.f_postgres_password'
+        - name: KC_DB_POOL_INITIAL_SIZE
+          value: '5'
+        - name: KC_DB_POOL_MAX_SIZE
+          value: '20'
+        - name: KC_DB_POOL_MIN_SIZE
+          value: '5'
+        - name: KC_DB_URL_DATABASE
+          value: kc21
+        - name: KC_DB_URL_HOST
+          value: 'cpln://secret/common-cm-coreos-dev.f_postgres_host'
+        - name: KC_DB_URL_PORT
+          value: 'cpln://secret/common-cm-coreos-dev.f_postgres_port'
+        - name: KC_DB_USERNAME
+          value: 'cpln://secret/common-secrets-coreos-dev.f_postgres_user'
+        - name: KC_FEATURES
+          value: >-
+            docker,account3,token-exchange,web-authn,client-secret-rotation,admin-fine-grained-authz,scripts,step-up-authentication,update-email,impersonation
+        - name: KC_HOSTNAME_STRICT
+          value: 'false'
+        - name: KC_HOSTNAME_URL
+          value: 'https://delhivery1.cpln.fxtrt.io/auth'
+        - name: KC_HTTP_ENABLED
+          value: 'true'
+        - name: KC_HTTP_PORT
+          value: '8080'
+        - name: KC_HTTP_RELATIVE_PATH
+          value: /auth
+        - name: KC_INITIAL_HOSTS
+          value: >-
+            keycloak-stateful-0.keycloak-stateful[7800],keycloak-stateful-1.keycloak-stateful[7800]
+        - name: KC_LOG_LEVEL
+          value: debug
+        - name: KC_PROXY
+          value: passthrough
+        - name: KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_LEGACY_LOGOUT_REDIRECT_URI
+          value: 'true'
+        - name: >-
+            KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_SUPPRESS_LOGOUT_CONFIRMATION_SCREEN
+          value: 'true'
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: http/protobuf
+        - name: OTEL_JAVAAGENT_ENABLE
+          value: 'true'
+        - name: OTEL_SERVICE_NAME
+          value: cpln-keycloak
+        - name: PROXY_ADDRESS_FORWARDING
+          value: 'true'
+        - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+          value: 'true'
+        - name: f_keycloak_database
+          value: kc21
+      image: >-
+        217425097687.dkr.ecr.ap-south-1.amazonaws.com/platform-coreos/keycloak:f2d8eaaf-1889-57354
+      inheritEnv: false
+      memory: 1Gi
+      ports:
+        - number: 8080
+          protocol: http
+        - number: 7800
+          protocol: tcp
+      volumes:
+        - path: /configs/cache-ispn-tcpping.xml
+          recoveryPolicy: retain
+          uri: 'cpln://secret/keycloak-cache-config'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 2
+      metric: disabled
+      minScale: 2
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 60
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 3.6.213.217/32
+        - 3.7.27.185/32
+        - 46.210.61.236
+        - 84.110.208.178
+        - 89.139.225.119/32
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: /org/delhivery/gvc/coreos-dev/identity/nonprod
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: OrderedReady
+  supportDynamicTags: false

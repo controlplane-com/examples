@@ -1,0 +1,177 @@
+kind: gvc
+name: {{ .Values.keycloak.gvc }}
+description: {{ .Values.keycloak.gvc }}
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/{{ .Values.keycloak.location }}
+---
+kind: identity
+name: {{ .Values.keycloak.name }}
+gvc: {{ .Values.keycloak.name }}
+tags: {}
+---
+kind: policy
+name: {{ .Values.keycloak.name }}
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.keycloak.gvc }}/identity/{{ .Values.keycloak.name }}
+targetKind: secret
+targetLinks:
+  - //secret/keycloak-cache-config
+  - //secret/keycloak-db
+  - //secret/keycloak-admin
+---
+kind: secret
+name: keycloak-admin
+description: keycloak-admin
+type: dictionary
+data:
+  KEYCLOAK_ADMIN: {{ .Values.keycloak.env.KEYCLOAK_ADMIN }}
+  KEYCLOAK_ADMIN_PASSWORD: {{ .Values.keycloak.env.KEYCLOAK_ADMIN_PASSWORD }}
+---
+kind: workload
+name: {{ .Values.keycloak.name }}
+description: {{ .Values.keycloak.name }}
+gvc: {{ .Values.keycloak.gvc }}
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: keycloak
+      args:
+        - '-c'
+        - >-
+          cp /configs/cache-ispn-tcpping.xml /opt/keycloak/conf/cache-ispn-tcpping.xml
+          && /opt/keycloak/bin/kc.sh build --cache-config-file=cache-ispn-tcpping.xml &&
+          /opt/keycloak/bin/kc.sh start --optimized
+      command: /bin/bash
+      cpu: 550m
+      env:
+        - name: KC_CACHE
+          value: ispn
+        - name: KC_CACHE_CONFIG_FILE
+          value: cache-ispn-tcpping.xml
+        - name: KC_DB
+          value: 'cpln://secret/keycloak-db.KC_DB'
+        - name: KC_DB_PASSWORD
+          value: 'cpln://secret/keycloak-db.KC_DB_PASSWORD'
+        - name: KC_DB_POOL_INITIAL_SIZE
+          value: '5'
+        - name: KC_DB_POOL_MAX_SIZE
+          value: '20'
+        - name: KC_DB_POOL_MIN_SIZE
+          value: '5'
+        - name: KC_DB_URL_DATABASE
+          value: 'cpln://secret/keycloak-db.KC_DB_URL_DATABASE'
+        - name: KC_DB_URL_HOST
+          value: 'cpln://secret/keycloak-db.KC_DB_URL_HOST'
+        - name: KC_DB_URL_PORT
+          value: 'cpln://secret/keycloak-db.KC_DB_URL_PORT'
+        - name: KC_DB_USERNAME
+          value: 'cpln://secret/keycloak-db.KC_DB_USERNAME'
+        - name: KC_FEATURES
+          value: {{ .Values.keycloak.env.KC_FEATURES }}
+        - name: KEYCLOAK_ADMIN
+          value: 'cpln://secret/keycloak-admin.KEYCLOAK_ADMIN'
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: 'cpln://secret/keycloak-admin.KEYCLOAK_ADMIN_PASSWORD'
+        - name: KC_HEALTH_ENABLED
+          value: 'true'
+        - name: KC_HOSTNAME_STRICT
+          value: 'false'
+        - name: KC_HOSTNAME_URL
+          value: '{{ .Values.keycloak.env.KC_HOSTNAME_URL }}'
+        - name: KC_HTTP_ENABLED
+          value: 'true'
+        - name: KC_HTTP_PORT
+          value: '{{ .Values.keycloak.http_port }}'
+        - name: KC_HTTP_RELATIVE_PATH
+          value: /auth
+        - name: KC_INITIAL_HOSTS
+          value: "{{- range $i := until (int .Values.keycloak.replicas) -}}{{ if $i }},{{ end }}{{ $.Values.keycloak.name }}-{{ $i }}.{{ $.Values.keycloak.name }}[{{ $.Values.keycloak.tcp_port }}]{{- end }}"
+        - name: KC_LOG_LEVEL
+          value: {{ .Values.keycloak.env.KC_LOG_LEVEL }}
+        - name: KC_METRICS_ENABLED
+          value: 'true'
+        - name: KC_PROXY
+          value: {{ .Values.keycloak.env.KC_PROXY }}
+        - name: KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_LEGACY_LOGOUT_REDIRECT_URI
+          value: 'true'
+        - name: >-
+            KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_SUPPRESS_LOGOUT_CONFIRMATION_SCREEN
+          value: 'true'
+        - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+          value: 'true'
+        - name: PROXY_ADDRESS_FORWARDING
+          value: 'true'
+      image: {{ .Values.image.repository }}
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 20
+        httpGet:
+          httpHeaders: []
+          path: /auth/health/live
+          port: {{ .Values.keycloak.http_port }}
+          scheme: HTTP
+        initialDelaySeconds: 20
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      memory: 1050Mi
+      ports:
+        - number: {{ .Values.keycloak.http_port }}
+          protocol: http
+        - number: {{ .Values.keycloak.tcp_port }}
+          protocol: tcp
+      readinessProbe:
+        failureThreshold: 20
+        httpGet:
+          httpHeaders: []
+          path: /auth/health/ready
+          port: {{ .Values.keycloak.http_port }}
+          scheme: HTTP
+        initialDelaySeconds: 20
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      volumes:
+        - path: /configs/cache-ispn-tcpping.xml
+          recoveryPolicy: retain
+          uri: 'cpln://secret/keycloak-cache-config'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 2
+      metric: disabled
+      minScale: 2
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 60
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - {{ .Values.keycloak.inboundCidr }}
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //gvc/{{ .Values.keycloak.gvc }}/identity/{{ .Values.keycloak.name }}
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: Parallel
+  supportDynamicTags: false
