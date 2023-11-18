@@ -1,0 +1,53 @@
+kind: workload
+name: kafka-ui
+description: kafka-ui
+spec:
+  type: standard
+  containers:
+    - name: kafka-ui
+      cpu: 256m
+      env:
+        - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+          value: >-
+            kafka-cluster-0.kafka-cluster:9092,kafka-cluster-1.kafka-cluster:9092,kafka-cluster-2.kafka-cluster:9092
+        - name: KAFKA_CLUSTERS_0_NAME
+          value: kafka-cluster-example
+        - name: KAFKA_CLUSTERS_0_PROPERTIES_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM
+          value: ''
+        - name: LOGGING_LEVEL_ROOT
+          value: INFO
+        - name: KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL
+          value: SASL_PLAINTEXT
+        - name: KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM
+          value: PLAIN
+        - name: KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG
+          value: >-
+            org.apache.kafka.common.security.plain.PlainLoginModule required username="kafka-admin" password="fkor3Dro52oodA";
+      image: 'provectuslabs/kafka-ui:latest'
+      inheritEnv: false
+      memory: 2Gi
+      ports:
+        - number: 8080
+          protocol: http
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  localOptions: []
+  supportDynamicTags: false
