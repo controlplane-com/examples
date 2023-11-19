@@ -27,6 +27,11 @@ It will take a few minutes for Kafka cluster to get to ready state.
 
 Note: If you prefer not to include kafka-exporter for reading kafka custom metrics in your deployment, then apply `kafka-cluster.yaml` instead. 
 
+#### Deploy kafka-ui (Optional)
+
+```bash
+cpln apply --gvc kafka-cluster-example -f ./kafka-ui.yaml
+```
 
 #### Test Kafka Cluster with Kafka Client
 
@@ -65,6 +70,7 @@ kafka-console-consumer.sh --bootstrap-server kafka-cluster:9092 --topic controlp
 
 1. Create a GVC named `kafka-cluster-example` and assign the location(s) that you would like to use.
 2. Apply the `kafka-cluster-exporter.yaml` file using the `cpln apply >_` option in the upper right corner.
+3. (Optional) Apply the `kafka-ui.yaml` file using the `cpln apply >_` option in the upper right corner.
 
 It will take a few minutes for Kafka cluster to get to ready state.
 
