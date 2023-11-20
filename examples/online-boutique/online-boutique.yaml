@@ -1,16 +1,5 @@
 kind: gvc
 name: online-boutique
-spec:
-  tracing:
-    provider:
-      otel:
-        endpoint: 'otel-collector.online-boutique.cpln.local:4317'
-    sampling: 100
-  staticPlacement:
-    locationLinks:
-      - //location/aws-us-west-2
-      - //location/gcp-me-west1
-      - //location/azure-eastus2
 ---
 kind: volumeset
 name: redis-volume
