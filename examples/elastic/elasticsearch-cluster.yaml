@@ -1,0 +1,182 @@
+kind: gvc
+name: elasticsearch
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-us-east-2
+---
+kind: identity
+name: elasticsearch
+---
+kind: volumeset
+name: es-data
+description: es-data
+spec:
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+---
+kind: secret
+name: elasticsearch-config
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+
+    cluster.name: "cpln-cluster"
+    cluster.initial_master_nodes:
+       - workload-name-placeholder-0.workload-name-placeholder
+       - workload-name-placeholder-1.workload-name-placeholder
+       - workload-name-placeholder-2.workload-name-placeholder
+    discovery.seed_hosts:
+       - workload-name-placeholder-0.workload-name-placeholder
+       - workload-name-placeholder-1.workload-name-placeholder
+       - workload-name-placeholder-2.workload-name-placeholder
+    network.host: 0.0.0.0
+    node.store.allow_mmap: false
+    xpack.security.enabled: false
+    node.name: node-name-placeholder
+---
+kind: secret
+name: elasticsearch-init
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: >-
+    #!/bin/bash
+
+
+    set -o errexit
+
+    set -o nounset
+
+    set -o pipefail
+
+    error(){
+      local message="${1:?missing message}"
+      echo "ERROR: ${message}"
+      exit 1
+    }
+
+    cp /usr/share/elasticsearch/config-custom/elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
+
+    ELASTIC_CONFIG_FILE=/usr/share/elasticsearch/config/elasticsearch.yml
+
+    replace_placeholder() {
+      local placeholder="${1:?missing placeholder value}"
+      local value="${2:?missing value}"
+      sed -i "s/$placeholder/$value/g" "$ELASTIC_CONFIG_FILE"
+    }
+
+    POD_ID=$(echo "$POD_NAME" | rev | cut -d'-' -f 1 | rev)
+
+    WORKLOAD_NAME=$(echo $CPLN_WORKLOAD | sed 's|.*/workload/\([^/]*\)$|\1|')
+
+    replace_placeholder "workload-name-placeholder"
+    "${WORKLOAD_NAME}"
+
+    replace_placeholder "node-name-placeholder"
+    "${POD_NAME}.${WORKLOAD_NAME}"
+
+    /usr/local/bin/docker-entrypoint.sh
+---
+kind: policy
+name: elasticsearch-policy
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/elasticsearch/identity/elasticsearch
+targetKind: secret
+targetLinks:
+  - //secret/elasticsearch-config
+  - //secret/elasticsearch-init
+---
+kind: workload
+name: elasticsearch
+description: elasticsearch
+spec:
+  type: stateful
+  containers:
+    - name: elasticsearch
+      args:
+        - '-c'
+        - >-
+          cp /scripts/elasticsearch-init.sh /tmp/elasticsearch-start.sh && chmod +x /tmp/elasticsearch-start.sh && /tmp/elasticsearch-start.sh
+      command: /bin/bash
+      cpu: 500m
+      image: 'docker.elastic.co/elasticsearch/elasticsearch:8.9.1'
+      inheritEnv: false
+      livenessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - 'curl -s http://localhost:9200'
+        failureThreshold: 3
+        initialDelaySeconds: 60
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 3
+      memory: 3Gi
+      ports:
+        - number: 9200
+          protocol: http
+        - number: 9300
+          protocol: tcp
+      readinessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - 'curl -s http://localhost:9200'
+        failureThreshold: 3
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      volumes:
+        - path: /usr/share/elasticsearch/data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/es-data'
+        - path: /usr/share/elasticsearch/config-custom/elasticsearch.yml
+          recoveryPolicy: retain
+          uri: 'cpln://secret/elasticsearch-config'
+        - path: /scripts/elasticsearch-init.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/elasticsearch-init' 
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: disabled
+      minScale: 3
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 30
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  identityLink: //identity/elasticsearch
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: Parallel
+  securityOptions:
+    filesystemGroupId: 1000
+  supportDynamicTags: false
