@@ -1,0 +1,129 @@
+kind: gvc
+name: mysql-example
+description: mysql-example
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-us-east-2
+---
+kind: identity
+name: mysql-identity
+gvc: mysql-example
+---
+kind: volumeset
+name: mysql-data
+description: mysql-data
+gvc: mysql-example
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 15
+  performanceClass: general-purpose-ssd
+---
+kind: secret
+name: mysql-secret
+description: mysql-secret
+tags: {}
+type: dictionary
+data:
+  MYSQL_DATABASE: db
+  MYSQL_PASSWORD: password
+  MYSQL_ROOT_PASSWORD: password
+  MYSQL_USER: user
+---
+kind: policy
+name: mysql-policy
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/mysql-example/identity/mysql-identity
+targetKind: secret
+targetLinks:
+  - //secret/mysql-secret
+---
+kind: workload
+name: mysql
+description: mysql
+gvc: mysql-example
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: mysql
+      args:
+        - '--ignore-db-dir=lost+found'
+      cpu: 300m
+      env:
+        - name: MYSQL_DATABASE
+          value: 'cpln://secret/mysql-secret.MYSQL_DATABASE'
+        - name: MYSQL_PASSWORD
+          value: 'cpln://secret/mysql-secret.MYSQL_PASSWORD'
+        - name: MYSQL_ROOT_PASSWORD
+          value: 'cpln://secret/mysql-secret.MYSQL_ROOT_PASSWORD'
+        - name: MYSQL_USER
+          value: 'cpln://secret/mysql-secret.MYSQL_USER'
+      image: 'mysql:5.7'
+      inheritEnv: false
+      livenessProbe:
+        exec:
+          command:
+            - sh
+            - '-c'
+            - 'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}'
+        failureThreshold: 10
+        initialDelaySeconds: 17
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      memory: 700Mi
+      ports:
+        - number: 3306
+          protocol: tcp
+      readinessProbe:
+        exec:
+          command:
+            - sh
+            - '-c'
+            - 'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}'
+        failureThreshold: 10
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+      volumes:
+        - path: /var/lib/mysql
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/mysql-data'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: disabled
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: true
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  identityLink: //identity/mysql-identity
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: OrderedReady
+  supportDynamicTags: false
