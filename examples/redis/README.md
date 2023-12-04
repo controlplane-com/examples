@@ -1,6 +1,6 @@
 ## Redis example
 
-This example creates a Redis cluster with 6 nodes on Control Plane Platform.
+This example creates a Redis cluster with 6 nodes on the Control Plane Platform and can be further customized as needed.
 
 ### Steps to run this example:
 
