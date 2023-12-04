@@ -15,6 +15,7 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and
    ```bash
    helm template . | cpln apply -f -
    ```
+   Note:  Typically, it takes 5 minutes for all replicas of the workload to become ready and for the cluster to be created.
 
 ### Accessing redis-cluster
 
