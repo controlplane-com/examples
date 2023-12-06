@@ -1,0 +1,129 @@
+kind: gvc
+name: {{ .Values.redis.gvc }}
+description: {{ .Values.redis.name }}
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/{{ .Values.redis.location }}
+---
+kind: identity
+name: {{ .Values.redis.name }}-identity
+gvc: {{ .Values.redis.gvc }}
+description: {{ .Values.redis.name }}
+---
+kind: policy
+name: {{ .Values.redis.name }}
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.redis.gvc }}/identity/{{ .Values.redis.name }}-identity
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.redis.name }}-default-config
+  - //secret/{{ .Values.redis.name }}-start
+---
+kind: volumeset
+name: {{ .Values.redis.name }}
+gvc: {{ .Values.redis.gvc }}
+description: {{ .Values.redis.name }}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 20
+  performanceClass: general-purpose-ssd
+---
+kind: workload
+name: {{ .Values.redis.name }}
+gvc: {{ .Values.redis.gvc }}
+description: {{ .Values.redis.name }}
+spec:
+  type: stateful
+  containers:
+    - name: redis-cluster
+      args:
+        - '-c'
+        - /scripts/redis-start.sh
+      command: /bin/sh
+      cpu: {{ .Values.redis.cpu }}
+      env:
+        - name: NUM_SHARDS
+          value: '3'
+        - name: CUSTOM_NUM_NODES
+          value: '{{ .Values.redis.replicas }}'
+        - name: CUSTOM_REDIS_PORT
+          value: '{{ .Values.redis.port }}'
+      image: {{ .Values.image.repository }}
+      livenessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - redis-cli ping
+        failureThreshold: 10
+        initialDelaySeconds: 25
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 4
+      readinessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - redis-cli ping
+        failureThreshold: 10
+        initialDelaySeconds: 20
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 4
+      inheritEnv: false
+      memory: {{ .Values.redis.memory }}
+      ports:
+        - number: {{ .Values.redis.port }}
+          protocol: tcp
+        - number: 16379
+          protocol: tcp
+      volumes:
+        - path: /data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/{{ .Values.redis.name }}'
+        - path: /scripts/redis-start.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.redis.name }}-start'
+        - path: /usr/local/etc/redis/redis-default.conf
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.redis.name }}-default-config'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: {{ .Values.redis.replicas }}
+      metric: disabled
+      minScale: {{ .Values.redis.replicas }}
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: {{ .Values.redis.firewallConfig.internal.inboundAllowType }}
+      inboundAllowWorkload: []
+  identityLink: //identity/{{ .Values.redis.name }}-identity
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: OrderedReady
+  securityOptions:
+    filesystemGroupId: 1001
+  supportDynamicTags: false
