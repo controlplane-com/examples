@@ -1,0 +1,93 @@
+kind: workload
+name: metabase
+description: metabase
+tags: {}
+spec:
+  type: serverless
+  containers:
+    - name: metabase
+      cpu: 1000m
+      env:
+        - name: MB_APPLICATION_DB_MAX_CONNECTION_POOL_SIZE
+          value: '2'
+        - name: MB_DB_DBNAME
+          value: metabase
+        - name: MB_DB_HOST
+          value: db1.cpzpvrd2ypb4.us-west-2.rds.amazonaws.com
+        - name: MB_DB_PASS
+          value: 'cpln://secret/metabase-password.payload'
+        - name: MB_DB_PORT
+          value: '5432'
+        - name: MB_DB_TYPE
+          value: postgres
+        - name: MB_DB_USER
+          value: postgres
+        - name: PORT
+          value: '3000'
+      image: metabase/metabase
+      inheritEnv: false
+      memory: 1Gi
+      ports:
+        - number: 3000
+          protocol: http
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          httpHeaders: []
+          path: /
+          port: 3000
+          scheme: HTTP
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 1000
+      maxScale: 1
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 60
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: none
+      inboundAllowWorkload: []
+  identityLink: //identity/foo-id
+  localOptions:
+    - autoscaling:
+        maxConcurrency: 1000
+        maxScale: 1
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      location: //location/aws-us-west-2
+      suspend: false
+      timeoutSeconds: 60
+    - autoscaling:
+        maxConcurrency: 1000
+        maxScale: 1
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      location: /org/doron-test1/location/gcp-me-west1
+      suspend: true
+      timeoutSeconds: 60
+  supportDynamicTags: false

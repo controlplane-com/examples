@@ -1,6 +1,11 @@
 kind: gvc
 name: online-boutique
 spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-eu-central-1
+      - //location/azure-centralus
+      - //location/gcp-me-west1
   tracing:
     provider:
       otel:

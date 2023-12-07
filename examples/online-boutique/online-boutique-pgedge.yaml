@@ -3,44 +3,38 @@ name: online-boutique
 spec:
   staticPlacement:
     locationLinks:
-      # - //location/aws-eu-central-1
-      # - //location/azure-centralus
-      - //location/gcp-me-west1
----
-kind: volumeset
-name: redis-volume
-description: redis-volume
-spec:
-  fileSystemType: ext4
-  initialCapacity: 10
-  performanceClass: general-purpose-ssd
+      - //location/aws-eu-central-1
+      - //location/azure-centralus
+      - //location/gcp-us-east1
 ---
 kind: secret
-name: redis-boutique-conf
-description: redis-boutique-conf
+name: pgedge-secret
+description: pgedge connection details
 tags: {}
-type: opaque
+type: dictionary
 data:
-  encoding: plain
-  payload: port 6389
+  POSTGRES_DATABASE_NAME: demo
+  POSTGRES_TABLE_NAME: online_boutique
+  POSTGRES_PASSWORD: ji2jd32d2
+  POSTGRES_USERNAME: demo
 ---
 kind: identity
-name: redis-identity
-description: redis-identity
+name: cartservice-identity
+description: cartservice-identity
 tags: {}
 ---
 kind: policy
-name: redis-cart
+name: cartservice
 tags: {}
 origin: default
 bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/online-boutique/identity/redis-identity
+      - //gvc/online-boutique/identity/cartservice-identity
 targetKind: secret
 targetLinks:
-  - //secret/redis-boutique-conf
+  - //secret/pgedge-secret
 ---
 kind: workload
 name: adservice
@@ -103,15 +97,25 @@ spec:
 kind: workload
 name: cartservice
 description: cartservice
+tags: {}
 spec:
   type: serverless
   containers:
     - name: server
       cpu: 300m
       env:
-        - name: REDIS_ADDR
-          value: 'redis-cart:6389'
-      image: 'gcr.io/google-samples/microservices-demo/cartservice:v0.8.1'
+        - name: PGEDGE_HOST_LIST
+          value: >-
+            pgedge.pgedge-us-east.cpln.local:5432,pgedge.pgedge-us-central.cpln.local:5432,pgedge.pgedge-eu-central.cpln.local:5432
+        - name: POSTGRES_DATABASE_NAME
+          value: cpln://secret/pgedge-secret.POSTGRES_DATABASE_NAME
+        - name: POSTGRES_PASSWORD
+          value: cpln://secret/pgedge-secret.POSTGRES_PASSWORD
+        - name: POSTGRES_TABLE_NAME
+          value: cpln://secret/pgedge-secret.POSTGRES_TABLE_NAME
+        - name: POSTGRES_USERNAME
+          value: cpln://secret/pgedge-secret.POSTGRES_USERNAME
+      image: 'igorchyts/online-boutique-cartservice:0.8.1-cpln-2'
       inheritEnv: false
       livenessProbe:
         failureThreshold: 3
@@ -148,17 +152,18 @@ spec:
   firewallConfig:
     external:
       inboundAllowCIDR: []
-      outboundAllowCIDR: []
-      outboundAllowHostname:
-        - redis-cart.online-boutique.cpln.local
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
       outboundAllowPort: []
     internal:
       inboundAllowType: workload-list
       inboundAllowWorkload:
         - //workload/checkoutservice
         - //workload/frontend
+  identityLink: //identity/cartservice-identity
   localOptions: []
-  supportDynamicTags: false
+  supportDynamicTags: true
 ---
 kind: workload
 name: checkoutservice
@@ -660,75 +665,6 @@ spec:
       inboundAllowWorkload:
         - //workload/frontend
   localOptions: []
-  supportDynamicTags: false
----
-kind: workload
-name: redis-cart
-description: redis
-spec:
-  type: stateful
-  containers:
-    - name: redis
-      args:
-        - /etc/redis/redis.conf
-      cpu: 75m
-      image: 'redis:alpine'
-      inheritEnv: false
-      livenessProbe:
-        failureThreshold: 3
-        initialDelaySeconds: 0
-        periodSeconds: 10
-        successThreshold: 1
-        tcpSocket:
-          port: 6389
-        timeoutSeconds: 1
-      memory: 150Mi
-      ports:
-        - number: 6389
-          protocol: tcp
-      readinessProbe:
-        failureThreshold: 3
-        initialDelaySeconds: 0
-        periodSeconds: 10
-        successThreshold: 1
-        tcpSocket:
-          port: 6389
-        timeoutSeconds: 1
-      volumes:
-        - path: /data
-          recoveryPolicy: retain
-          uri: 'cpln://volumeset/redis-volume'
-        - path: /etc/redis/redis.conf
-          recoveryPolicy: retain
-          uri: 'cpln://secret/redis-boutique-conf'
-  defaultOptions:
-    autoscaling:
-      maxConcurrency: 0
-      maxScale: 1
-      metric: cpu
-      minScale: 1
-      scaleToZeroDelay: 300
-      target: 100
-    capacityAI: false
-    debug: false
-    suspend: false
-    timeoutSeconds: 10
-  firewallConfig:
-    external:
-      inboundAllowCIDR: []
-      outboundAllowCIDR: []
-      outboundAllowHostname: []
-      outboundAllowPort: []
-    internal:
-      inboundAllowType: workload-list
-      inboundAllowWorkload:
-        - //workload/cartservice
-  identityLink: //identity/redis-identity
-  localOptions: []
-  rolloutOptions:
-    maxSurgeReplicas: 25%
-    maxUnavailableReplicas: '1'
-    minReadySeconds: 0
   supportDynamicTags: false
 ---
 kind: workload
