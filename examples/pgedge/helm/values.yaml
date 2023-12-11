@@ -8,6 +8,10 @@ image:
 
 online_boutique: true
 
+postgres:  
+  password: 'ji2jd32d2'
+  dbname: demo
+
 pgedge:
   - name: pgedge-us-east
     enable: true
@@ -30,10 +34,6 @@ pgedge:
     diskCapacity: 20 # In Gigabytes
     memory: 3000Mi
     cpu: 1.5
-
-postgres:  
-  password: 'ji2jd32d2'
-  dbname: demo
 
 pgadmin:
   gvc: pgedge-us-east

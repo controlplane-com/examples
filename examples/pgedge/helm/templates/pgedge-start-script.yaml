@@ -6,4 +6,8 @@ type: opaque
 data:
   encoding: plain
   payload: |
+{{- if .Values.online_boutique }}
+{{ .Files.Get "scripts/pgedge-start-script-boutique.sh" | indent 4 }}
+{{- else}}
 {{ .Files.Get "scripts/pgedge-start-script.sh" | indent 4 }}
+{{- end }}
