@@ -115,7 +115,7 @@ spec:
           value: cpln://secret/pgedge-secret.POSTGRES_TABLE_NAME
         - name: POSTGRES_USERNAME
           value: cpln://secret/pgedge-secret.POSTGRES_USERNAME
-      image: 'igorchyts/online-boutique-cartservice:0.8.1-cpln-2'
+      image: 'igorchyts/online-boutique-cartservice:0.8.1-cpln-3'
       inheritEnv: false
       livenessProbe:
         failureThreshold: 3

@@ -4,8 +4,4 @@ description: pgedge-postgres secret
 type: dictionary
 data:
   POSTGRES_PASSWORD: {{ .Values.postgres.password }}
-{{- if .Values.online_boutique }}
-  POSTGRES_DB: online_boutique
-{{- else}}
   POSTGRES_DB: {{ .Values.postgres.dbname }}
-{{- end }}
