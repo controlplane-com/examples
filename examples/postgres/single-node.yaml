@@ -1,0 +1,93 @@
+kind: volumeset
+name: postgres-poc-vs
+description: postgres-poc-vs
+spec:
+  autoscaling:
+    maxCapacity: 1000
+    minFreePercentage: 1
+    scalingFactor: 1.1
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+  snapshots:
+    createFinalSnapshot: true
+    retentionDuration: 7d
+
+---
+kind: secret
+name: postgres-poc-credentials
+description: ''
+type: dictionary
+data:
+  password: PASSWORD_HERE #Replace this with a real password
+  username: USERNAME_HERE #Replace this with a real username
+
+---
+kind: identity
+name: postgres-poc-identity
+description: postgres-poc-identity
+
+---
+kind: policy
+name: postgres-poc-access
+description: postgres-poc-access
+bindings:
+  - permissions:
+      - reveal
+      - use
+      - view
+    principalLinks:
+      - //gvc/YOUR_GVC_HERE/identity/postgres-poc-identity  #Replace YOUR_GVC_HERE with the name of your gvc
+targetKind: secret
+targetLinks:
+  - //secret/postgres-poc-credentials
+  - //secret/postgres-poc-entrypoint-script
+
+---
+kind: workload
+name: postgres-poc
+description: postgres-poc
+spec:
+  type: stateful
+  containers:
+    - cpu: 1000m
+      memory: 512Mi
+      env:
+        - name: PGDATA #The location postgres stores the db. This can be anything other than /var/lib/postgresql/data, but it must be inside the mount point for the volume set
+          value: "/var/lib/postgresql/data/pg_data"
+        - name: POSTGRES_DB #The name of the initial db
+          value: test
+        - name: POSTGRES_PASSWORD #The password for the default user
+          value: cpln://secret/postgres-poc-credentials.password
+        - name: POSTGRES_USER #The name of the default user
+          value: cpln://secret/postgres-poc-credentials.username
+      name: stateful
+      image: postgres:15
+      ports:
+        - number: 5432
+          protocol: tcp
+      volumes:
+        - uri: cpln://volumeset/postgres-poc-vs
+          path: "/var/lib/postgresql/data"
+      livenessProbe:
+        tcpSocket:
+          port: 5432
+        failureThreshold: 1
+      readinessProbe:
+        tcpSocket:
+          port: 5432
+        failureThreshold: 1
+  identityLink: //identity/postgres-poc-identity
+  defaultOptions:
+    capacityAI: false
+    autoscaling:
+      metric: disabled
+      maxScale: 1
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+    internal:
+      inboundAllowType: same-gvc
+
