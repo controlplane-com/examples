@@ -1,5 +1,6 @@
 kind: workload
 name: {{ .Values.proxyWorkload.name }}
+gvc: {{ .Values.gvc }}
 tags:
   {{- include "nginx.tags" . | nindent 2 }}
   cpln/checksum: {{ include (print $.Template.BasePath "/nginx.conf.yaml") . | sha256sum }}
@@ -20,7 +21,7 @@ spec:
     timeoutSeconds: {{ .Values.proxyWorkload.timeoutSeconds }}
   firewallConfig:
     external:
-      inboundAllowCIDR: []
+      inboundAllowCIDR: ["0.0.0.0"]
     internal:
       inboundAllowType: same-gvc
   containers:
@@ -56,6 +57,7 @@ spec:
 ---
 kind: identity
 name: {{ .Values.proxyWorkload.name }}
+gvc: {{ .Values.gvc }}
 description: Identity for the workload "nginx" used to grant access to the nginx-conf secret
 
 ---

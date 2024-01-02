@@ -15,21 +15,21 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
 
 1. Clone this repo and update the `values.yaml` file as needed.
 
-   If you change the `gvc` parameter, also update the GVC for the commands below.
-
 2. If the GVC does not exist, create it and select location(s).
 
 3. Run the command below from this directory.
 
    ```bash
-   helm template . | cpln apply --gvc nginx-sidecar -f -
+   cpln helm install nginx-sidecar
 
    ```
+
+4. Inspect the workload and access the external endpoint. Notice how traffic routes through the nginx container on port 8080 to the httpbin container on port 80.
 
 ### Cleanup
 
 **HELM**
 
 ```bash
-helm template . | cpln delete --gvc nginx-sidecar -f -
+cpln helm uninstall nginx-sidecar
 ```
