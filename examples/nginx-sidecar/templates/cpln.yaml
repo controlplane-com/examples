@@ -21,7 +21,7 @@ spec:
     timeoutSeconds: {{ .Values.proxyWorkload.timeoutSeconds }}
   firewallConfig:
     external:
-      inboundAllowCIDR: ["0.0.0.0"]
+      inboundAllowCIDR: ["0.0.0.0/0"]
     internal:
       inboundAllowType: same-gvc
   containers:

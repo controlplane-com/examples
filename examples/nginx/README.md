@@ -18,21 +18,33 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
 
 1. Clone this repo and update the `values.yaml` file as needed.
 
-   If you change the `gvc` parameter, also update the GVC for the commands below.
+   If you change the `gvc` parameter, also update the GVC for the command below.
 
 2. If the GVC does not exist, create it and select location(s).
+
+   ```bash
+   cpln gvc create --name nginx-example --location aws-us-west-2
+   ```
 
 3. Run the command below from this directory.
 
    ```bash
-   helm template . | cpln apply --gvc nginx-example -f -
+   cpln helm install nginx-example
 
    ```
+
+4. Inspect the workloads and access the external endpoint of the nginx workload.
+
+   1. Notice how traffic routes through the nginx workload and is forwarded to the other workloads.
+
+   2. All endpoints use tls by default.
+
+   3. Internal service to service communication uses mutual tls with a verified client certificate.
 
 ### Cleanup
 
 **HELM**
 
 ```bash
-helm template . | cpln delete --gvc nginx-example -f -
+cpln helm uninstall nginx-example
 ```

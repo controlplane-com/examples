@@ -1,5 +1,6 @@
 kind: workload
 name: {{ .Values.proxyWorkload.name }}
+gvc: {{ .Values.gvc }}
 tags:
   {{- include "nginx.tags" . | nindent 2 }}
   cpln/checksum: {{ include (print $.Template.BasePath "/nginx.conf.yaml") . | sha256sum }}
@@ -44,6 +45,7 @@ spec:
 ---
 kind: workload
 name: default
+gvc: {{ .Values.gvc }}
 description: default
 spec:
   type: serverless
@@ -72,6 +74,7 @@ spec:
 ---
 kind: workload
 name: user
+gvc: {{ .Values.gvc }}
 description: user
 spec:
   type: serverless
@@ -101,6 +104,7 @@ spec:
 ---
 kind: identity
 name: {{ .Values.proxyWorkload.name }}
+gvc: {{ .Values.gvc }}
 description: Identity for the workload "nginx" used to grant access to the nginx-conf secret
 
 ---
