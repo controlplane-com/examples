@@ -8,12 +8,12 @@ This example creates a Redis cluster with 6 nodes on the Control Plane Platform 
 
 The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and [Control Plane CLI](https://docs.controlplane.com/reference/cli#install-npm) must be installed.
 
-1. Clone this repo and update the [values.yaml](./values.yaml) file if any cutomization required
+1. Clone this repo and update the [values.yaml](./values.yaml) file as needed.
 
 2. Run the command below from this directory.
 
    ```bash
-   helm template . | cpln apply -f -
+   cpln helm install redis-cluster  
    ```
    Note:  Typically, it takes 5 minutes for all replicas of the workload to become ready and for the cluster to be created.
 
@@ -28,6 +28,7 @@ Improtant: To access workloads listening on a TCP port, the client workload must
 Syntax: <WORKLOAD_NAME>
 ```
 redis-cli -c -h redis-cluster -p 6379 set mykey "test"
+redis-cli -c -h redis-cluster -p 6379 get mykey
 ```
 #### Option 2: (By replica)
 
@@ -46,5 +47,5 @@ redis-cli -c -h redis-cluster-5.redis-cluster -p 6379 get mykey
 **HELM**
 
 ```bash
-helm template . | cpln delete -f -
+cpln helm uninstall redis-cluster
 ```
