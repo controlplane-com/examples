@@ -1,0 +1,99 @@
+kind: workload
+name: {{ .Values.tailscale.name }}
+gvc: {{ .Values.gvc }}
+tags:
+  {{- include "nginx.tags" . | nindent 2 }}
+  cpln/checksum: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+spec:
+  type: standard
+  identityLink: //identity/{{ .Values.tailscale.name }}
+  defaultOptions:
+    suspend: true
+    capacityAI: false
+    autoscaling:
+      maxConcurrency: 1000
+      metric: disabled
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 50
+  localOptions:
+    - autoscaling:
+        maxConcurrency: 1000
+        metric: disabled
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 50
+      location: //location/{{ .Values.location }}
+      suspend: false
+      capacityAI: false
+      timeoutSeconds: 5
+  firewallConfig:
+    external:
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+  containers:
+    - name: {{ .Chart.Name }}
+      image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+      {{- toYaml .Values.resources | nindent 6 }}
+      env:
+        - name: KUBERNETES_SERVICE_HOST
+          value: ''
+        - name: TS_ACCEPT_DNS
+          value: 'false'
+        - name: TS_AUTHKEY
+          value: cpln://secret/{{ .Values.tailscale.name }}.authkey
+        - name: TS_HOSTNAME
+          value: cpln-test
+        - name: TS_KUBE_SECRET
+          value: ''
+        - name: TS_ROUTES
+          value: '192.168.0.0/16,240.240.0.0/16,{{ index .Values.locationDNS .Values.location }}/32'
+        - name: TS_USERSPACE
+          value: 'true'
+---
+kind: workload
+name: httpbin
+gvc: {{ .Values.gvc }}
+description: default
+spec:
+  type: serverless
+  containers:
+    - name: httpbin
+      cpu: 100m
+      image: kennethreitz/httpbin
+      memory: 128Mi
+      ports:
+        - number: 80
+          protocol: http
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 80
+          scheme: HTTP
+  defaultOptions:
+    capacityAI: false
+  firewallConfig:
+    internal:
+      inboundAllowType: workload-list
+      # allow access from tailscale internally
+      inboundAllowWorkload:
+        - //gvc/{{ .Values.gvc }}/workload/{{ .Values.tailscale.name }}
+
+---
+kind: identity
+name: {{ .Values.tailscale.name }}
+gvc: {{ .Values.gvc }}
+description: Identity for the workload "tailscale" used to grant access to the tailscale secret
+
+---
+kind: policy
+name: {{ .Values.tailscale.name }}
+description: Allow the workload to use the secret tailscale
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.gvc }}/identity/{{ .Values.tailscale.name }}
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.tailscale.name }}
