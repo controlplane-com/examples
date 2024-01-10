@@ -14,7 +14,7 @@ online_boutique:
 #   sampling: 100
 #   # Do not set DD_API_KEY_VALUE and DD_SITE_VALUE below inside quotation mark
 #   DD_API_KEY: DD_API_KEY_VALUE
-#   DD_SITE: DD_SITE_VALUE
+#   DD_SITE: DD_SITE_VALUE ## For Example: datadoghq.com
 #   cpu: 100m
 #   memory: 200Mi
 
