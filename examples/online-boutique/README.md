@@ -6,9 +6,13 @@ This example creates an [Online Boutique](https://github.com/GoogleCloudPlatform
 
 Control Plane has native integration with OTLP to collect tracing data for workloads. In this example, we are using the otel-collector workload and shipping tracing data collected by Control Plane to Data Dog. You can choose to configure the otel-collector with your preferred backend for tracing or skip Step 2 completely.
 
-This example deploys the applications in two locations: `gcp-us-east1` and `aws-eu-central-1`. You can customize the command to use locations of your preference, but at least one location is required.
+It is recommended to use the Helm chart for the example, as it allows customization and the optional use of a multi-master PostgreSQL backend.
 
 ### Steps to run this example:
+
+#### Deployment options
+1. [Helm](./helm/) (Recommended)
+2. Applying manifests with [CLI](#cli) or [UI](#ui)
 
 #### Requirements
 * [Control Plane Account](https://controlplane.com)

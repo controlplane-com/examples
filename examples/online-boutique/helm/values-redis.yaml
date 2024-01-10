@@ -1,0 +1,71 @@
+# Values for online-boutique with pgEdge backend 
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+online_boutique:
+  gvc: online-boutique
+  locations: gcp-us-east1,aws-eu-central-1,azure-centralus
+  # db_postgres:
+  #   POSTGRES_TABLE_NAME: online_boutique
+
+# tracing:
+#   otel_workload: 'otel-collector'
+#   otel_port: '4317'
+#   sampling: 100
+#   # Do not set DD_API_KEY_VALUE and DD_SITE_VALUE below inside quotation mark
+#   DD_API_KEY: DD_API_KEY_VALUE
+#   DD_SITE: DD_SITE_VALUE
+#   cpu: 100m
+#   memory: 200Mi
+
+# image:
+#   # custom image
+#   repository: igorchyts/pgedge-cpln:v0.1
+
+# postgres:
+#   password: 'ji2jd32d2'
+#   dbname: demo
+
+# pgedge:
+#   - name: pgedge-us-east
+#     port: 5432
+#     location: gcp-us-east1
+#     diskCapacity: 20 # In Gigabytes
+#     memory: 3000Mi
+#     cpu: 1.5
+#   - name: pgedge-us-central
+#     port: 5432
+#     location: aws-us-east-2
+#     diskCapacity: 20 # In Gigabytes
+#     memory: 3000Mi
+#     cpu: 1.5
+#   - name: pgedge-eu-central
+#     port: 5432
+#     location: aws-eu-central-1
+#     diskCapacity: 20 # In Gigabytes
+#     memory: 3000Mi
+#     cpu: 1.5
+
+# pgadmin:
+#   gvc: pgedge-us-east
+#   email: user@cpln.com
+#   password: admin
+#   memory: 300Mi
+#   cpu: 50m
+#   inboundCidr: 0.0.0.0/0
+
+# pgcat:
+#   name: pgcat
+#   gvc: pgcat-pgedge
+#   memory: 200Mi
+#   cpu: 100m
+#   pg_port: 6432
+#   prom_port: 9930
+#   capacityAI: false
+#   autoscaling:
+#     maxConcurrency: 0
+#     maxScale: 2
+#     metric: cpu
+#     minScale: 1
+#     scaleToZeroDelay: 300
+#     target: 70

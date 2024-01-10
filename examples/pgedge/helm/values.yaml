@@ -6,29 +6,24 @@ image:
   # custom image
   repository: igorchyts/pgedge-cpln:v0.1
 
-online_boutique: true
-
-postgres:  
+postgres:
   password: 'ji2jd32d2'
   dbname: demo
 
 pgedge:
   - name: pgedge-us-east
-    enable: true
     port: 5432
     location: gcp-us-east1
     diskCapacity: 20 # In Gigabytes
     memory: 3000Mi
     cpu: 1.5
   - name: pgedge-us-central
-    enable: true
     port: 5432
-    location: azure-centralus
+    location: aws-us-west-2
     diskCapacity: 20 # In Gigabytes
     memory: 3000Mi
     cpu: 1.5
   - name: pgedge-eu-central
-    enable: disable
     port: 5432
     location: aws-eu-central-1
     diskCapacity: 20 # In Gigabytes
@@ -41,5 +36,5 @@ pgadmin:
   email: user@cpln.com
   password: admin
   memory: 300Mi
-  cpu: 150m
+  cpu: 50m
   inboundCidr: 0.0.0.0/0

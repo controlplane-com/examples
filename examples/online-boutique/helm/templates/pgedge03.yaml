@@ -55,7 +55,7 @@ spec:
       command: /bin/bash
       env:
         - name: CLUSTER_NODES
-          value: '{{- $length := len .Values.pgedge }}{{- range $index, $element := .Values.pgedge }}{{- if $element.enable }}pgedge.{{ $element.name }}.cpln.local:{{ $element.port }}{{ if lt $index (sub $length 1) }} {{ end }}{{- end }}{{- end }}'
+          value: '{{- $length := len .Values.pgedge }}{{- range $index, $element := .Values.pgedge }}{{- if $element }}pgedge.{{ $element.name }}.cpln.local:{{ $element.port }}{{ if lt $index (sub $length 1) }} {{ end }}{{- end }}{{- end }}'
         - name: POSTGRES_PASSWORD
           value: 'cpln://secret/pgedge-postgres.POSTGRES_PASSWORD'
         - name: POSTGRES_DB

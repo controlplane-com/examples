@@ -1,0 +1,29 @@
+{{- if .Values.postgres }}
+kind: secret
+name: pgedge-postgres
+description: pgedge-postgres secret
+type: dictionary
+data:
+  POSTGRES_PASSWORD: {{ .Values.postgres.password }}
+  POSTGRES_DB: {{ .Values.postgres.dbname }}
+---
+kind: secret
+name: pgedge-replication-sql
+description: pgedge-replication-sql
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+{{ .Files.Get "scripts/replication-boutique.sql" | indent 4 }}
+---
+kind: secret
+name: pgedge-start-script
+description: pgedge-start-script
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+{{ .Files.Get "scripts/pgedge-start-script.sh" | indent 4 }}
+{{- end }}

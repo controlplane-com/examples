@@ -6,8 +6,4 @@ type: opaque
 data:
   encoding: plain
   payload: |
-{{- if .Values.online_boutique }}
-{{ .Files.Get "scripts/replication-boutique.sql" | indent 4 }}
-{{- else}}
 {{ .Files.Get "scripts/replication.sql" | indent 4 }}
-{{- end }}

@@ -6,6 +6,9 @@ Default specs:
 * A trigger and a function to add any table created using `spock.replicate_ddl` function to the `cpln_default` replication set are applied using [replication.sql](scripts/replication.sql). For further infrotmation, you can read in the [pgEdge documentation](https://docs.pgedge.com/spock_ext/advanced_spock/repset_trigger)
 * The cluster is created in three locations, unless otherwise specified, and each location has it's own endpoint described below.
 
+
+For a practical implementation of pgEdge used as a database for example online-boutique application, please navigate to [online-boutique example](../../online-boutique/helm/)
+
 ### Steps to run this example:
 
 **HELM**
@@ -29,7 +32,7 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and
 3. Run the command below from this directory.
 
    ```bash
-   helm template . | cpln apply -f -
+   cpln helm install pgedge-example
    ```
 
 ### Testing
@@ -57,5 +60,5 @@ For advanced configuration of pgEdge, please refer to the pgEdge [documentation]
 **HELM**
 
 ```bash
-helm template . | cpln delete -f -
+cpln helm delete pgedge-example
 ```
