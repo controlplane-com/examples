@@ -32,9 +32,8 @@ pgedge:
 
 pgadmin:
   gvc: pgedge-us-east
-  enable: true
   email: user@cpln.com
   password: admin
   memory: 300Mi
-  cpu: 50m
+  cpu: 150m
   inboundCidr: 0.0.0.0/0
