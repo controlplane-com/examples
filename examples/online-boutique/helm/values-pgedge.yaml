@@ -58,6 +58,8 @@ pgadmin:
 pgcat:
   name: pgcat
   gvc: pgcat-pgedge
+  image: 'igorchyts/pgcat:v0.4'
+  image_liveness: 'igorchyts/pgcat-liveness:v0.1'
   memory: 200Mi
   cpu: 100m
   pg_port: 6432
