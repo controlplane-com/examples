@@ -5,5 +5,5 @@ tags: {}
 type: opaque
 data:
   encoding: plain
-  payload: >
+  payload: |
 {{ .Files.Get "scripts/replication.sql" | indent 4 }}

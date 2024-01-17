@@ -1,4 +1,4 @@
-{{- if (index .Values.pgedge 1).enable }}
+{{- if and .Values.pgedge (index .Values.pgedge 1) }}
 kind: gvc
 name: {{ (index .Values.pgedge 1).name }}
 description: {{ (index .Values.pgedge 1).name }}

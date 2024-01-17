@@ -21,7 +21,7 @@ cpln apply -f ./mysql.yaml
 
 #### ui
 
-Step 1 - Deploy online-boutique
+Step 1 - Deploy MySQL Server
 
 1. Create a GVC named `mysql-example` and assign the location(s) that you would like to use.
 2. Apply the `mysql.yaml` file using the `cpln apply >_` option in the upper right corner.

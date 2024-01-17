@@ -1,47 +1,47 @@
-{{- if and .Values.pgedge (index .Values.pgedge 2) }}
+{{- if and .Values.pgedge (index .Values.pgedge 0) }}
 kind: gvc
-name: {{ (index .Values.pgedge 2).name }}
-description: {{ (index .Values.pgedge 2).name }}
+name: {{ (index .Values.pgedge 0).name }}
+description: {{ (index .Values.pgedge 0).name }}
 tags: {}
 spec:
   staticPlacement:
     locationLinks:
-      - //location/{{ (index .Values.pgedge 2).location }}
+      - //location/{{ (index .Values.pgedge 0).location }}
 ---
 kind: identity
-name: {{ (index .Values.pgedge 2).name }}
-gvc: {{ (index .Values.pgedge 2).name }}
+name: {{ (index .Values.pgedge 0).name }}
+gvc: {{ (index .Values.pgedge 0).name }}
 tags: {}
 ---
 kind: volumeset
 name: pgedge-data
 description: pgedge-data
-gvc: {{ (index .Values.pgedge 2).name }}
+gvc: {{ (index .Values.pgedge 0).name }}
 tags: {}
 spec:
   fileSystemType: ext4
-  initialCapacity: {{ (index .Values.pgedge 2).diskCapacity }}
+  initialCapacity: {{ (index .Values.pgedge 0).diskCapacity }}
   performanceClass: general-purpose-ssd
 ---
 kind: policy
-name: {{ (index .Values.pgedge 2).name }}
+name: {{ (index .Values.pgedge 0).name }}
 tags: {}
 origin: default
 bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ (index .Values.pgedge 2).name }}/identity/{{ (index .Values.pgedge 2).name }}
+      - //gvc/{{ (index .Values.pgedge 0).name }}/identity/{{ (index .Values.pgedge 0).name }}
 targetKind: secret
 targetLinks:
-  - //secret/pgedge-start-script
-  - //secret/pgedge-replication-sql
-  - //secret/pgedge-postgres
+  - //secret/pgedge-start-script-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+  - //secret/pgedge-replication-sql-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+  - //secret/pgedge-postgres-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
 ---
 kind: workload
 name: pgedge
 description: pgedge
-gvc: {{ (index .Values.pgedge 2).name }}
+gvc: {{ (index .Values.pgedge 0).name }}
 tags: {}
 spec:
   type: stateful
@@ -55,17 +55,17 @@ spec:
       command: /bin/bash
       env:
         - name: CLUSTER_NODES
-          value: '{{- $length := len .Values.pgedge }}{{- range $index, $element := .Values.pgedge }}{{- if $element.enable }}pgedge.{{ $element.name }}.cpln.local:{{ $element.port }}{{ if lt $index (sub $length 1) }} {{ end }}{{- end }}{{- end }}'
+          value: '{{- $length := len .Values.pgedge }}{{- range $index, $element := .Values.pgedge }}{{- if $element }}pgedge.{{ $element.name }}.cpln.local:{{ $element.port }}{{ if lt $index (sub $length 1) }} {{ end }}{{- end }}{{- end }}'
         - name: POSTGRES_PASSWORD
-          value: 'cpln://secret/pgedge-postgres.POSTGRES_PASSWORD'
+          value: 'cpln://secret/pgedge-postgres-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}.POSTGRES_PASSWORD'
         - name: POSTGRES_DB
-          value: 'cpln://secret/pgedge-postgres.POSTGRES_DB'
-      cpu: '{{ (index .Values.pgedge 2).cpu }}'
+          value: 'cpln://secret/pgedge-postgres-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}.POSTGRES_DB'
+      cpu: '{{ (index .Values.pgedge 0).cpu }}'
       image: '{{ .Values.image.repository }}'
       inheritEnv: false
-      memory: {{ (index .Values.pgedge 2).memory }}
+      memory: {{ (index .Values.pgedge 0).memory }}
       ports:
-        - number: {{ (index .Values.pgedge 2).port }}
+        - number: {{ (index .Values.pgedge 0).port }}
           protocol: tcp
       volumes:
         - path: /opt/pgedge
@@ -73,10 +73,10 @@ spec:
           uri: 'cpln://volumeset/pgedge-data'
         - path: /scripts/bootstrap-cpln.sh
           recoveryPolicy: retain
-          uri: 'cpln://secret/pgedge-start-script'
+          uri: 'cpln://secret/pgedge-start-script-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}'
         - path: /scripts/replication.sql
           recoveryPolicy: retain
-          uri: 'cpln://secret/pgedge-replication-sql'
+          uri: 'cpln://secret/pgedge-replication-sql-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}'
   defaultOptions:
     autoscaling:
       maxConcurrency: 0
@@ -99,7 +99,7 @@ spec:
     internal:
       inboundAllowType: same-org
       inboundAllowWorkload: []
-  identityLink: //identity/{{ (index .Values.pgedge 2).name }}
+  identityLink: //identity/{{ (index .Values.pgedge 0).name }}
   localOptions: []
   rolloutOptions:
     maxSurgeReplicas: 25%
