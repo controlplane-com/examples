@@ -16,7 +16,7 @@ gvc: {{ .Values.pgcat.gvc }}
 tags: {}
 ---
 kind: policy
-name: {{ .Values.pgcat.name }}
+name: {{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
 tags: {}
 origin: default
 bindings:
@@ -28,7 +28,7 @@ targetKind: secret
 targetLinks:
   - //secret/pgcat-toml-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
   - //secret/pgcat-init-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
-  - //secret/pgedge-postgres
+  - //secret/pgedge-postgres-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
 ---
 kind: secret
 name: pgcat-toml-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
@@ -67,9 +67,9 @@ spec:
           value: "{{ $element.location }}"
 {{- end }}
         - name: POSTGRES_PASSWORD
-          value: 'cpln://secret/pgedge-postgres.POSTGRES_PASSWORD'
+          value: 'cpln://secret/pgedge-postgres-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}.POSTGRES_PASSWORD'
         - name: POSTGRES_USER
-          value: 'cpln://secret/pgedge-postgres.POSTGRES_DB'
+          value: 'cpln://secret/pgedge-postgres-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}.POSTGRES_DB'
       image: {{ .Values.pgcat.image_liveness }}
       inheritEnv: false
       livenessProbe:
@@ -113,9 +113,9 @@ spec:
         value: "{{ $element.location }}"
 {{- end }}
       - name: POSTGRES_PASSWORD
-        value: 'cpln://secret/pgedge-postgres.POSTGRES_PASSWORD'
+        value: 'cpln://secret/pgedge-postgres-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}.POSTGRES_PASSWORD'
       - name: POSTGRES_USER
-        value: 'cpln://secret/pgedge-postgres.POSTGRES_DB'
+        value: 'cpln://secret/pgedge-postgres-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}.POSTGRES_DB'
       - name: PGCAT_PORT
         value: '{{ .Values.pgcat.pg_port }}'
       - name: PGCAT_PROM_PORT

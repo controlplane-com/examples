@@ -2,6 +2,7 @@
 ---
 kind: identity
 name: otel-collector-{{ .Values.online_boutique.gvc }}
+gvc: {{ .Values.online_boutique.gvc }}
 tags: {}
 ---
 kind: secret

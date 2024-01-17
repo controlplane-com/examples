@@ -1,6 +1,6 @@
 {{- if .Values.postgres }}
 kind: secret
-name: pgedge-postgres
+name: pgedge-postgres-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
 description: pgedge-postgres secret
 type: dictionary
 data:
@@ -8,7 +8,7 @@ data:
   POSTGRES_DB: {{ .Values.postgres.dbname }}
 ---
 kind: secret
-name: pgedge-replication-sql
+name: pgedge-replication-sql-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
 description: pgedge-replication-sql
 tags: {}
 type: opaque
@@ -18,7 +18,7 @@ data:
 {{ .Files.Get "scripts/replication-boutique.sql" | indent 4 }}
 ---
 kind: secret
-name: pgedge-start-script
+name: pgedge-start-script-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
 description: pgedge-start-script
 tags: {}
 type: opaque

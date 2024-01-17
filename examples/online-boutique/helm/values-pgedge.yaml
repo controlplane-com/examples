@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 online_boutique:
-  gvc: online-boutique-pgedge
+  gvc: online-boutique
   locations: gcp-us-west1,aws-eu-central-1,azure-eastus2
   db_postgres:
     POSTGRES_TABLE_NAME: online_boutique
