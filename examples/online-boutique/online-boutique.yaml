@@ -4,8 +4,8 @@ spec:
   staticPlacement:
     locationLinks:
       - //location/aws-eu-central-1
-      - //location/azure-centralus
-      - //location/gcp-me-west1
+      - //location/azure-eastus2
+      - //location/gcp-us-west1
 ---
 kind: volumeset
 name: redis-volume

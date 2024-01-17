@@ -26,7 +26,6 @@ Step 1 - Deploy online-boutique
 
 ```bash
 cpln apply --gvc online-boutique -f ./online-boutique.yaml
-cpln gvc add-location online-boutique --location gcp-us-east1 --location aws-eu-central-1
 ```
 
 Step 2 - Configure Tracing (Optional)

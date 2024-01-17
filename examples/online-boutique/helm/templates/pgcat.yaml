@@ -76,7 +76,7 @@ spec:
         failureThreshold: 3
         httpGet:
           httpHeaders: []
-          path: /health
+          path: /
           port: 8091
           scheme: HTTP
         initialDelaySeconds: 15
@@ -91,7 +91,7 @@ spec:
         failureThreshold: 7
         httpGet:
           httpHeaders: []
-          path: /health
+          path: /
           port: 8091
           scheme: HTTP
         initialDelaySeconds: 15

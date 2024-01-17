@@ -5,7 +5,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/health':
+        if self.path == '/':
             try:
                 postgres_user = os.getenv('POSTGRES_USER', 'default_user')
                 location = os.getenv('CPLN_LOCATION', '').split('/')[-1]

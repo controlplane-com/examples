@@ -1,7 +1,7 @@
 {{- if .Values.tracing }}
 ---
 kind: identity
-name: otel-collector-online-boutique
+name: otel-collector-{{ .Values.online_boutique.gvc }}
 tags: {}
 ---
 kind: secret
@@ -65,7 +65,7 @@ bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ .Values.online_boutique.gvc }}/identity/otel-collector-online-boutique
+      - //gvc/{{ .Values.online_boutique.gvc }}/identity/otel-collector-{{ .Values.online_boutique.gvc }}
 targetKind: secret
 targetLinks:
   - //secret/datadog-config-{{ .Values.online_boutique.gvc }}
@@ -121,7 +121,7 @@ spec:
     internal:
       inboundAllowType: same-gvc
       inboundAllowWorkload: []
-  identityLink: //identity/otel-collector-online-boutique
+  identityLink: //identity/otel-collector-{{ .Values.online_boutique.gvc }}
   localOptions: []
   supportDynamicTags: false
 {{- end }}

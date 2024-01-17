@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 
 online_boutique:
-  gvc: online-boutique
-  locations: gcp-us-east1,aws-eu-central-1,azure-centralus
+  gvc: online-boutique-pgedge
+  locations: gcp-us-west1,aws-eu-central-1,azure-eastus2
   db_postgres:
     POSTGRES_TABLE_NAME: online_boutique
 
@@ -29,13 +29,13 @@ postgres:
 pgedge:
   - name: pgedge-us-east
     port: 5432
-    location: gcp-us-east1
+    location: azure-eastus2
     diskCapacity: 20 # In Gigabytes
     memory: 3000Mi
     cpu: 1.5
-  - name: pgedge-us-central
+  - name: pgedge-us-west
     port: 5432
-    location: aws-us-east-2
+    location: gcp-us-west1
     diskCapacity: 20 # In Gigabytes
     memory: 3000Mi
     cpu: 1.5
@@ -59,7 +59,7 @@ pgcat:
   name: pgcat
   gvc: pgcat-pgedge
   image: 'igorchyts/pgcat:v0.4'
-  image_liveness: 'igorchyts/pgcat-liveness:v0.1'
+  image_liveness: 'igorchyts/pgcat-liveness:v0.2'
   memory: 200Mi
   cpu: 100m
   pg_port: 6432
