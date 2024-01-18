@@ -1,0 +1,9 @@
+kind: secret
+name: pgedge-db-config-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+description: pgedge-db-config-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: >
+{{ .Files.Get "scripts/db.json" | indent 4 }}

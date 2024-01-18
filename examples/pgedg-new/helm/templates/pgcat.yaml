@@ -1,0 +1,177 @@
+{{- if .Values.pgcat }}
+kind: gvc
+name: {{ .Values.pgcat.gvc }}
+description: {{ .Values.pgcat.gvc }}
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+{{- range .Values.pgedge }}
+      - //location/{{ .location }}
+{{- end }}
+---
+kind: identity
+name: {{ .Values.pgcat.name }}
+gvc: {{ .Values.pgcat.gvc }}
+tags: {}
+---
+kind: policy
+name: {{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.pgcat.gvc }}/identity/{{ .Values.pgcat.name }}
+targetKind: secret
+targetLinks:
+  - //secret/pgcat-toml-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+  - //secret/pgcat-init-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+---
+kind: secret
+name: pgcat-toml-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+description: pgcat.toml for {{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+{{ .Files.Get "scripts/pgcat.toml-template" | indent 4 }}
+---
+kind: secret
+name: pgcat-init-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+description: pgcat init for {{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+{{ .Files.Get "scripts/pgcat-init.sh" | indent 4 }}
+---
+kind: workload
+name: {{ .Values.pgcat.name }}
+description: {{ .Values.pgcat.name }}
+gvc: {{ .Values.pgcat.gvc }}
+spec:
+  type: standard
+  containers:
+    - name: liveness
+      cpu: 50m
+      env:
+{{- range $index, $element := .Values.pgedge }}
+        - name: PGEDGE_{{ $index }}_SERVER
+          value: "pgedge.{{ $element.name }}.cpln.local:{{ $element.port }}"
+        - name: PGEDGE_{{ $index }}_LOCATION
+          value: "{{ $element.location }}"
+{{- end }}
+      image: {{ .Values.pgcat.image_liveness }}
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          httpHeaders: []
+          path: /
+          port: 8091
+          scheme: HTTP
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 3
+      memory: 128Mi
+      ports:
+        - number: 8091
+          protocol: http
+      readinessProbe:
+        failureThreshold: 7
+        httpGet:
+          httpHeaders: []
+          path: /
+          port: 8091
+          scheme: HTTP
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+    - name: pgcat
+      args:
+        - '-c'
+        - >-
+          cp /etc/pgcat/pgcat-init.sh /tmp/ && chmod +x /tmp/pgcat-init.sh &&
+          /tmp/pgcat-init.sh
+      command: /bin/bash
+      env:
+{{- range $index, $element := .Values.pgedge }}
+      - name: PGEDGE_{{ $index }}_SERVER
+        value: "pgedge.{{ $element.name }}.cpln.local:{{ $element.port }}"
+      - name: PGEDGE_{{ $index }}_LOCATION
+        value: "{{ $element.location }}"
+{{- end }}
+      - name: PGCAT_PORT
+        value: '{{ .Values.pgcat.pg_port }}'
+      - name: PGCAT_PROM_PORT
+        value: '{{ .Values.pgcat.prom_port }}'
+      cpu: {{ .Values.pgcat.cpu }}
+      image: {{ .Values.pgcat.image }}
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 6432
+        timeoutSeconds: 3
+      memory: {{ .Values.pgcat.memory }}
+      ports:
+        - number: {{ .Values.pgcat.prom_port }}
+          protocol: http
+        - number: {{ .Values.pgcat.pg_port }}
+          protocol: tcp
+      readinessProbe:
+        failureThreshold: 7
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 6432
+        timeoutSeconds: 3
+      volumes:
+        - path: /etc/pgcat/pgcat.toml-template
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgcat-toml-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}'
+        - path: /etc/pgcat/pgcat-init.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgcat-init-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: {{ .Values.pgcat.autoscaling.maxConcurrency }}
+      maxScale: {{ .Values.pgcat.autoscaling.maxScale }}
+      metric: {{ .Values.pgcat.autoscaling.metric }}
+      minScale: {{ .Values.pgcat.autoscaling.minScale }}
+      scaleToZeroDelay: {{ .Values.pgcat.autoscaling.scaleToZeroDelay }}
+      target: {{ .Values.pgcat.autoscaling.target }}
+    capacityAI: {{ .Values.pgcat.capacityAI }}
+    debug: false
+    suspend: false
+    timeoutSeconds: 30
+  firewallConfig:
+    external:
+      inboundAllowCIDR: 
+        - 0.0.0.0/0
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/{{ .Values.pgcat.name }}
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: OrderedReady
+  supportDynamicTags: false
+{{- end }}

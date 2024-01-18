@@ -1,0 +1,36 @@
+# General pooler settings
+[general]
+host = "0.0.0.0"
+port = ___pgcat_port___
+enable_prometheus_exporter = true
+prometheus_exporter_port = ___prom_port___
+connect_timeout = 5000
+healthcheck_timeout = 1000
+healthcheck_delay = 30000
+shutdown_timeout = 60000
+ban_time = 60 # seconds
+log_client_connections = true
+log_client_disconnections = true
+
+admin_username = "postgres"
+admin_password = "postgres"
+
+[pools.demo]
+pool_mode = "transaction"
+default_role = "any"
+query_parser_enabled = false
+query_parser_read_write_splitting = false
+primary_reads_enabled = true
+sharding_function = "pg_bigint_hash"
+
+[pools.demo.users.0]
+username = "___pg_user___"
+password = "___pg_password___"
+pool_size = 50
+statement_timeout = 0
+
+[pools.demo.shards.0]
+servers = [
+    [ "___pgedge_server___", ___pgedge_port___, "primary" ]
+]
+database = "demo"

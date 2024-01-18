@@ -1,0 +1,837 @@
+---
+# Source: pgedge/templates/pgcat.yaml
+kind: gvc
+name: pgcat-pgedge
+description: pgcat-pgedge
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/azure-eastus2
+      - //location/gcp-us-west1
+      - //location/aws-eu-central-1
+---
+# Source: pgedge/templates/pgedge01.yaml
+kind: gvc
+name: pgedge-us-east
+description: pgedge-us-east
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/azure-eastus2
+---
+# Source: pgedge/templates/pgedge02.yaml
+kind: gvc
+name: pgedge-us-west
+description: pgedge-us-west
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/gcp-us-west1
+---
+# Source: pgedge/templates/pgedge03.yaml
+kind: gvc
+name: pgedge-eu-central
+description: pgedge-eu-central
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-eu-central-1
+---
+# Source: pgedge/templates/pgcat.yaml
+kind: identity
+name: pgcat
+gvc: pgcat-pgedge
+tags: {}
+---
+# Source: pgedge/templates/pgedge01.yaml
+kind: identity
+name: pgedge-us-east
+gvc: pgedge-us-east
+tags: {}
+---
+# Source: pgedge/templates/pgedge02.yaml
+kind: identity
+name: pgedge-us-west
+gvc: pgedge-us-west
+tags: {}
+---
+# Source: pgedge/templates/pgedge03.yaml
+kind: identity
+name: pgedge-eu-central
+gvc: pgedge-eu-central
+tags: {}
+---
+# Source: pgedge/templates/pgcat.yaml
+kind: policy
+name: pgcat-pgcat-pgedge
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/pgcat-pgedge/identity/pgcat
+targetKind: secret
+targetLinks:
+  - //secret/pgcat-toml-pgcat-pgcat-pgedge
+  - //secret/pgcat-init-pgcat-pgcat-pgedge
+---
+# Source: pgedge/templates/pgedge01.yaml
+kind: policy
+name: pgedge-us-east
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/pgedge-us-east/identity/pgedge-us-east
+targetKind: secret
+targetLinks:
+  - //secret/pgedge-db-config-pgcat-pgcat-pgedge
+---
+# Source: pgedge/templates/pgedge02.yaml
+kind: policy
+name: pgedge-us-west
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/pgedge-us-west/identity/pgedge-us-west
+targetKind: secret
+targetLinks:
+  - //secret/pgedge-db-config-pgcat-pgcat-pgedge
+---
+# Source: pgedge/templates/pgedge03.yaml
+kind: policy
+name: pgedge-eu-central
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/pgedge-eu-central/identity/pgedge-eu-central
+targetKind: secret
+targetLinks:
+  - //secret/pgedge-db-config-pgcat-pgcat-pgedge
+---
+# Source: pgedge/templates/pgcat.yaml
+kind: secret
+name: pgcat-toml-pgcat-pgcat-pgedge
+description: pgcat.toml for pgcat-pgcat-pgedge
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    [general]
+    host = "0.0.0.0"
+    port = 6432
+    autoreload = 10000
+    dns_cache_enabled = true
+    admin_username = "pgcat_admin"
+    admin_password = "k6uu4od8r0P6lA11Oep648KC"
+    prepared_statements = true
+    prepared_statements_cache_size = 500
+    
+    [pools.defaultdb]
+    pool_size = 50
+    min_pool_size = 1
+    pool_mode = "transaction"
+    query_parser_enabled = false
+    auth_query = "SELECT usename, passwd FROM pg_shadow WHERE usename='$1'"
+    auth_query_user = "pgcat_auth"
+    auth_query_password = "5Y306TW24540dEnyxp3mQBwH"
+    
+    [pools.defaultdb.users.0]
+    pool_size = 16
+    min_pool_size = 1
+    pool_mode = "session"
+    username = "admin"
+    
+    [pools.defaultdb.users.1]
+    pool_size = 50
+    min_pool_size = 1
+    username = "app"
+    
+    [pools.defaultdb.shards.0]
+    servers = [
+      ["___pgedge_server___", ___pgedge_port___, "Primary"]
+    ]
+    database = "defaultdb"
+---
+# Source: pgedge/templates/pgcat.yaml
+kind: secret
+name: pgcat-init-pgcat-pgcat-pgedge
+description: pgcat init for pgcat-pgcat-pgedge
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    #!/bin/bash
+    
+    set -o errexit
+    set -o nounset
+    set -o pipefail
+    
+    cp /etc/pgcat/pgcat.toml-template /etc/pgcat/pgcat.toml
+    
+    # Set env
+    export PGCAT_LOCATION=$(echo ${CPLN_LOCATION##*/})
+    export PGCAT_CONFIG_FILE=/etc/pgcat/pgcat.toml
+    
+    # Function to replace placeholder in pgcat.toml
+    replace_placeholder() {
+        local placeholder="${1:?missing placeholder value}"
+        local value="${2:?missing value}"
+        sed -i "s/$placeholder/$value/g" "$PGCAT_CONFIG_FILE"
+    }
+    
+    # Function to extract the domain and port from the server variable
+    extract_domain_and_port() {
+      local server_var=$1
+      local server_value=${!server_var}
+      domain=$(echo $server_value | cut -d':' -f1)
+      port=$(echo $server_value | cut -d':' -f2)
+      echo "Match found for location $PGCAT_LOCATION:"
+      echo "Domain: $domain"
+      echo "Port: $port"
+    
+      replace_placeholder "___pgedge_server___" $domain
+      replace_placeholder "___pgedge_port___" $port
+    }
+    
+    # Loop through all environment variables
+    matched=false
+    while IFS='=' read -r name value ; do
+      if [[ $name =~ ^PGEDGE_([0-9]+)_LOCATION$ ]]; then
+        index=${BASH_REMATCH[1]}
+        location_var="PGEDGE_${index}_LOCATION"
+        server_var="PGEDGE_${index}_SERVER"
+        
+        location_value=${!location_var}
+        
+        # Check if the PGCAT_LOCATION matches this PGEDGE location
+        if [ "$PGCAT_LOCATION" == "$location_value" ]; then
+          # Call function to extract domain and port
+          extract_domain_and_port $server_var
+          matched=true
+          break
+        fi
+      fi
+    done < <(env)
+    
+    # Call the readiness check if a match was found
+    if [ "$matched" = true ]; then
+      pgcat /etc/pgcat/pgcat.toml
+    else
+      echo "No matching PGEDGE location found for $PGCAT_LOCATION"
+      exit 1
+    fi
+---
+# Source: pgedge/templates/pgedge-db-config.yaml
+kind: secret
+name: pgedge-db-config-pgcat-pgcat-pgedge
+description: pgedge-db-config-pgcat-pgcat-pgedge
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: >
+    {
+        "id": "1111",
+        "tenant_id": "7777",
+        "name": "defaultdb",
+        "port": 5432,
+        "nodes": [
+          {
+            "name": "n1",
+            "region": "azure-eastus2",
+            "hostname": "pgedge.pgedge-us-east.cpln.local"
+          },
+          {
+            "name": "n2",
+            "region": "gcp-us-west1",
+            "hostname": "pgedge.pgedge-us-west.cpln.local"
+          },
+          {
+            "name": "n3",
+            "region": "aws-eu-central-1",
+            "hostname": "pgedge.pgedge-eu-central.cpln.local"
+          }
+        ],
+        "users": [
+          {
+            "username": "app",
+            "password": "0Osh8bqE5EokT3I3Z78MQ344",
+            "superuser": false,
+            "service": "postgres",
+            "type": "application"
+          },
+          {
+            "username": "admin",
+            "password": "uFR44yr69C4mZa72g3JQ37GX",
+            "superuser": true,
+            "service": "postgres",
+            "type": "admin"
+          },
+          {
+            "username": "pgedge",
+            "password": "z1Zsku10a91RS526jnVrLC39",
+            "superuser": true,
+            "service": "postgres",
+            "type": "internal_admin"
+          },
+          {
+            "username": "pgcat_auth",
+            "password": "5Y306TW24540dEnyxp3mQBwH",
+            "superuser": false,
+            "service": "postgres",
+            "type": "pooler_auth"
+          },
+          {
+            "username": "pgcat_admin",
+            "password": "k6uu4od8r0P6lA11Oep648KC",
+            "superuser": false,
+            "service": "pgcat",
+            "type": "other"
+          }
+        ]
+      }
+---
+# Source: pgedge/templates/pgedge-start-script.yaml
+kind: secret
+name: pgedge-start-script
+description: pgedge-start-script
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: >
+    #!/bin/bash
+    
+    
+    set -x
+    
+    
+    subscribe() {
+        local this="$1"
+        local nodes="$2"
+        local count=0
+    
+        for on in $nodes; do
+            count=$((count + 1))
+            on_short="n$count"
+            on_hostname="${on%%:*}"
+            on_port="${on##*:}"
+            if [[ "$this" == "$on_short" ]]; then
+                continue
+            else
+                while true; do
+                    #nodectl spock sub-create SUBSCRIPTION_NAME PROVIDER_DSN DB
+                    ./nodectl spock sub-create sub_${this}${on_short} "host=${on_hostname} port=${on_port} user=pgedge dbname=${POSTGRES_DB}" "${POSTGRES_DB}" && break
+                    sleep 10s
+                done
+                ./nodectl spock sub-add-repset sub_${this}${on_short} $SET_NAME demo
+            fi
+        done
+    }
+    
+    
+    if [ "`id -u`" = "0" ]; then
+        echo "****** Phase 1 running as root"
+    
+        export WORKLOAD_NAME=$(echo $CPLN_WORKLOAD | sed 's|.*/workload/\([^/]*\)$|\1|')
+        export HOSTNAME="${WORKLOAD_NAME}.${CPLN_GVC}.cpln.local"
+    
+        # mkdir -p /opt/pgedge
+        chown -R pgedge /opt/pgedge
+    
+        cat <<EOF > /home/pgedge/pgedge.env
+    HOSTNAME=$HOSTNAME
+    
+    CLUSTER_NODES="$CLUSTER_NODES"
+    
+    POSTGRES_DB=$POSTGRES_DB
+    
+    POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+    
+    EOF
+    
+        # and then rerun this script as pgedge
+        su pgedge - $0
+        exit
+    fi
+    
+    
+    #------ from here down we are user pgedge....
+    
+    
+    echo "****** Phase 2 running as pgedge"
+    
+    
+    source /home/pgedge/pgedge.env
+    
+    
+    cd /opt/pgedge/
+    
+    
+    if [ ! -d /opt/pgedge/pgedge/nodectl ]; then
+        python3 -c "$(curl -fsSL https://pgedge-download.s3.amazonaws.com/REPO/install.py)"
+    fi
+    
+    
+    cd /opt/pgedge/pgedge
+    
+    
+    NODE_COUNT=0
+    
+    
+    for NODE in $CLUSTER_NODES; do
+        NODE_COUNT=$((NODE_COUNT + 1))
+        NODE_SHORT="n$NODE_COUNT"
+        NODE_HOSTNAME="${NODE%%:*}"
+        NODE_PORT="${NODE##*:}"
+    
+        if [ "$NODE_HOSTNAME" == "$HOSTNAME" ]; then
+        echo "This host ($HOSTNAME) is part of the cluster."
+        # sed -i 's/export PGPORT=5432/export PGPORT=$NODE_PORT/' pg16/pg16.env
+        # source pg16/pg16.env
+        SET_NAME="cpln_default"
+        output=$(./nodectl status pgedge)
+        pg_ctl_path="/opt/pgedge/pgedge/pg16/bin/pg_ctl"
+    
+        if ([ "$output" == "pgedge installed" ] || [ "$output" == "pgedge stopped" ]) && [ -f "$pg_ctl_path" ]; then
+            # Restore the password
+            cp /opt/pgedge/pgedge/pg16/.pgpass ~pgedge/.pgpass
+            ./nodectl start pg16
+            ./nodectl spock node-create $NODE_SHORT "host=$HOSTNAME port=$NODE_PORT user=pgedge dbname=$POSTGRES_DB" "${POSTGRES_DB}" || true
+            ./nodectl spock repset-create "${SET_NAME}" "${POSTGRES_DB}" || true
+            subscribe "$NODE_SHORT" "$CLUSTER_NODES" &
+        else
+            ./nodectl install pgedge -U $POSTGRES_DB -P $POSTGRES_PASSWORD -d $POSTGRES_DB -p $NODE_PORT
+            # backup the pass file
+            cp ~pgedge/.pgpass /opt/pgedge/pgedge/pg16/.pgpass
+            ./nodectl spock node-create $NODE_SHORT "host=$HOSTNAME port=$NODE_PORT user=pgedge dbname=$POSTGRES_DB" "${POSTGRES_DB}" || true
+            ./nodectl spock repset-create "${SET_NAME}" "${POSTGRES_DB}" || true
+            subscribe "$NODE_SHORT" "$CLUSTER_NODES" &
+        fi
+        break
+        fi
+    done
+    
+    
+    wait
+    
+    
+    /opt/pgedge/pgedge/pg16/bin/psql $POSTGRES_DB -c "SELECT * FROM spock.node;"
+    -p $NODE_PORT
+    
+    /opt/pgedge/pgedge/pg16/bin/psql $POSTGRES_DB -p $NODE_PORT -f
+    /scripts/replication.sql
+    
+    sleep 99999d
+---
+# Source: pgedge/templates/pgedge01.yaml
+kind: volumeset
+name: pgedge-data
+description: pgedge-data
+gvc: pgedge-us-east
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 20
+  performanceClass: general-purpose-ssd
+---
+# Source: pgedge/templates/pgedge02.yaml
+kind: volumeset
+name: pgedge-data
+description: pgedge-data
+gvc: pgedge-us-west
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 20
+  performanceClass: general-purpose-ssd
+---
+# Source: pgedge/templates/pgedge03.yaml
+kind: volumeset
+name: pgedge-data
+description: pgedge-data
+gvc: pgedge-eu-central
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 20
+  performanceClass: general-purpose-ssd
+---
+# Source: pgedge/templates/pgadmin.yaml
+kind: workload
+name: pgadmin
+description: pgadmin
+gvc: pgedge-eu-central
+spec:
+  type: standard
+  containers:
+    - name: pgadmin
+      cpu: 150m
+      env:
+        - name: PGADMIN_DEFAULT_EMAIL
+          value: user@cpln.com
+        - name: PGADMIN_DEFAULT_PASSWORD
+          value: admin
+      image: dpage/pgadmin4
+      inheritEnv: false
+      memory: 300Mi
+      ports:
+        - number: 80
+          protocol: http
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 30
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  localOptions: []
+  supportDynamicTags: false
+---
+# Source: pgedge/templates/pgcat.yaml
+kind: workload
+name: pgcat
+description: pgcat
+gvc: pgcat-pgedge
+spec:
+  type: standard
+  containers:
+    - name: liveness
+      cpu: 50m
+      env:
+        - name: PGEDGE_0_SERVER
+          value: "pgedge.pgedge-us-east.cpln.local:5432"
+        - name: PGEDGE_0_LOCATION
+          value: "azure-eastus2"
+        - name: PGEDGE_1_SERVER
+          value: "pgedge.pgedge-us-west.cpln.local:5432"
+        - name: PGEDGE_1_LOCATION
+          value: "gcp-us-west1"
+        - name: PGEDGE_2_SERVER
+          value: "pgedge.pgedge-eu-central.cpln.local:5432"
+        - name: PGEDGE_2_LOCATION
+          value: "aws-eu-central-1"
+      image: igorchyts/pgcat-liveness:v0.2
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          httpHeaders: []
+          path: /
+          port: 8091
+          scheme: HTTP
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 3
+      memory: 128Mi
+      ports:
+        - number: 8091
+          protocol: http
+      readinessProbe:
+        failureThreshold: 7
+        httpGet:
+          httpHeaders: []
+          path: /
+          port: 8091
+          scheme: HTTP
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 3
+    - name: pgcat
+      args:
+        - '-c'
+        - >-
+          cp /etc/pgcat/pgcat-init.sh /tmp/ && chmod +x /tmp/pgcat-init.sh &&
+          /tmp/pgcat-init.sh
+      command: /bin/bash
+      env:
+      - name: PGEDGE_0_SERVER
+        value: "pgedge.pgedge-us-east.cpln.local:5432"
+      - name: PGEDGE_0_LOCATION
+        value: "azure-eastus2"
+      - name: PGEDGE_1_SERVER
+        value: "pgedge.pgedge-us-west.cpln.local:5432"
+      - name: PGEDGE_1_LOCATION
+        value: "gcp-us-west1"
+      - name: PGEDGE_2_SERVER
+        value: "pgedge.pgedge-eu-central.cpln.local:5432"
+      - name: PGEDGE_2_LOCATION
+        value: "aws-eu-central-1"
+      - name: PGCAT_PORT
+        value: '6432'
+      - name: PGCAT_PROM_PORT
+        value: '9930'
+      cpu: 100m
+      image: pgedge/pgcat:1.0
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 6432
+        timeoutSeconds: 3
+      memory: 200Mi
+      ports:
+        - number: 9930
+          protocol: http
+        - number: 6432
+          protocol: tcp
+      readinessProbe:
+        failureThreshold: 7
+        initialDelaySeconds: 15
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 6432
+        timeoutSeconds: 3
+      volumes:
+        - path: /etc/pgcat/pgcat.toml-template
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgcat-toml-pgcat-pgcat-pgedge'
+        - path: /etc/pgcat/pgcat-init.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgcat-init-pgcat-pgcat-pgedge'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 2
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 70
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 30
+  firewallConfig:
+    external:
+      inboundAllowCIDR: 
+        - 0.0.0.0/0
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/pgcat
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: OrderedReady
+  supportDynamicTags: false
+---
+# Source: pgedge/templates/pgedge01.yaml
+kind: workload
+name: pgedge
+description: pgedge
+gvc: pgedge-us-east
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: pgedge
+      env:
+        - name: NODE_NAME
+          value: n1
+        - name: PG_DATA_DIR
+          value: /data
+      cpu: '1.5'
+      image: 'pgedge/postgres:1.8'
+      inheritEnv: false
+      memory: 3000Mi
+      ports:
+        - number: 5432
+          protocol: tcp
+      volumes:
+        - path: /data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/pgedge-data'
+        - path: /home/pgedge/db.json
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgedge-db-config-pgcat-pgcat-pgedge'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/pgedge-us-east
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+  supportDynamicTags: false
+---
+# Source: pgedge/templates/pgedge02.yaml
+kind: workload
+name: pgedge
+description: pgedge
+gvc: pgedge-us-west
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: pgedge
+      env:
+        - name: NODE_NAME
+          value: n2
+      cpu: '1.5'
+      image: 'pgedge/postgres:1.8'
+      inheritEnv: false
+      memory: 3000Mi
+      ports:
+        - number: 5432
+          protocol: tcp
+        - name: PG_DATA_DIR
+          value: /data
+      volumes:
+        - path: /data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/pgedge-data'
+        - path: /home/pgedge/db.json
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgedge-db-config-pgcat-pgcat-pgedge'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/pgedge-us-west
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+  supportDynamicTags: false
+---
+# Source: pgedge/templates/pgedge03.yaml
+kind: workload
+name: pgedge
+description: pgedge
+gvc: pgedge-eu-central
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: pgedge
+      env:
+        - name: NODE_NAME
+          value: n3
+        - name: PG_DATA_DIR
+          value: /data
+      cpu: '1.5'
+      image: 'pgedge/postgres:1.8'
+      inheritEnv: false
+      memory: 3000Mi
+      ports:
+        - number: 5432
+          protocol: tcp
+      volumes:
+        - path: /data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/pgedge-data'
+        - path: /home/pgedge/db.json
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgedge-db-config-pgcat-pgcat-pgedge'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/pgedge-eu-central
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+  supportDynamicTags: false

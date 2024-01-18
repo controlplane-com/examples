@@ -1,0 +1,98 @@
+{{- if and .Values.pgedge (index .Values.pgedge 2) }}
+kind: gvc
+name: {{ (index .Values.pgedge 2).name }}
+description: {{ (index .Values.pgedge 2).name }}
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/{{ (index .Values.pgedge 2).location }}
+---
+kind: identity
+name: {{ (index .Values.pgedge 2).name }}
+gvc: {{ (index .Values.pgedge 2).name }}
+tags: {}
+---
+kind: volumeset
+name: pgedge-data
+description: pgedge-data
+gvc: {{ (index .Values.pgedge 2).name }}
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: {{ (index .Values.pgedge 2).diskCapacity }}
+  performanceClass: general-purpose-ssd
+---
+kind: policy
+name: {{ (index .Values.pgedge 2).name }}
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ (index .Values.pgedge 2).name }}/identity/{{ (index .Values.pgedge 2).name }}
+targetKind: secret
+targetLinks:
+  - //secret/pgedge-db-config-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+---
+kind: workload
+name: pgedge
+description: pgedge
+gvc: {{ (index .Values.pgedge 2).name }}
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: pgedge
+      env:
+        - name: NODE_NAME
+          value: {{ (index .Values.pgedge 2).NODE_NAME }}
+        # - name: PG_DATA_DIR
+        #   value: {{ (index .Values.pgedge 2).PG_DATA_DIR }}
+      cpu: '{{ (index .Values.pgedge 2).cpu }}'
+      image: '{{ .Values.image.repository }}'
+      inheritEnv: false
+      memory: {{ (index .Values.pgedge 2).memory }}
+      ports:
+        - number: {{ (index .Values.pgedge 2).port }}
+          protocol: tcp
+      volumes:
+        # - path: /data
+        #   recoveryPolicy: retain
+        #   uri: 'cpln://volumeset/pgedge-data'
+        - path: /home/pgedge/db.json
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgedge-db-config-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/{{ (index .Values.pgedge 2).name }}
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+  securityOptions:
+    filesystemGroupId: 1020
+  supportDynamicTags: false
+{{- end }}

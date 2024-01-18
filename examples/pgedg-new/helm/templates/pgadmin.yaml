@@ -1,0 +1,47 @@
+{{- if .Values.pgadmin }}
+kind: workload
+name: pgadmin
+description: pgadmin
+gvc: {{ .Values.pgadmin.gvc }}
+spec:
+  type: standard
+  containers:
+    - name: pgadmin
+      cpu: {{ .Values.pgadmin.cpu }}
+      env:
+        - name: PGADMIN_DEFAULT_EMAIL
+          value: {{ .Values.pgadmin.email }}
+        - name: PGADMIN_DEFAULT_PASSWORD
+          value: {{ .Values.pgadmin.password }}
+      image: dpage/pgadmin4
+      inheritEnv: false
+      memory: {{ .Values.pgadmin.memory }}
+      ports:
+        - number: 80
+          protocol: http
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 30
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - {{ .Values.pgadmin.inboundCidr }}
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  localOptions: []
+  supportDynamicTags: false
+{{- end }}

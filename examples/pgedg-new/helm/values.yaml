@@ -1,0 +1,63 @@
+# Default values for pgedge.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  # custom image
+  repository: pgedge/postgres:1.8
+
+pgedge:
+  - name: pgedge-us-east
+    NODE_NAME: n1
+    PG_DATA_DIR: /data
+    port: 5432
+    location: azure-eastus2
+    diskCapacity: 20 # In Gigabytes
+    memory: 3000Mi
+    cpu: 1.5
+  - name: pgedge-us-west
+    NODE_NAME: n2
+    PG_DATA_DIR: /data
+    port: 5432
+    location: gcp-us-west1
+    diskCapacity: 20 # In Gigabytes
+    memory: 3000Mi
+    cpu: 1.5
+  - name: pgedge-eu-central
+    NODE_NAME: n3
+    PG_DATA_DIR: /data
+    port: 5432
+    location: aws-eu-central-1
+    diskCapacity: 20 # In Gigabytes
+    memory: 3000Mi
+    cpu: 1.5
+
+# postgres:  
+#   password: 'ji2jd32d2'
+#   dbname: demo
+
+pgadmin:
+  gvc: pgedge-eu-central
+  email: user@cpln.com
+  password: admin
+  memory: 300Mi
+  cpu: 150m
+  inboundCidr: 0.0.0.0/0
+
+pgcat:
+  name: pgcat
+  gvc: pgcat-pgedge
+  image: 'pgedge/pgcat:1.0'
+  image_liveness: 'igorchyts/pgcat-liveness:v0.2'
+  memory: 200Mi
+  cpu: 100m
+  pg_port: 6432
+  prom_port: 9930
+  capacityAI: false
+  autoscaling:
+    maxConcurrency: 0
+    maxScale: 2
+    metric: cpu
+    minScale: 1
+    scaleToZeroDelay: 300
+    target: 70
