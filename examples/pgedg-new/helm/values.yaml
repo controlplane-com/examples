@@ -13,24 +13,24 @@ pgedge:
     port: 5432
     location: azure-eastus2
     diskCapacity: 20 # In Gigabytes
-    memory: 3000Mi
-    cpu: 1.5
+    memory: 1000Mi
+    cpu: 500m
   - name: pgedge-us-west
     NODE_NAME: n2
     PG_DATA_DIR: /data
     port: 5432
     location: gcp-us-west1
     diskCapacity: 20 # In Gigabytes
-    memory: 3000Mi
-    cpu: 1.5
+    memory: 1000Mi
+    cpu: 500m
   - name: pgedge-eu-central
     NODE_NAME: n3
     PG_DATA_DIR: /data
     port: 5432
     location: aws-eu-central-1
     diskCapacity: 20 # In Gigabytes
-    memory: 3000Mi
-    cpu: 1.5
+    memory: 1000Mi
+    cpu: 500m
 
 # postgres:  
 #   password: 'ji2jd32d2'
