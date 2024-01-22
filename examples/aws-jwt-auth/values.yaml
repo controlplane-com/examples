@@ -1,0 +1,40 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+gvc: aws-jwt-auth
+
+image:
+  repository: ubuntu
+  tag: 24.04
+
+nameOverride: hello-world
+
+workload:
+  name: hello-world
+  port: 8080
+  capacityAI: false
+  timeoutSeconds: 5
+
+resources:
+  cpu: 100m
+  memory: 128Mi
+
+autoscaling:
+  minScale: 1
+  maxScale: 1
+  maxConcurrency: 1000
+
+envoyHttp:
+  audiences:
+    - jwt-audience-1
+    - jwt-audience-2
+  issuer: >-
+    https://cognito-idp.us-west-2.amazonaws.com/us-west-2_IuN4Nu5X2
+  claim_to_headers:
+    - claim_name: claim-name-1
+      header_name: x-header-name-1
+    - claim_name: claim-name-2
+      header_name: x-header-name-2
+  remote_jwks:
+    uri: >-
+      https://cognito-idp.us-west-2.amazonaws.com/us-west-2_IuN4Nu5X2/.well-known/jwks.json

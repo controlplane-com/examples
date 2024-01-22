@@ -1,0 +1,41 @@
+kind: workload
+name: {{ .Values.workload.name }}
+gvc: {{ .Values.gvc }}
+tags:
+{{- include "aws-jwt-auth.tags" . | nindent 2 }}
+spec:
+  sidecar:
+{{- include "envoy-config" . | indent 4}}
+  type: serverless
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: {{ .Values.autoscaling.maxConcurrency }}
+      maxScale: {{ .Values.autoscaling.maxScale }}
+      metric: cpu
+      minScale: {{ .Values.autoscaling.minScale }}
+      scaleToZeroDelay: 300
+      target: 50
+    capacityAI: {{ .Values.workload.capacityAI }}
+    debug: false
+    suspend: false
+    timeoutSeconds: {{ .Values.workload.timeoutSeconds }}
+  firewallConfig:
+    external:
+      inboundAllowCIDR: ["0.0.0.0/0"]
+    internal:
+      inboundAllowType: same-gvc
+  containers:
+    - name: {{ .Chart.Name }}
+      image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+      {{- toYaml .Values.resources | nindent 6 }}
+      ports:
+        - number: {{ .Values.workload.port | int }}
+          protocol: http
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: {{ .Values.workload.port | int }}
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: {{ .Values.workload.port | int }}
