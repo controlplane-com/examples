@@ -6,6 +6,12 @@ spec:
       - //location/aws-eu-central-1
       - //location/azure-eastus2
       - //location/gcp-us-west1
+  tracing:
+    provider:
+      controlplane: {}
+    customTags: {}
+    sampling: 100
+
 ---
 kind: volumeset
 name: redis-volume
