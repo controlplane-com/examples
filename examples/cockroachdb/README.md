@@ -27,9 +27,9 @@ If you haven't already installed the Control Plane CLI, [click here](https://doc
 
 ```bash
 cpln apply -f manifests/cockroachdb-script.yaml
-cpln apply --gvc cockroachdb-useast -f ./cockroachdb-useast.yaml
-cpln apply --gvc cockroachdb-uswest -f ./cockroachdb-uswest.yaml
-cpln apply --gvc cockroachdb-eucentral -f ./cockroachdb-eucentral.yaml
+cpln apply --gvc cockroachdb-useast -f manifests/cockroachdb-useast.yaml
+cpln apply --gvc cockroachdb-uswest -f manifests/cockroachdb-uswest.yaml
+cpln apply --gvc cockroachdb-eucentral -f manifests/cockroachdb-eucentral.yaml
 ```
 It will take a few minutes for Cockroachdb to get to ready state.
 
