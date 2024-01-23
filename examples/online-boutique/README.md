@@ -28,7 +28,7 @@ If you haven't already installed the Control Plane CLI, [click here](https://doc
 
    - If not changed, tracing is enabled with Control Plane tracing. Continue to Step 2.
    - To switch to tracing with OTEL to Datadog:
-     1. Replace tracing configuration for the `online-boutique` GVC object in the [online-boutique.yaml](./online-boutique.yaml) file with:
+     1. Replace tracing configuration for the `online-boutique` **GVC** object in the [online-boutique.yaml](./online-boutique.yaml) file with:
      ```yaml
        tracing:
          provider:
@@ -71,7 +71,7 @@ If you haven't already installed the Control Plane CLI, [click here](https://doc
 
    - If not changed, tracing is enabled with Control Plane tracing. Continue to Step 2.
    - To switch to tracing with OTEL to Datadog:
-     1. Replace tracing configuration for the `online-boutique` GVC object in the [online-boutique.yaml](./online-boutique.yaml) file with:
+     1. Replace tracing configuration for the `online-boutique` **GVC** object in the [online-boutique.yaml](./online-boutique.yaml) file with:
      ```yaml
        tracing:
          provider:
