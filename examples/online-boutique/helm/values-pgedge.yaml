@@ -8,15 +8,19 @@ online_boutique:
   db_postgres:
     POSTGRES_TABLE_NAME: online_boutique
 
-# tracing:
-#   otel_workload: 'otel-collector'
-#   otel_port: '4317'
-#   sampling: 100
-#   # Do not set DD_API_KEY_VALUE and DD_SITE_VALUE below inside quotation mark
-#   DD_API_KEY: DD_API_KEY_VALUE
-#   DD_SITE: DD_SITE_VALUE ## For Example: datadoghq.com
-#   cpu: 100m
-#   memory: 200Mi
+tracing:
+  controlplane:
+    sampling: 100
+  # otel:
+  #   otel_workload: 'otel-collector'
+  #   otel_port: '4317'
+  #   sampling: 100
+  #   # Do not set DD_API_KEY_VALUE and DD_SITE_VALUE below inside quotation mark
+  #   DD_API_KEY: DD_API_KEY_VALUE
+  #   DD_SITE: DD_SITE_VALUE ## For Example: datadoghq.com
+  #   cpu: 100m
+  #   memory: 200Mi
+
 
 image:
   # custom image

@@ -7,6 +7,22 @@ spec:
   staticPlacement:
     locationLinks:
       - //location/{{ (index .Values.pgedge 0).location }}
+{{- if and .Values.tracing (or .Values.tracing.otel .Values.tracing.controlplane) }}
+  tracing:
+    {{- if .Values.tracing.otel }}
+    provider:
+      otel:
+        endpoint: '{{ .Values.tracing.otel.otel_workload }}.{{ .Values.online_boutique.gvc }}.cpln.local:{{ .Values.tracing.otel.otel_port }}'
+    sampling: {{ .Values.tracing.otel.sampling }}
+    {{- end }}
+    {{- if .Values.tracing.controlplane }}
+    provider:
+      controlplane: {}
+    customTags: {}
+    sampling: {{ .Values.tracing.controlplane.sampling }}
+    {{- end }}
+{{- end }}
+
 ---
 kind: identity
 name: {{ (index .Values.pgedge 0).name }}

@@ -1,67 +1,68 @@
+---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: gvc
-name: {{ .Values.online_boutique.gvc }}
-description: {{ .Values.online_boutique.gvc }}
+name: online-boutique
+description: online-boutique
 tags: {}
 spec:
   staticPlacement:
     locationLinks:
-{{- range splitList "," .Values.online_boutique.locations }}
-      - //location/{{ . | trim }}
-{{- end }}
-{{- if and .Values.tracing (or .Values.tracing.otel .Values.tracing.controlplane) }}
-  tracing:
-    {{- if .Values.tracing.otel }}
-    provider:
-      otel:
-        endpoint: '{{ .Values.tracing.otel.otel_workload }}.{{ .Values.online_boutique.gvc }}.cpln.local:{{ .Values.tracing.otel.otel_port }}'
-    sampling: {{ .Values.tracing.otel.sampling }}
-    {{- end }}
-    {{- if .Values.tracing.controlplane }}
-    provider:
-      controlplane: {}
-    customTags: {}
-    sampling: {{ .Values.tracing.controlplane.sampling }}
-    {{- end }}
-{{- end }}
-
+      - //location/gcp-us-west1
+      - //location/aws-eu-central-1
+      - //location/azure-eastus2
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: identity
 name: cartservice-identity
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: cartservice-identity
 tags: {}
-
-{{- if .Values.online_boutique.db_postgres }}
 ---
-kind: secret
-name: db-secret-{{ .Values.online_boutique.gvc }}
-description: DB connection details
+# Source: online-boutique/templates/online-boutique.yaml
+kind: identity
+name: redis-identity
+gvc: online-boutique
+description: redis-identity
 tags: {}
-type: dictionary
-data:
-  POSTGRES_DATABASE_NAME: {{ .Values.postgres.dbname }}
-  POSTGRES_TABLE_NAME: {{ .Values.online_boutique.db_postgres.POSTGRES_TABLE_NAME }}
-  POSTGRES_PASSWORD: {{ .Values.postgres.password }}
-  POSTGRES_USERNAME: {{ .Values.postgres.dbname }}
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: policy
-name: cartservice-{{ .Values.online_boutique.gvc }}
+name: redis-cart
 tags: {}
 origin: default
 bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ .Values.online_boutique.gvc }}/identity/cartservice-identity
+      - //gvc/online-boutique/identity/redis-identity
 targetKind: secret
 targetLinks:
-  - //secret/db-secret-{{ .Values.online_boutique.gvc }}
-{{- end}}
-
+  - //secret/redis-boutique-conf
 ---
+# Source: online-boutique/templates/online-boutique.yaml
+kind: secret
+name: redis-boutique-conf
+description: redis-boutique-conf
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: port 6389
+---
+# Source: online-boutique/templates/online-boutique.yaml
+kind: volumeset
+name: redis-volume
+gvc: online-boutique
+description: redis-volume
+spec:
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: adservice
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: adservice
 spec:
   type: serverless
@@ -118,9 +119,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: cartservice
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: cartservice
 tags: {}
 spec:
@@ -129,21 +131,8 @@ spec:
     - name: server
       cpu: 300m
       env:
-{{- if .Values.online_boutique.db_postgres }}
-        - name: POSTGRES_HOSTNAME
-          value: {{ .Values.pgcat.name }}.{{ .Values.pgcat.gvc }}.cpln.local:6432
-        - name: POSTGRES_DATABASE_NAME
-          value: cpln://secret/db-secret-{{ .Values.online_boutique.gvc }}.POSTGRES_DATABASE_NAME
-        - name: POSTGRES_PASSWORD
-          value: cpln://secret/db-secret-{{ .Values.online_boutique.gvc }}.POSTGRES_PASSWORD
-        - name: POSTGRES_TABLE_NAME
-          value: cpln://secret/db-secret-{{ .Values.online_boutique.gvc }}.POSTGRES_TABLE_NAME
-        - name: POSTGRES_USERNAME
-          value: cpln://secret/db-secret-{{ .Values.online_boutique.gvc }}.POSTGRES_USERNAME
-{{- else }}
         - name: REDIS_ADDR
           value: 'redis-cart:6389'
-{{- end }}
       image: 'igorchyts/online-boutique-cartservice:0.8.1-cpln-3'
       inheritEnv: false
       livenessProbe:
@@ -194,9 +183,10 @@ spec:
   localOptions: []
   supportDynamicTags: true
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: checkoutservice
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: checkoutservice
 spec:
   type: serverless
@@ -205,19 +195,19 @@ spec:
       cpu: 200m
       env:
         - name: CART_SERVICE_ADDR
-          value: 'cartservice.{{ .Values.online_boutique.gvc }}.cpln.local:7070'
+          value: 'cartservice.online-boutique.cpln.local:7070'
         - name: CURRENCY_SERVICE_ADDR
-          value: 'currencyservice.{{ .Values.online_boutique.gvc }}.cpln.local:7000'
+          value: 'currencyservice.online-boutique.cpln.local:7000'
         - name: EMAIL_SERVICE_ADDR
-          value: 'emailservice.{{ .Values.online_boutique.gvc }}.cpln.local:8080'
+          value: 'emailservice.online-boutique.cpln.local:8080'
         - name: PAYMENT_SERVICE_ADDR
-          value: 'paymentservice.{{ .Values.online_boutique.gvc }}.cpln.local:50051'
+          value: 'paymentservice.online-boutique.cpln.local:50051'
         - name: PORT
           value: '5050'
         - name: PRODUCT_CATALOG_SERVICE_ADDR
-          value: 'productcatalogservice.{{ .Values.online_boutique.gvc }}.cpln.local:3550'
+          value: 'productcatalogservice.online-boutique.cpln.local:3550'
         - name: SHIPPING_SERVICE_ADDR
-          value: 'shippingservice.{{ .Values.online_boutique.gvc }}.cpln.local:50051'
+          value: 'shippingservice.online-boutique.cpln.local:50051'
       image: 'gcr.io/google-samples/microservices-demo/checkoutservice:v0.8.0'
       inheritEnv: false
       livenessProbe:
@@ -265,9 +255,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: currencyservice
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: currencyservice
 spec:
   type: serverless
@@ -327,9 +318,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: emailservice
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: emailservice
 spec:
   type: serverless
@@ -388,9 +380,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: frontend
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: frontend
 spec:
   type: standard
@@ -399,23 +392,23 @@ spec:
       cpu: 200m
       env:
         - name: AD_SERVICE_ADDR
-          value: 'adservice.{{ .Values.online_boutique.gvc }}.cpln.local:9555'
+          value: 'adservice.online-boutique.cpln.local:9555'
         - name: CART_SERVICE_ADDR
-          value: 'cartservice.{{ .Values.online_boutique.gvc }}.cpln.local:7070'
+          value: 'cartservice.online-boutique.cpln.local:7070'
         - name: CHECKOUT_SERVICE_ADDR
-          value: 'checkoutservice.{{ .Values.online_boutique.gvc }}.cpln.local:5050'
+          value: 'checkoutservice.online-boutique.cpln.local:5050'
         - name: CURRENCY_SERVICE_ADDR
-          value: 'currencyservice.{{ .Values.online_boutique.gvc }}.cpln.local:7000'
+          value: 'currencyservice.online-boutique.cpln.local:7000'
         - name: ENABLE_PROFILER
           value: '0'
         - name: PORT
           value: '8080'
         - name: PRODUCT_CATALOG_SERVICE_ADDR
-          value: 'productcatalogservice.{{ .Values.online_boutique.gvc }}.cpln.local:3550'
+          value: 'productcatalogservice.online-boutique.cpln.local:3550'
         - name: RECOMMENDATION_SERVICE_ADDR
-          value: 'recommendationservice.{{ .Values.online_boutique.gvc }}.cpln.local:8080'
+          value: 'recommendationservice.online-boutique.cpln.local:8080'
         - name: SHIPPING_SERVICE_ADDR
-          value: 'shippingservice.{{ .Values.online_boutique.gvc }}.cpln.local:50051'
+          value: 'shippingservice.online-boutique.cpln.local:50051'
       image: 'igorchyts/online-boutique-frontend:v0.8.0-cpln'
       inheritEnv: false
       livenessProbe:
@@ -476,9 +469,10 @@ spec:
     filesystemGroupId: 1000
   supportDynamicTags: true
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: loadgenerator
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: loadgenerator
 spec:
   type: standard
@@ -487,7 +481,7 @@ spec:
       cpu: 500m
       env:
         - name: FRONTEND_ADDR
-          value: 'frontend.{{ .Values.online_boutique.gvc }}.cpln.local:8080'
+          value: 'frontend.online-boutique.cpln.local:8080'
         - name: USERS
           value: '3'
       image: 'gcr.io/google-samples/microservices-demo/loadgenerator:v0.8.0'
@@ -517,9 +511,10 @@ spec:
       inboundAllowWorkload: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: paymentservice
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: paymentservice
 spec:
   type: serverless
@@ -578,9 +573,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: productcatalogservice
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: productcatalogservice
 spec:
   type: serverless
@@ -641,9 +637,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: recommendationservice
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: recommendationservice
 spec:
   type: serverless
@@ -656,7 +653,7 @@ spec:
         - name: PORT
           value: '8080'
         - name: PRODUCT_CATALOG_SERVICE_ADDR
-          value: 'productcatalogservice.{{ .Values.online_boutique.gvc }}.cpln.local:3550'
+          value: 'productcatalogservice.online-boutique.cpln.local:3550'
       image: 'gcr.io/google-samples/microservices-demo/recommendationservice:v0.8.0'
       inheritEnv: false
       livenessProbe:
@@ -703,49 +700,11 @@ spec:
         - //workload/frontend
   localOptions: []
   supportDynamicTags: false
-
-{{- if not .Values.online_boutique.db_postgres }}
 ---
-kind: secret
-name: redis-boutique-conf
-description: redis-boutique-conf
-tags: {}
-type: opaque
-data:
-  encoding: plain
-  payload: port 6389
----
-kind: identity
-name: redis-identity
-gvc: {{ .Values.online_boutique.gvc }}
-description: redis-identity
-tags: {}
----
-kind: policy
-name: redis-cart
-tags: {}
-origin: default
-bindings:
-  - permissions:
-      - reveal
-    principalLinks:
-      - //gvc/{{ .Values.online_boutique.gvc }}/identity/redis-identity
-targetKind: secret
-targetLinks:
-  - //secret/redis-boutique-conf
----
-kind: volumeset
-name: redis-volume
-gvc: {{ .Values.online_boutique.gvc }}
-description: redis-volume
-spec:
-  fileSystemType: ext4
-  initialCapacity: 10
-  performanceClass: general-purpose-ssd
----
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: redis-cart
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: redis
 spec:
   type: stateful
@@ -812,11 +771,11 @@ spec:
     maxUnavailableReplicas: '1'
     minReadySeconds: 0
   supportDynamicTags: false
-{{- end }}
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: shippingservice
-gvc: {{ .Values.online_boutique.gvc }}
+gvc: online-boutique
 description: shippingservice
 spec:
   type: serverless
