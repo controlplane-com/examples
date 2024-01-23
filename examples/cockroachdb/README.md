@@ -109,6 +109,6 @@ Note: Running above commands couple of times might be needed in order to properl
 
 #### ui
 
-1. delete the gvc `elasticsearch`. (You will need to clean up the Workloads and VolumeSets first)
-1. delete the policies `cockroachdb-eucentral`, `cockroachdb-uswest` and `cockroachdb-useast`.
-1. delete the secret `cockroachdb-start-script`.
+1. Delete the gvc `cockroachdb-useast`, `cockroachdb-uswest`, and `cockroachdb-eucentral`. (You will need to clean up the Workloads and VolumeSets first)
+2. Delete the policies `cockroachdb-eucentral`, `cockroachdb-uswest` and `cockroachdb-useast`.
+3. Delete the secret `cockroachdb-start-script`.
