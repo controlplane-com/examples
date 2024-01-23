@@ -101,9 +101,9 @@ It will take a few minutes for CockroachDB to get to ready state.
 
 ```bash
 cpln delete -f manifests/cockroachdb-script.yaml
-cpln delete --gvc cockroachdb-useast -f ./cockroachdb-useast.yaml
-cpln delete --gvc cockroachdb-uswest -f ./cockroachdb-uswest.yaml
-cpln delete --gvc cockroachdb-eucentral -f ./cockroachdb-eucentral.yaml
+cpln delete --gvc cockroachdb-useast -f manifests/cockroachdb-useast.yaml
+cpln delete --gvc cockroachdb-uswest -f manifests/cockroachdb-uswest.yaml
+cpln delete --gvc cockroachdb-eucentral -f manifests/cockroachdb-eucentral.yaml
 ```
 Note: Running above commands couple of times might be needed in order to properly clean up the Workloads and VolumeSets inside the GVC.
 
