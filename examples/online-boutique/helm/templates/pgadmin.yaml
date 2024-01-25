@@ -22,7 +22,7 @@ spec:
   defaultOptions:
     autoscaling:
       maxConcurrency: 0
-      maxScale: 3
+      maxScale: 1
       metric: cpu
       minScale: 1
       scaleToZeroDelay: 300

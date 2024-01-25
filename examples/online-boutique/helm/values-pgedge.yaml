@@ -52,11 +52,11 @@ pgedge:
     cpu: 1.5
 
 pgadmin:
-  gvc: pgedge-us-east
+  gvc: pgcat-pgedge
   email: user@cpln.com
   password: admin
   memory: 300Mi
-  cpu: 50m
+  cpu: 100m
   inboundCidr: 0.0.0.0/0
 
 pgcat:
