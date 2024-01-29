@@ -1,0 +1,23 @@
+kind: secret
+name: cockroachdb-start-script
+type: opaque
+data:
+  encoding: plain
+  payload: >-
+    #!/bin/bash 
+
+    set -x
+
+    WORKLOAD_NAME=$(echo $CPLN_WORKLOAD | sed 's|.*/workload/\([^/]*\)$|\1|')
+
+    POD_ID=$(echo "$POD_NAME" | awk -F'-' '{print $NF}')
+
+    location=$(echo $CPLN_LOCATION | awk -F'/' '{print $NF}')
+
+    exec /cockroach/cockroach start --insecure
+    --logtostderr --advertise-addr
+    "${WORKLOAD_NAME}.${CPLN_GVC}.cpln.local:$COCKROACH_PORT" --http-addr 0.0.0.0 --listen-addr 0.0.0.0:$COCKROACH_PORT
+    --join
+    cockroachdb.cockroachdb-useast.cpln.local:26262,cockroachdb.cockroachdb-uswest.cpln.local:26261,cockroachdb.cockroachdb-eucentral.cpln.local:26260
+    --locality=region="${location}",az="${POD_ID}",dns="${POD_NAME}.${WORKLOAD_NAME}.${CPLN_GVC}.cpln.local"
+    --cache $(expr $MEMORY_LIMIT_MIB / 4)MiB --max-sql-memory $(expr $MEMORY_LIMIT_MIB / 4)MiB
