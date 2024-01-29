@@ -1,0 +1,49 @@
+{{- define "envoy-config" }}
+envoy:
+  clusters:
+    - name: provider_cognito
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: provider_cognito
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: cognito-idp.us-west-2.amazonaws.com
+                      port_value: 443
+      transport_socket:
+        name: envoy.transport_sockets.tls
+  http:
+    - name: envoy.filters.http.jwt_authn
+      priority: 1
+      typed_config:
+        '@type': >-
+          type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+        providers:
+          provider_cognito:
+            audiences:
+              {{- range .Values.envoyHttp.audiences }}
+              - {{ . }}
+              {{- end }}
+            claim_to_headers:
+              {{- toYaml .Values.envoyHttp.claim_to_headers | nindent 14}}
+            issuer: >-
+              {{ .Values.envoyHttp.issuer }}
+            remote_jwks:
+              cache_duration: 300s
+              http_uri:
+                cluster: provider_cognito
+                timeout: 1s
+                uri: >- 
+                  {{ .Values.envoyHttp.remote_jwks.uri }}
+        rules:
+          - match:
+              prefix: /health
+          - match:
+              prefix: /
+            requires:
+              requires_any:
+                requirements:
+                  - provider_name: provider_cognito
+{{- end }}
