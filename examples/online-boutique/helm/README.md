@@ -15,11 +15,15 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and
 
 ![Alt text](pgedge.png)
 
-1. Clone this repo and update the `values-pgedge.yaml` file as needed. 
-   
-   To enable tracing with OTEL to Datadog:
+1. Clone this repository and modify the `values-pgedge.yaml` file as needed. 
 
-   Uncomment tracing section in `values-pgedge.yaml` and replace `DD_API_KEY_VALUE` and `DD_SITE_VALUE` with the respective values(Can be found in your Datadog account).
+   **Tracing configuration**
+   - If not changed, tracing is enabled with Control Plane tracing specified under `tracing.controlplane` 
+   - To switch to tracing with OTEL to Datadog:
+     - Uncomment `tracing.otel` section in `values-pgedge.yaml` 
+     - Replace `DD_API_KEY_VALUE` and `DD_SITE_VALUE` with the respective values(Can be found in your Datadog account)
+     - Comment out the `tracing.controlplane` section
+   - To disable tracing entirely, comment out the entire `tracing` section in the values-pgedge.yaml file.
 
 2. Run the command below from this directory.
 
@@ -31,11 +35,16 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and
 
 ![Alt text](redis.png)
 
-1. Clone this repo and update the `values-redis.yaml` file as needed
+1. Clone this repository and modify the `values-redis.yaml` file as needed
 
-   To enable tracing with OTEL to Datadog:
+   **Tracing configuration**
+   - If not changed, tracing is enabled with Control Plane tracing specified under `tracing.controlplane` 
+   - To switch to tracing with OTEL to Datadog:
+     - Uncomment `tracing.otel` section in `values-pgedge.yaml` 
+     - Replace `DD_API_KEY_VALUE` and `DD_SITE_VALUE` with the respective values(Can be found in your Datadog account)
+     - Comment out the `tracing.controlplane` section
+   - To disable tracing entirely, comment out the entire `tracing` section in the values-pgedge.yaml file.
 
-   Uncomment tracing section in `values-pgedge.yaml` and replace `DD_API_KEY_VALUE` and `DD_SITE_VALUE` with the respective values(Can be found in your Datadog account).
 
 2. Run the command below from this directory.
 

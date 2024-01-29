@@ -8,13 +8,22 @@ spec:
 {{- range splitList "," .Values.online_boutique.locations }}
       - //location/{{ . | trim }}
 {{- end }}
-{{- if .Values.tracing }}
+{{- if and .Values.tracing (or .Values.tracing.otel .Values.tracing.controlplane) }}
   tracing:
+    {{- if .Values.tracing.otel }}
     provider:
       otel:
-        endpoint: '{{ .Values.tracing.otel_workload }}.{{ .Values.online_boutique.gvc }}.cpln.local:{{ .Values.tracing.otel_port }}'
-    sampling: {{ .Values.tracing.sampling }}
+        endpoint: '{{ .Values.tracing.otel.otel_workload }}.{{ .Values.online_boutique.gvc }}.cpln.local:{{ .Values.tracing.otel.otel_port }}'
+    sampling: {{ .Values.tracing.otel.sampling }}
+    {{- end }}
+    {{- if .Values.tracing.controlplane }}
+    provider:
+      controlplane: {}
+    customTags: {}
+    sampling: {{ .Values.tracing.controlplane.sampling }}
+    {{- end }}
 {{- end }}
+
 ---
 kind: identity
 name: cartservice-identity

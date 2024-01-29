@@ -1,40 +1,31 @@
+---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: gvc
 name: online-boutique
+description: online-boutique
+tags: {}
 spec:
   staticPlacement:
     locationLinks:
+      - //location/gcp-us-west1
       - //location/aws-eu-central-1
       - //location/azure-eastus2
-      - //location/gcp-us-west1
-  tracing:
-    provider:
-      controlplane: {}
-    customTags: {}
-    sampling: 100
-
 ---
-kind: volumeset
-name: redis-volume
-description: redis-volume
-spec:
-  fileSystemType: ext4
-  initialCapacity: 10
-  performanceClass: general-purpose-ssd
----
-kind: secret
-name: redis-boutique-conf
-description: redis-boutique-conf
+# Source: online-boutique/templates/online-boutique.yaml
+kind: identity
+name: cartservice-identity
+gvc: online-boutique
+description: cartservice-identity
 tags: {}
-type: opaque
-data:
-  encoding: plain
-  payload: port 6389
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: identity
 name: redis-identity
+gvc: online-boutique
 description: redis-identity
 tags: {}
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: policy
 name: redis-cart
 tags: {}
@@ -48,8 +39,30 @@ targetKind: secret
 targetLinks:
   - //secret/redis-boutique-conf
 ---
+# Source: online-boutique/templates/online-boutique.yaml
+kind: secret
+name: redis-boutique-conf
+description: redis-boutique-conf
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: port 6389
+---
+# Source: online-boutique/templates/online-boutique.yaml
+kind: volumeset
+name: redis-volume
+gvc: online-boutique
+description: redis-volume
+spec:
+  fileSystemType: ext4
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: adservice
+gvc: online-boutique
 description: adservice
 spec:
   type: serverless
@@ -106,9 +119,12 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: cartservice
+gvc: online-boutique
 description: cartservice
+tags: {}
 spec:
   type: serverless
   containers:
@@ -117,7 +133,7 @@ spec:
       env:
         - name: REDIS_ADDR
           value: 'redis-cart:6389'
-      image: 'gcr.io/google-samples/microservices-demo/cartservice:v0.8.1'
+      image: 'igorchyts/online-boutique-cartservice:0.8.1-cpln-3'
       inheritEnv: false
       livenessProbe:
         failureThreshold: 3
@@ -154,20 +170,23 @@ spec:
   firewallConfig:
     external:
       inboundAllowCIDR: []
-      outboundAllowCIDR: []
-      outboundAllowHostname:
-        - redis-cart.online-boutique.cpln.local
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
       outboundAllowPort: []
     internal:
       inboundAllowType: workload-list
       inboundAllowWorkload:
         - //workload/checkoutservice
         - //workload/frontend
+  identityLink: //identity/cartservice-identity
   localOptions: []
-  supportDynamicTags: false
+  supportDynamicTags: true
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: checkoutservice
+gvc: online-boutique
 description: checkoutservice
 spec:
   type: serverless
@@ -236,8 +255,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: currencyservice
+gvc: online-boutique
 description: currencyservice
 spec:
   type: serverless
@@ -297,8 +318,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: emailservice
+gvc: online-boutique
 description: emailservice
 spec:
   type: serverless
@@ -357,8 +380,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: frontend
+gvc: online-boutique
 description: frontend
 spec:
   type: standard
@@ -444,8 +469,10 @@ spec:
     filesystemGroupId: 1000
   supportDynamicTags: true
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: loadgenerator
+gvc: online-boutique
 description: loadgenerator
 spec:
   type: standard
@@ -484,8 +511,10 @@ spec:
       inboundAllowWorkload: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: paymentservice
+gvc: online-boutique
 description: paymentservice
 spec:
   type: serverless
@@ -544,8 +573,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: productcatalogservice
+gvc: online-boutique
 description: productcatalogservice
 spec:
   type: serverless
@@ -606,8 +637,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: recommendationservice
+gvc: online-boutique
 description: recommendationservice
 spec:
   type: serverless
@@ -668,8 +701,10 @@ spec:
   localOptions: []
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: redis-cart
+gvc: online-boutique
 description: redis
 spec:
   type: stateful
@@ -737,8 +772,10 @@ spec:
     minReadySeconds: 0
   supportDynamicTags: false
 ---
+# Source: online-boutique/templates/online-boutique.yaml
 kind: workload
 name: shippingservice
+gvc: online-boutique
 description: shippingservice
 spec:
   type: serverless
