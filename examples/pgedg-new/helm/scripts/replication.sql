@@ -21,3 +21,5 @@ CREATE EVENT TRIGGER spock_assign_repset_trg
     EXECUTE PROCEDURE spock_assign_repset();
 
 ALTER EVENT TRIGGER spock_assign_repset_trg ENABLE ALWAYS;
+
+CREATE TABLE online_boutique (userId text, productId text, quantity int, PRIMARY KEY(userId, productId));
