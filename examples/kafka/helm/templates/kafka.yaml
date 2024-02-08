@@ -273,22 +273,6 @@ spec:
       env:
         - name: BITNAMI_DEBUG
           value: '{{ .Values.kafka.debug }}'
-        # - name: KAFKA_CFG_CONTROLLER_LISTENER_NAMES
-        #   value: CONTROLLER
-        # - name: KAFKA_CFG_CONTROLLER_QUORUM_VOTERS
-        #   value: >-
-        #     0@kafka-cluster-0.kafka-cluster:9093,1@kafka-cluster-1.kafka-cluster:9093,2@kafka-cluster-2.kafka-cluster:9093
-        # - name: KAFKA_CFG_LISTENERS
-        #   value: 'CLIENT://:9092,INTERNAL://:9094,CONTROLLER://:9093'
-        # - name: KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP
-        #   value: >-
-        #     CLIENT:SASL_PLAINTEXT,INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT
-        # - name: KAFKA_CFG_PROCESS_ROLES
-        #   value: 'controller,broker'
-        # - name: KAFKA_CFG_SASL_MECHANISM_CONTROLLER_PROTOCOL
-        #   value: PLAIN
-        # - name: KAFKA_CFG_SASL_MECHANISM_INTER_BROKER_PROTOCOL
-        #   value: PLAIN
 {{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
         - name: KAFKA_CLIENT_PASSWORDS
           value: 'cpln://secret/{{ .Values.kafka.name }}-secrets.client-passwords'
@@ -300,8 +284,7 @@ spec:
         - name: KAFKA_CONTROLLER_USER
           value: controller_user
         - name: KAFKA_HEAP_OPTS
-          value: >-
-            {{- include "kafka.heap.opts" . | indent 12 }}
+          value: "{{ include "kafka.heap.opts" . | trim }}"
         - name: KAFKA_INTER_BROKER_PASSWORD
           value: 'cpln://secret/{{ .Values.kafka.name }}-secrets.inter-broker-password'
         - name: KAFKA_INTER_BROKER_USER
@@ -353,9 +336,6 @@ spec:
         - path: /scripts/kafka-init.sh
           recoveryPolicy: retain
           uri: 'cpln://secret/{{ .Values.kafka.name }}-init'
-        # - path: /temp
-        #   recoveryPolicy: retain
-        #   uri: 'scratch://temp'
 {{- if .Values.kafka_exporter }}
     - name: kafka-exporter
       args:
@@ -379,7 +359,7 @@ spec:
           value: '{{ .Values.kafka_exporter.debug }}'
 {{- if .Values.kafka.secrets.client_passwords }}
         - name: KAFKA_CLIENT_PASSWORDS
-          value: 'cpln://secret/kafka-cluster-user-passwords.client-passwords'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-secrets.client-passwords'
 {{- end }}
       image: {{ .Values.kafka_exporter.image }}
       inheritEnv: false

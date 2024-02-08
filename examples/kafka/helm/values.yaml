@@ -1,20 +1,20 @@
-# Default values for pgedge.
+# Default values for kafka.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 kafka:
   image: docker.io/bitnami/kafka:3.5.1-debian-11-r14
   suspend: false
-  gvc: monopoly
-  create_gvc: true # If you deploy in new GVC, set to true
+  gvc: dev
+  create_gvc: false # If deployed in existing GVC, set to false
   name: kafka-dev-cluster # Choose a unique name so you don't override other clusters on your system
-  location: aws-eu-central-1 # Relevant only if create_gvc=true
+  location: aws-us-east-1 # Relevant only if create_gvc=true
   volume_size: 20 # In GB
   replicas: 3 # Can be either 1 or 3
   debug: false
   volumeDir: /bitnami/kafka
   cpu: '1' # For millicores us 'm' like 500m
-  memory: 1Gi # Gi / Mi
+  memory: 1500Mi # Gi / Mi
   internalFirewall: same-gvc # same-org / same-gvc
   configurations:
     client_port: 9092 # Ports 9093 and 9094 are Reserved for internal components
@@ -26,7 +26,12 @@ kafka:
     controller_password: ayd8iJwqXe
     
 kafka_exporter:
-  debug: false
   image: docker.io/bitnami/kafka-exporter:1.7.0
+  debug: false
   cpu: 50m
   memory: 128Mi
+
+# kafka_client:
+#   image: docker.io/bitnami/kafka:3.5.1-debian-11-r14
+#   cpu: 125m
+#   memory: 150Mi
