@@ -1,0 +1,399 @@
+---
+# Source: kafka/templates/kafka.yaml
+kind: gvc
+name: monopoly
+description: kafka-dev-cluster
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-eu-central-1
+---
+# Source: kafka/templates/kafka.yaml
+kind: identity
+name: kafka-dev-cluster-identity
+description: kafka-dev-cluster identity
+gvc: monopoly
+tags: {}
+---
+# Source: kafka/templates/kafka.yaml
+kind: policy
+name: kafka-dev-cluster-policy
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/monopoly/identity/kafka-dev-cluster-identity
+targetKind: secret
+targetLinks:
+  - //secret/kafka-dev-cluster-controller-configuration
+  - //secret/kafka-dev-cluster-init
+  - //secret/kafka-dev-cluster-secrets
+---
+# Source: kafka/templates/kafka.yaml
+kind: secret
+name: kafka-dev-cluster-controller-configuration
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    # Listeners configuration
+
+    listeners=CLIENT://:9092,INTERNAL://:9094,CONTROLLER://:9093
+    advertised.listeners=CLIENT://advertised-address-placeholder:9092,INTERNAL://advertised-address-placeholder:9094
+    listener.security.protocol.map=CLIENT:PLAINTEXT,INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT
+
+    # KRaft process roles
+    process.roles=controller,broker
+
+    #node.id=
+    controller.listener.names=CONTROLLER
+    controller.quorum.voters=0@kafka-dev-cluster-0.kafka-dev-cluster:9093,1@kafka-dev-cluster-1.kafka-dev-cluster:9093,2@kafka-dev-cluster-2.kafka-dev-cluster:9093
+
+
+    # Kraft Controller listener SASL settings
+    sasl.mechanism.controller.protocol=PLAIN
+    listener.name.controller.sasl.enabled.mechanisms=PLAIN
+    listener.name.controller.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="controller_user" password="controller-password-placeholder" user_controller_user="controller-password-placeholder";
+    log.dir=/bitnami/kafka/data
+    sasl.enabled.mechanisms=PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
+
+    # Interbroker configuration
+    inter.broker.listener.name=INTERNAL
+    sasl.mechanism.inter.broker.protocol=PLAIN
+
+    # Listeners SASL JAAS configuration
+    listener.name.client.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required user_kafka-admin="password-placeholder-0";
+    listener.name.client.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
+    listener.name.client.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
+    listener.name.internal.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="inter_broker_user" password="interbroker-password-placeholder" user_inter_broker_user="interbroker-password-placeholder" user_kafka-admin="password-placeholder-0";
+    listener.name.internal.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="inter_broker_user" password="interbroker-password-placeholder";
+    listener.name.internal.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="inter_broker_user" password="interbroker-password-placeholder";
+
+    # End of SASL JAAS configuration
+---
+# Source: kafka/templates/kafka.yaml
+kind: secret
+name: kafka-dev-cluster-init
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    #!/bin/bash
+
+    set -o errexit
+    set -o nounset
+    set -o pipefail
+
+    error(){
+        local message="${1:?missing message}"
+        echo "ERROR: ${message}"
+        exit 1
+    }
+
+    retry_while() {
+        local -r cmd="${1:?cmd is missing}"
+        local -r retries="${2:-12}"
+        local -r sleep_time="${3:-5}"
+        local return_value=1
+
+        read -r -a command <<< "$cmd"
+        for ((i = 1 ; i <= retries ; i+=1 )); do
+            "${command[@]}" && return_value=0 && break
+            sleep "$sleep_time"
+        done
+        return $return_value
+    }
+
+    replace_in_file() {
+        local filename="${1:?filename is required}"
+        local match_regex="${2:?match regex is required}"
+        local substitute_regex="${3:?substitute regex is required}"
+        local posix_regex=${4:-true}
+
+        local result
+
+        # We should avoid using 'sed in-place' substitutions
+        # 1) They are not compatible with files mounted from ConfigMap(s)
+        # 2) We found incompatibility issues with Debian10 and "in-place" substitutions
+        local -r del=$'\001' # Use a non-printable character as a 'sed' delimiter to avoid issues
+        if [[ $posix_regex = true ]]; then
+            result="$(sed -E "s${del}${match_regex}${del}${substitute_regex}${del}g" "$filename")"
+        else
+            result="$(sed "s${del}${match_regex}${del}${substitute_regex}${del}g" "$filename")"
+        fi
+        echo "$result" > "$filename"
+    }
+
+    kafka_conf_set() {
+        local file="${1:?missing file}"
+        local key="${2:?missing key}"
+        local value="${3:?missing value}"
+
+        # Check if the value was set before
+        if grep -q "^[#\\s]*$key\s*=.*" "$file"; then
+            # Update the existing key
+            replace_in_file "$file" "^[#\\s]*${key}\s*=.*" "${key}=${value}" false
+        else
+            # Add a new key
+            printf '\n%s=%s' "$key" "$value" >>"$file"
+        fi
+    }
+
+    replace_placeholder() {
+        local placeholder="${1:?missing placeholder value}"
+        local password="${2:?missing password value}"
+        sed -i "s/$placeholder/$password/g" "$KAFKA_CONFIG_FILE"
+    }
+
+    configure_external_access() {
+        # Configure external hostname
+        if [[ -f "/shared/external-host.txt" ]]; then
+            host=$(cat "/shared/external-host.txt")
+        elif [[ -n "${EXTERNAL_ACCESS_HOST:-}" ]]; then
+            host="$EXTERNAL_ACCESS_HOST"
+        elif [[ -n "${EXTERNAL_ACCESS_HOSTS_LIST:-}" ]]; then
+            read -r -a hosts <<<"$(tr ',' ' ' <<<"${EXTERNAL_ACCESS_HOSTS_LIST}")"
+            host="${hosts[$POD_ID]}"
+        elif [[ "$EXTERNAL_ACCESS_HOST_USE_PUBLIC_IP" =~ ^(yes|true)$ ]]; then
+            host=$(curl -s https://ipinfo.io/ip)
+        else
+            error "External access hostname not provided"
+        fi
+
+        # Configure external port
+        if [[ -f "/shared/external-port.txt" ]]; then
+            port=$(cat "/shared/external-port.txt")
+        elif [[ -n "${EXTERNAL_ACCESS_PORT:-}" ]]; then
+            if [[ "${EXTERNAL_ACCESS_PORT_AUTOINCREMENT:-}" =~ ^(yes|true)$ ]]; then
+            port="$((EXTERNAL_ACCESS_PORT + POD_ID))"
+            else
+            port="$EXTERNAL_ACCESS_PORT"
+            fi
+        elif [[ -n "${EXTERNAL_ACCESS_PORTS_LIST:-}" ]]; then
+            read -r -a ports <<<"$(tr ',' ' ' <<<"${EXTERNAL_ACCESS_PORTS_LIST}")"
+            port="${ports[$POD_ID]}"
+        else
+            error "External access port not provided"
+        fi
+        # Configure Kafka advertised listeners
+        sed -i -E "s|^(advertised\.listeners=\S+)$|\1,EXTERNAL://${host}:${port}|" "$KAFKA_CONFIG_FILE"
+    }
+
+    configure_kafka_sasl() {
+
+        # Replace placeholders with passwords
+        replace_placeholder "interbroker-password-placeholder" "$KAFKA_INTER_BROKER_PASSWORD"
+        replace_placeholder "controller-password-placeholder" "$KAFKA_CONTROLLER_PASSWORD"
+        read -r -a passwords <<<"$(tr ',;' ' ' <<<"${KAFKA_CLIENT_PASSWORDS:-}")"
+        for ((i = 0; i < ${#passwords[@]}; i++)); do
+            replace_placeholder "password-placeholder-${i}" "${passwords[i]}"
+        done
+    }
+
+    export KAFKA_CONFIG_FILE=/opt/bitnami/kafka/config/server.properties
+    cp /configmaps/server.properties $KAFKA_CONFIG_FILE
+
+    # Get pod ID and role, last and second last fields in the pod name respectively
+    POD_ID=$(echo "$POD_NAME" | rev | cut -d'-' -f 1 | rev)
+    export KAFKA_CFG_NODE_ID="$POD_ID"
+    # POD_ROLE=$(echo "$POD_NAME" | rev | cut -d'-' -f 2 | rev)
+
+    # Configure node.id and/or broker.id
+    if [[ -f "/bitnami/kafka/data/meta.properties" ]]; then
+        if grep -q "broker.id" /bitnami/kafka/data/meta.properties; then
+            ID="$(grep "broker.id" /bitnami/kafka/data/meta.properties | awk -F '=' '{print $2}')"
+            kafka_conf_set "$KAFKA_CONFIG_FILE" "node.id" "$ID"
+        else
+            ID="$(grep "node.id" /bitnami/kafka/data/meta.properties | awk -F '=' '{print $2}')"
+            kafka_conf_set "$KAFKA_CONFIG_FILE" "node.id" "$ID"
+        fi
+    else
+        ID=$((POD_ID + KAFKA_MIN_ID))
+        kafka_conf_set "$KAFKA_CONFIG_FILE" "node.id" "$ID"
+    fi
+
+    WORKLOAD_NAME=$(echo $CPLN_WORKLOAD | sed 's|.*/workload/\([^/]*\)$|\1|')
+    replace_placeholder "advertised-address-placeholder" "${POD_NAME}.${WORKLOAD_NAME}"
+
+    if [[ "${EXTERNAL_ACCESS_ENABLED:-false}" =~ ^(yes|true)$ ]]; then
+        configure_external_access
+    fi
+
+    configure_kafka_sasl
+---
+# Source: kafka/templates/kafka.yaml
+kind: secret
+name: kafka-dev-cluster-secrets
+tags: {}
+type: dictionary
+data:
+  kraft-cluster-id: bkdDtS1Rsf536si7BGM0JY
+  inter-broker-password: HfcgCHp32e
+  controller-password: ayd8iJwqXe
+---
+# Source: kafka/templates/kafka.yaml
+kind: volumeset
+name: kafka-dev-cluster-data
+description: kafka-dev-cluster data
+gvc: monopoly
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 20
+  performanceClass: general-purpose-ssd
+---
+# Source: kafka/templates/kafka.yaml
+kind: workload
+name: kafka-dev-cluster
+gvc: monopoly
+spec:
+  type: stateful
+  containers:
+    - name: kafka
+      args:
+        - '-c'
+        - >-
+          cp /scripts/kafka-init.sh /tmp/ && chmod +x /tmp/kafka-init.sh &&
+          /tmp/kafka-init.sh && /opt/bitnami/scripts/kafka/entrypoint.sh
+          /opt/bitnami/scripts/kafka/run.sh
+      command: /bin/bash
+      cpu: '1'
+      env:
+        - name: BITNAMI_DEBUG
+          value: 'false'
+        # - name: KAFKA_CFG_CONTROLLER_LISTENER_NAMES
+        #   value: CONTROLLER
+        # - name: KAFKA_CFG_CONTROLLER_QUORUM_VOTERS
+        #   value: >-
+        #     0@kafka-cluster-0.kafka-cluster:9093,1@kafka-cluster-1.kafka-cluster:9093,2@kafka-cluster-2.kafka-cluster:9093
+        # - name: KAFKA_CFG_LISTENERS
+        #   value: 'CLIENT://:9092,INTERNAL://:9094,CONTROLLER://:9093'
+        # - name: KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP
+        #   value: >-
+        #     CLIENT:SASL_PLAINTEXT,INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT
+        # - name: KAFKA_CFG_PROCESS_ROLES
+        #   value: 'controller,broker'
+        # - name: KAFKA_CFG_SASL_MECHANISM_CONTROLLER_PROTOCOL
+        #   value: PLAIN
+        # - name: KAFKA_CFG_SASL_MECHANISM_INTER_BROKER_PROTOCOL
+        #   value: PLAIN
+        - name: KAFKA_CLIENT_USERS
+          value: kafka-admin
+        - name: KAFKA_CONTROLLER_PASSWORD
+          value: 'cpln://secret/kafka-dev-cluster-secrets.controller-password'
+        - name: KAFKA_CONTROLLER_USER
+          value: controller_user
+        - name: KAFKA_HEAP_OPTS
+          value: >-            
+            '-Xmx1024m -Xms1024m'
+        - name: KAFKA_INTER_BROKER_PASSWORD
+          value: 'cpln://secret/kafka-dev-cluster-secrets.inter-broker-password'
+        - name: KAFKA_INTER_BROKER_USER
+          value: inter_broker_user
+        - name: KAFKA_KRAFT_BOOTSTRAP_SCRAM_USERS
+          value: 'true'
+        - name: KAFKA_KRAFT_CLUSTER_ID
+          value: 'cpln://secret/kafka-dev-cluster-secrets.kraft-cluster-id'
+        - name: KAFKA_MIN_ID
+          value: '0'
+        - name: KAFKA_VOLUME_DIR
+          value: /bitnami/kafka
+      image: docker.io/bitnami/kafka:3.5.1-debian-11-r14
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 5
+        initialDelaySeconds: 45
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 9093
+        timeoutSeconds: 5
+      memory: 1Gi
+      ports:
+        - number: 9092
+          protocol: tcp
+        - number: 9093
+          protocol: tcp
+        - number: 9094
+          protocol: tcp
+      readinessProbe:
+        failureThreshold: 15
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 9093
+        timeoutSeconds: 5
+      volumes:
+        - path: /bitnami/kafka
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/kafka-dev-cluster-data'
+        - path: /opt/bitnami/kafka/logs
+          recoveryPolicy: retain
+          uri: 'scratch://logs'
+        - path: /configmaps/server.properties
+          recoveryPolicy: retain
+          uri: 'cpln://secret/kafka-dev-cluster-controller-configuration'
+        - path: /scripts/kafka-init.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/kafka-dev-cluster-init'
+        # - path: /temp
+        #   recoveryPolicy: retain
+        #   uri: 'scratch://temp'
+    - name: kafka-exporter
+      args:
+        - '-c'
+        - >-
+          sleep 60 && kafka_exporter --kafka.server=localhost:9092
+          --no-sasl.handshake --web.listen-address=:9308
+      command: /bin/bash
+      cpu: 50m
+      metrics:
+        path: /metrics
+        port: 9308
+      env:
+        - name: BITNAMI_DEBUG
+          value: 'false'
+      image: docker.io/bitnami/kafka-exporter:1.7.0
+      inheritEnv: false
+      memory: 128Mi
+      ports:
+        - number: 9308
+          protocol: tcp
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: disabled
+      minScale: 3
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  identityLink: //identity/kafka-dev-cluster-identity
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: Parallel
+  securityOptions:
+    filesystemGroupId: 1001
+  supportDynamicTags: false
