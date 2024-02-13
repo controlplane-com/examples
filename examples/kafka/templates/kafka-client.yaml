@@ -1,0 +1,47 @@
+{{- if .Values.kafka_client }}
+kind: workload
+name: {{ .Values.kafka_client.name }}
+gvc: {{ .Values.kafka.gvc }}
+tags: {}
+spec:
+  type: standard
+  containers:
+    - name: kafka
+      args:
+        - '-c'
+        - sleep infinity
+      command: /bin/bash
+      cpu: {{ .Values.kafka_client.cpu }}
+      image: {{ .Values.kafka_client.image }}
+      inheritEnv: false
+      memory: {{ .Values.kafka_client.memory }}
+      ports:
+        - number: 9092
+          protocol: tcp
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+{{- if .Values.kafka_client.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.kafka_client.firewall "external_inboundAllowCIDR") (hasKey .Values.kafka_client.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.kafka_client.firewall.external_inboundAllowCIDR }}{{ .Values.kafka_client.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.kafka_client.firewall.external_outboundAllowCIDR }}{{ .Values.kafka_client.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.kafka_client.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.kafka_client.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  localOptions: []
+  supportDynamicTags: false
+{{- end }}

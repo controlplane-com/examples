@@ -1,0 +1,413 @@
+{{- if .Values.kafka.create_gvc }}
+kind: gvc
+name: {{ .Values.kafka.gvc }}
+description: {{ .Values.kafka.name }}
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+{{- range splitList "," .Values.kafka.location }}
+      - //location/{{ . | trim }}
+{{- end }}
+---
+{{- end }}
+
+kind: volumeset
+name: {{ .Values.kafka.name }}-data
+description: {{ .Values.kafka.name }} data
+gvc: {{ .Values.kafka.gvc }}
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: {{ .Values.kafka.volume_size }}
+  performanceClass: general-purpose-ssd
+---
+
+kind: identity
+name: {{ .Values.kafka.name }}-identity
+description: {{ .Values.kafka.name }} identity
+gvc: {{ .Values.kafka.gvc }}
+tags: {}
+---
+
+kind: secret
+name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    # Listeners configuration
+
+    listeners=CLIENT://:{{ .Values.kafka.configurations.client_port }},INTERNAL://:9094,CONTROLLER://:9093
+    advertised.listeners=CLIENT://advertised-address-placeholder:{{ .Values.kafka.configurations.client_port }},INTERNAL://advertised-address-placeholder:9094
+{{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
+    listener.security.protocol.map=CLIENT:{{ .Values.kafka.configurations.client_listener_security_protocol }},INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT
+{{- else }}
+    listener.security.protocol.map=CLIENT:PLAINTEXT,INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT
+{{- end }}
+
+    # KRaft process roles
+    process.roles=controller,broker
+
+    #node.id=
+    controller.listener.names=CONTROLLER
+    controller.quorum.voters={{- if eq (int .Values.kafka.replicas) 1 -}}
+    0@{{ .Values.kafka.name }}-0.{{ .Values.kafka.name }}:9093
+    {{- else -}}
+    0@{{ .Values.kafka.name }}-0.{{ .Values.kafka.name }}:9093,1@{{ .Values.kafka.name }}-1.{{ .Values.kafka.name }}:9093,2@{{ .Values.kafka.name }}-2.{{ .Values.kafka.name }}:9093
+    {{- end }}
+
+
+    # Kraft Controller listener SASL settings
+    sasl.mechanism.controller.protocol=PLAIN
+    listener.name.controller.sasl.enabled.mechanisms=PLAIN
+    listener.name.controller.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="controller_user" password="controller-password-placeholder" user_controller_user="controller-password-placeholder";
+    log.dir=/bitnami/kafka/data
+    sasl.enabled.mechanisms=PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
+
+    # Interbroker configuration
+    inter.broker.listener.name=INTERNAL
+    sasl.mechanism.inter.broker.protocol=PLAIN
+
+    # Listeners SASL JAAS configuration
+    listener.name.client.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required user_kafka-admin="password-placeholder-0";
+    listener.name.client.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
+    listener.name.client.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
+    listener.name.internal.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="inter_broker_user" password="interbroker-password-placeholder" user_inter_broker_user="interbroker-password-placeholder" user_kafka-admin="password-placeholder-0";
+    listener.name.internal.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="inter_broker_user" password="interbroker-password-placeholder";
+    listener.name.internal.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="inter_broker_user" password="interbroker-password-placeholder";
+
+    # End of SASL JAAS configuration
+
+---
+kind: secret
+name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-init
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    #!/bin/bash
+
+    set -o errexit
+    set -o nounset
+    set -o pipefail
+
+    error(){
+        local message="${1:?missing message}"
+        echo "ERROR: ${message}"
+        exit 1
+    }
+
+    retry_while() {
+        local -r cmd="${1:?cmd is missing}"
+        local -r retries="${2:-12}"
+        local -r sleep_time="${3:-5}"
+        local return_value=1
+
+        read -r -a command <<< "$cmd"
+        for ((i = 1 ; i <= retries ; i+=1 )); do
+            "${command[@]}" && return_value=0 && break
+            sleep "$sleep_time"
+        done
+        return $return_value
+    }
+
+    replace_in_file() {
+        local filename="${1:?filename is required}"
+        local match_regex="${2:?match regex is required}"
+        local substitute_regex="${3:?substitute regex is required}"
+        local posix_regex=${4:-true}
+
+        local result
+
+        # We should avoid using 'sed in-place' substitutions
+        # 1) They are not compatible with files mounted from ConfigMap(s)
+        # 2) We found incompatibility issues with Debian10 and "in-place" substitutions
+        local -r del=$'\001' # Use a non-printable character as a 'sed' delimiter to avoid issues
+        if [[ $posix_regex = true ]]; then
+            result="$(sed -E "s${del}${match_regex}${del}${substitute_regex}${del}g" "$filename")"
+        else
+            result="$(sed "s${del}${match_regex}${del}${substitute_regex}${del}g" "$filename")"
+        fi
+        echo "$result" > "$filename"
+    }
+
+    kafka_conf_set() {
+        local file="${1:?missing file}"
+        local key="${2:?missing key}"
+        local value="${3:?missing value}"
+
+        # Check if the value was set before
+        if grep -q "^[#\\s]*$key\s*=.*" "$file"; then
+            # Update the existing key
+            replace_in_file "$file" "^[#\\s]*${key}\s*=.*" "${key}=${value}" false
+        else
+            # Add a new key
+            printf '\n%s=%s' "$key" "$value" >>"$file"
+        fi
+    }
+
+    replace_placeholder() {
+        local placeholder="${1:?missing placeholder value}"
+        local password="${2:?missing password value}"
+        sed -i "s/$placeholder/$password/g" "$KAFKA_CONFIG_FILE"
+    }
+
+    configure_external_access() {
+        # Configure external hostname
+        if [[ -f "/shared/external-host.txt" ]]; then
+            host=$(cat "/shared/external-host.txt")
+        elif [[ -n "${EXTERNAL_ACCESS_HOST:-}" ]]; then
+            host="$EXTERNAL_ACCESS_HOST"
+        elif [[ -n "${EXTERNAL_ACCESS_HOSTS_LIST:-}" ]]; then
+            read -r -a hosts <<<"$(tr ',' ' ' <<<"${EXTERNAL_ACCESS_HOSTS_LIST}")"
+            host="${hosts[$POD_ID]}"
+        elif [[ "$EXTERNAL_ACCESS_HOST_USE_PUBLIC_IP" =~ ^(yes|true)$ ]]; then
+            host=$(curl -s https://ipinfo.io/ip)
+        else
+            error "External access hostname not provided"
+        fi
+
+        # Configure external port
+        if [[ -f "/shared/external-port.txt" ]]; then
+            port=$(cat "/shared/external-port.txt")
+        elif [[ -n "${EXTERNAL_ACCESS_PORT:-}" ]]; then
+            if [[ "${EXTERNAL_ACCESS_PORT_AUTOINCREMENT:-}" =~ ^(yes|true)$ ]]; then
+            port="$((EXTERNAL_ACCESS_PORT + POD_ID))"
+            else
+            port="$EXTERNAL_ACCESS_PORT"
+            fi
+        elif [[ -n "${EXTERNAL_ACCESS_PORTS_LIST:-}" ]]; then
+            read -r -a ports <<<"$(tr ',' ' ' <<<"${EXTERNAL_ACCESS_PORTS_LIST}")"
+            port="${ports[$POD_ID]}"
+        else
+            error "External access port not provided"
+        fi
+        # Configure Kafka advertised listeners
+        sed -i -E "s|^(advertised\.listeners=\S+)$|\1,EXTERNAL://${host}:${port}|" "$KAFKA_CONFIG_FILE"
+    }
+
+    configure_kafka_sasl() {
+
+        # Replace placeholders with passwords
+        replace_placeholder "interbroker-password-placeholder" "$KAFKA_INTER_BROKER_PASSWORD"
+        replace_placeholder "controller-password-placeholder" "$KAFKA_CONTROLLER_PASSWORD"
+        read -r -a passwords <<<"$(tr ',;' ' ' <<<"${KAFKA_CLIENT_PASSWORDS:-}")"
+        for ((i = 0; i < ${#passwords[@]}; i++)); do
+            replace_placeholder "password-placeholder-${i}" "${passwords[i]}"
+        done
+    }
+
+    export KAFKA_CONFIG_FILE=/opt/bitnami/kafka/config/server.properties
+    cp /configmaps/server.properties $KAFKA_CONFIG_FILE
+
+    # Get pod ID and role, last and second last fields in the pod name respectively
+    POD_ID=$(echo "$POD_NAME" | rev | cut -d'-' -f 1 | rev)
+    export KAFKA_CFG_NODE_ID="$POD_ID"
+    # POD_ROLE=$(echo "$POD_NAME" | rev | cut -d'-' -f 2 | rev)
+
+    # Configure node.id and/or broker.id
+    if [[ -f "/bitnami/kafka/data/meta.properties" ]]; then
+        if grep -q "broker.id" /bitnami/kafka/data/meta.properties; then
+            ID="$(grep "broker.id" /bitnami/kafka/data/meta.properties | awk -F '=' '{print $2}')"
+            kafka_conf_set "$KAFKA_CONFIG_FILE" "node.id" "$ID"
+        else
+            ID="$(grep "node.id" /bitnami/kafka/data/meta.properties | awk -F '=' '{print $2}')"
+            kafka_conf_set "$KAFKA_CONFIG_FILE" "node.id" "$ID"
+        fi
+    else
+        ID=$((POD_ID + KAFKA_MIN_ID))
+        kafka_conf_set "$KAFKA_CONFIG_FILE" "node.id" "$ID"
+    fi
+
+    WORKLOAD_NAME=$(echo $CPLN_WORKLOAD | sed 's|.*/workload/\([^/]*\)$|\1|')
+    replace_placeholder "advertised-address-placeholder" "${POD_NAME}.${WORKLOAD_NAME}"
+
+    if [[ "${EXTERNAL_ACCESS_ENABLED:-false}" =~ ^(yes|true)$ ]]; then
+        configure_external_access
+    fi
+
+    configure_kafka_sasl
+
+---
+kind: secret
+name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets
+tags: {}
+type: dictionary
+data:
+  kraft-cluster-id: {{ .Values.kafka.secrets.kraft_cluster_id }}
+  {{- with .Values.kafka.secrets.client_passwords }}
+  client-passwords: {{ . }}
+  {{- end }}
+  inter-broker-password: {{ .Values.kafka.secrets.inter_broker_password }}
+  controller-password: {{ .Values.kafka.secrets.controller_password }}
+---
+kind: policy
+name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-policy
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.kafka.gvc }}/identity/{{ .Values.kafka.name }}-identity
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration
+  - //secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-init
+  - //secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets
+---
+kind: workload
+name: {{ .Values.kafka.name }}
+gvc: {{ .Values.kafka.gvc }}
+spec:
+  type: stateful
+  containers:
+    - name: kafka
+      args:
+        - '-c'
+        - >-
+          cp /scripts/kafka-init.sh /tmp/ && chmod +x /tmp/kafka-init.sh &&
+          /tmp/kafka-init.sh && /opt/bitnami/scripts/kafka/entrypoint.sh
+          /opt/bitnami/scripts/kafka/run.sh
+      command: /bin/bash
+      cpu: '{{ .Values.kafka.cpu }}'
+      env:
+        - name: BITNAMI_DEBUG
+          value: '{{ .Values.kafka.debug }}'
+{{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
+        - name: KAFKA_CLIENT_PASSWORDS
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.client-passwords'
+{{- end }}
+        - name: KAFKA_CLIENT_USERS
+          value: kafka-admin
+        - name: KAFKA_CONTROLLER_PASSWORD
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.controller-password'
+        - name: KAFKA_CONTROLLER_USER
+          value: controller_user
+        - name: KAFKA_HEAP_OPTS
+          value: "{{ include "kafka.heap.opts" . | trim }}"
+        - name: KAFKA_INTER_BROKER_PASSWORD
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.inter-broker-password'
+        - name: KAFKA_INTER_BROKER_USER
+          value: inter_broker_user
+        - name: KAFKA_KRAFT_BOOTSTRAP_SCRAM_USERS
+          value: 'true'
+        - name: KAFKA_KRAFT_CLUSTER_ID
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.kraft-cluster-id'
+        - name: KAFKA_MIN_ID
+          value: '0'
+        - name: KAFKA_VOLUME_DIR
+          value: {{ .Values.kafka.volumeDir }}
+      image: {{ .Values.kafka.image }}
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 5
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 9093
+        timeoutSeconds: 5
+      memory: {{ .Values.kafka.memory }}
+      ports:
+        - number: {{ .Values.kafka.configurations.client_port }}
+          protocol: tcp
+        - number: 9093
+          protocol: tcp
+        - number: 9094
+          protocol: tcp
+      readinessProbe:
+        failureThreshold: 20
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 9093
+        timeoutSeconds: 5
+      volumes:
+        - path: {{ .Values.kafka.volumeDir }}
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/{{ .Values.kafka.name }}-data'
+        - path: /opt/bitnami/kafka/logs
+          recoveryPolicy: retain
+          uri: 'scratch://logs'
+        - path: /configmaps/server.properties
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration'
+        - path: /scripts/kafka-init.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-init'
+{{- if .Values.kafka_exporter }}
+    - name: kafka-exporter
+      args:
+        - '-c'
+        - >-
+{{- if .Values.kafka.secrets.client_passwords }}
+  {{- if eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT" }}
+          sleep 60 && kafka_exporter --kafka.server=localhost:{{ .Values.kafka.configurations.client_port }}
+          --sasl.enabled --sasl.username=kafka-admin --sasl.mechanism=plain
+          --sasl.password=${KAFKA_CLIENT_PASSWORDS} --web.listen-address=:9308
+  {{- else }}
+          sleep 60 && kafka_exporter --kafka.server=localhost:{{ .Values.kafka.configurations.client_port }}
+          --no-sasl.handshake --web.listen-address=:9308
+  {{- end }}
+{{- else }}
+          sleep 60 && kafka_exporter --kafka.server=localhost:{{ .Values.kafka.configurations.client_port }}
+          --no-sasl.handshake --web.listen-address=:9308
+{{- end }}
+      command: /bin/bash
+      cpu: {{ .Values.kafka_exporter.cpu }}
+      metrics:
+        path: /metrics
+        port: 9308
+      env:
+        - name: BITNAMI_DEBUG
+          value: '{{ .Values.kafka_exporter.debug }}'
+  {{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
+        - name: KAFKA_CLIENT_PASSWORDS
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.client-passwords'
+  {{- end }}
+      image: {{ .Values.kafka_exporter.image }}
+      inheritEnv: false
+      memory: {{ .Values.kafka_exporter.memory }}
+      ports:
+        - number: 9308
+          protocol: tcp
+{{- end }}
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: {{ .Values.kafka.replicas }}
+      metric: disabled
+      minScale: {{ .Values.kafka.replicas }}
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: {{ .Values.kafka.suspend }}
+    timeoutSeconds: 5
+{{- if .Values.kafka.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.kafka.firewall "external_inboundAllowCIDR") (hasKey .Values.kafka.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.kafka.firewall.external_inboundAllowCIDR }}{{ .Values.kafka.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.kafka.firewall.external_outboundAllowCIDR }}{{ .Values.kafka.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.kafka.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.kafka.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  identityLink: //identity/{{ .Values.kafka.name }}-identity
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: Parallel
+  securityOptions:
+    filesystemGroupId: 1001
+  supportDynamicTags: false

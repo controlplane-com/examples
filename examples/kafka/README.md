@@ -1,86 +1,54 @@
-## Kafka Cluster Example
+## Helm chart for Kafka on Control Plane
 
-### Kafka-cluster 
-
-This example creates a Kafka cluster of 3 replicas, configured with Kraft and persistent storage.
-
-Service discovery is made using the stateful workload service endpoint of `kafka-cluster` and the unique `$HOSTNAME` environment variable for each replica.
-
-These names will be `kafka-cluster-0`, `kafka-cluster-1` and `kafka-cluster-2` at runtime.
+This example walks through the steps to create a Kafka cluster on Control Plane.
 
 ### Steps to run this example:
 
-#### Requirements
-* [Control Plane Account](https://controlplane.com)
+Before you begin, ensure that the [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and [Control Plane CLI](https://docs.controlplane.com/reference/cli#install-npm) are installed.
 
-### cli
+1. Clone or fork this repository. It is recommended to fork the repository to store your environment configurations in your own repository.
 
-If you haven't already installed the Control Plane CLI, [click here](https://docs.controlplane.com/reference/cli) to do so.
+2. Copy `values-example.yaml` to a file named for your environment, for example, `values-kafka-dev.yaml`
 
-#### Deploy Kafka Cluster with kafka-exporter
+3. Modify the `values-kafka-dev.yaml` as needed. Guidelines for modifications:
 
-```bash
-cpln apply --gvc kafka-cluster-example -f ./kafka-cluster-exporter.yaml
-cpln gvc add-location kafka-cluster-example --location aws-us-east-2
-```
-It will take a few minutes for Kafka cluster to get to ready state.
+   - `kafka.gvc` - It's recommended to use an existing GVC where Kafka clients are deployed. If a GVC does not exist, you can create one by setting `kafka.create_gvc` to `true`.
+   - `kafka.name` - This is the unique name for your cluster, for example, **kafka-dev-cluster**.
+   - `kafka.replicas` - Choose either 1 or 3 for replicas. For high availability (HA), use 3.
+   - `kafka.configurations.client_listener_security_protocol` - Choose **PLAINTEXT** or **SASL_PLAINTEXT**. This is the client security protocol configuration.
+   - `kafka.secrets.client_passwords` - Ensure it's enabled when using **SASL_PLAINTEXT**.
+   - Make any necessary changes to the rest of the configuration to suit your needs. Optionally, change the values of the Secrets to be unique.
+   - To disable additional components including `kafka-exporter`, `kafka_ui`, and `kafka_client`, ensure they are commented out.
 
-Note: If you prefer not to include kafka-exporter for reading kafka custom metrics in your deployment, then apply `kafka-cluster.yaml` instead. 
+4. When ready. Install the helm chart.
 
-#### Deploy kafka-ui (Optional)
+   ```bash
+   cpln helm install kafka-dev-cluster -f values-kafka-dev.yaml
+   ```
 
-```bash
-cpln apply --gvc kafka-cluster-example -f ./kafka-ui.yaml
-```
+   Note: You can modify the values at any time and apply these changes by running the same install command again.
 
-#### Test Kafka Cluster with Kafka Client
 
-1. Deploy kafka-client workload
-```BASH
-cpln apply --gvc kafka-cluster-example -f ./kafka-client.yaml
-```
-2. Connect to the kafka-client workload from the UI or with CLI
-```BASH
-# Find the name of the replica to connect
-export kafka_client_replica=$(cpln workload get-replicas kafka-client --gvc kafka-cluster-example --location aws-us-east-2 -o json | jq -r '.items[0]')
+### How to connect to the cluster
 
-# Connect to the replica of kafka-client
-cpln workload connect kafka-client --location aws-us-east-2 --replica $kafka_client_replica --container kafka --shell bash --gvc kafka-cluster-example
-``` 
-3. Write and Consume messages from topic `controlplane` from `kafka-client` workload
-```BASH
-# Change to bin directory
-cd /opt/bitnami/kafka/bin
+You can connect to Kafka from the same GVC in which it's deployed using the following methods:
 
-# Create client.properties
-echo "security.protocol=SASL_PLAINTEXT
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"kafka-admin\" password=\"fkor3Dro52oodA\";" > ./client.properties
+- To connect using the cluster's general address, use `kafka-dev-cluster:9092`.
 
-# Produce messages to the 'controlplane' topic
-kafka-console-producer.sh --bootstrap-server kafka-cluster:9092 --topic controlplane --producer.config ./client.properties
+- To connect to a specific replica, use one of the following addresses based on the replica you wish to connect to:
+  - `kafka-dev-cluster-0.kafka-dev-cluster:9092`
+  - `kafka-dev-cluster-1.kafka-dev-cluster:9092`
+  - `kafka-dev-cluster-2.kafka-dev-cluster:9092`
 
-# Consume messages from the 'controlplane' topic
-kafka-console-consumer.sh --bootstrap-server kafka-cluster:9092 --topic controlplane --from-beginning --consumer.config ./client.properties
-```
+### Test Kafka Cluster with Kafka Client
 
-### ui
+1. To activate the Kafka client, make sure `kafka_client` is uncommented in your values file. If necessary, reinstall the chart with the command:
+   ```bash
+   cpln helm install kafka-dev-cluster -f values-kafka-dev.yaml
+   ```
+2. To connect to the `kafka-client` workload, navigate through the UI to the appropriate GVC and select the `kafka-client` workload. In the workload details, find and use the **Connect** feature to establish a connection, which can be done either via the UI or by utilizing the CLI command provided there.
+3. Once connected, you can write and consume messages through the `kafka-client` workload. If it's `PLAINTEXT`, producer and consumer configurations should be omitted below:
 
-#### Deploy Kafka Cluster
-
-1. Create a GVC named `kafka-cluster-example` and assign the location(s) that you would like to use.
-2. Apply the `kafka-cluster-exporter.yaml` file using the `cpln apply >_` option in the upper right corner.
-3. (Optional) Apply the `kafka-ui.yaml` file using the `cpln apply >_` option in the upper right corner.
-
-It will take a few minutes for Kafka cluster to get to ready state.
-
-Note: If you prefer not to include kafka-exporter for reading kafka custom metrics in your deployment, then apply `kafka-cluster.yaml` instead. 
-
-#### Test Kafka Cluster with Kafka Client
-
-1. Apply the `kafka-client.yaml` file using the `cpln apply >_` option in the upper right corner.
-2. Connect to the `kafka-client` workload via the UI by navigating to the GVC `kafka-cluster-example` and selecting the `kafka-client` workload. Once there, locate the "Connect" feature and establish a connection either through the UI or by using the displayed CLI command.
-3. Write and Consume messages from topic `controlplane` from `kafka-client` workload
 ```BASH
 # Change to bin directory
 cd /opt/bitnami/kafka/bin
@@ -97,20 +65,8 @@ kafka-console-producer.sh --bootstrap-server kafka-cluster:9092 --topic controlp
 kafka-console-consumer.sh --bootstrap-server kafka-cluster:9092 --topic controlplane --from-beginning --consumer.config ./client.properties
 ```
 
-### cleanup:
-
-#### cli
+### Cleanup
 
 ```bash
-cpln delete --gvc kafka-cluster-example -f ./kafka-client.yaml
-cpln delete --gvc kafka-cluster-example -f ./kafka-cluster.yaml
+cpln helm delete kafka-dev-cluster
 ```
-
-#### ui
-
-1. delete the gvc `kafka-cluster-example`.
-1. delete the policy `kafka-cluster-policy`.
-1. delete the secrets `kafka-cluster-controller-configuration`, `kafka-cluster-kraft-cluster-id`, `kafka-cluster-scripts` and `kafka-cluster-user-passwords`.
-
-#### References
-https://github.com/bitnami/charts/tree/main/bitnami/kafka
