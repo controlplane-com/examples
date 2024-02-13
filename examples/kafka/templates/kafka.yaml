@@ -31,7 +31,7 @@ tags: {}
 ---
 
 kind: secret
-name: {{ .Values.kafka.name }}-controller-configuration
+name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration
 tags: {}
 type: opaque
 data:
@@ -41,7 +41,11 @@ data:
 
     listeners=CLIENT://:{{ .Values.kafka.configurations.client_port }},INTERNAL://:9094,CONTROLLER://:9093
     advertised.listeners=CLIENT://advertised-address-placeholder:{{ .Values.kafka.configurations.client_port }},INTERNAL://advertised-address-placeholder:9094
+{{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
     listener.security.protocol.map=CLIENT:{{ .Values.kafka.configurations.client_listener_security_protocol }},INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT
+{{- else }}
+    listener.security.protocol.map=CLIENT:PLAINTEXT,INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT
+{{- end }}
 
     # KRaft process roles
     process.roles=controller,broker
@@ -78,7 +82,7 @@ data:
 
 ---
 kind: secret
-name: {{ .Values.kafka.name }}-init
+name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-init
 tags: {}
 type: opaque
 data:
@@ -229,7 +233,7 @@ data:
 
 ---
 kind: secret
-name: {{ .Values.kafka.name }}-secrets
+name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets
 tags: {}
 type: dictionary
 data:
@@ -241,7 +245,7 @@ data:
   controller-password: {{ .Values.kafka.secrets.controller_password }}
 ---
 kind: policy
-name: {{ .Values.kafka.name }}-policy
+name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-policy
 tags: {}
 origin: default
 bindings:
@@ -251,9 +255,9 @@ bindings:
       - //gvc/{{ .Values.kafka.gvc }}/identity/{{ .Values.kafka.name }}-identity
 targetKind: secret
 targetLinks:
-  - //secret/{{ .Values.kafka.name }}-controller-configuration
-  - //secret/{{ .Values.kafka.name }}-init
-  - //secret/{{ .Values.kafka.name }}-secrets
+  - //secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration
+  - //secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-init
+  - //secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets
 ---
 kind: workload
 name: {{ .Values.kafka.name }}
@@ -275,24 +279,24 @@ spec:
           value: '{{ .Values.kafka.debug }}'
 {{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
         - name: KAFKA_CLIENT_PASSWORDS
-          value: 'cpln://secret/{{ .Values.kafka.name }}-secrets.client-passwords'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.client-passwords'
 {{- end }}
         - name: KAFKA_CLIENT_USERS
           value: kafka-admin
         - name: KAFKA_CONTROLLER_PASSWORD
-          value: 'cpln://secret/{{ .Values.kafka.name }}-secrets.controller-password'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.controller-password'
         - name: KAFKA_CONTROLLER_USER
           value: controller_user
         - name: KAFKA_HEAP_OPTS
           value: "{{ include "kafka.heap.opts" . | trim }}"
         - name: KAFKA_INTER_BROKER_PASSWORD
-          value: 'cpln://secret/{{ .Values.kafka.name }}-secrets.inter-broker-password'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.inter-broker-password'
         - name: KAFKA_INTER_BROKER_USER
           value: inter_broker_user
         - name: KAFKA_KRAFT_BOOTSTRAP_SCRAM_USERS
           value: 'true'
         - name: KAFKA_KRAFT_CLUSTER_ID
-          value: 'cpln://secret/{{ .Values.kafka.name }}-secrets.kraft-cluster-id'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.kraft-cluster-id'
         - name: KAFKA_MIN_ID
           value: '0'
         - name: KAFKA_VOLUME_DIR
@@ -301,7 +305,7 @@ spec:
       inheritEnv: false
       livenessProbe:
         failureThreshold: 5
-        initialDelaySeconds: 45
+        initialDelaySeconds: 60
         periodSeconds: 10
         successThreshold: 1
         tcpSocket:
@@ -316,7 +320,7 @@ spec:
         - number: 9094
           protocol: tcp
       readinessProbe:
-        failureThreshold: 15
+        failureThreshold: 20
         initialDelaySeconds: 10
         periodSeconds: 10
         successThreshold: 1
@@ -332,20 +336,25 @@ spec:
           uri: 'scratch://logs'
         - path: /configmaps/server.properties
           recoveryPolicy: retain
-          uri: 'cpln://secret/{{ .Values.kafka.name }}-controller-configuration'
+          uri: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration'
         - path: /scripts/kafka-init.sh
           recoveryPolicy: retain
-          uri: 'cpln://secret/{{ .Values.kafka.name }}-init'
+          uri: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-init'
 {{- if .Values.kafka_exporter }}
     - name: kafka-exporter
       args:
         - '-c'
         - >-
-{{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
+{{- if .Values.kafka.secrets.client_passwords }}
+  {{- if eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT" }}
           sleep 60 && kafka_exporter --kafka.server=localhost:{{ .Values.kafka.configurations.client_port }}
           --sasl.enabled --sasl.username=kafka-admin --sasl.mechanism=plain
           --sasl.password=${KAFKA_CLIENT_PASSWORDS} --web.listen-address=:9308
-{{- else if and (not .Values.kafka.secrets.client_passwords) (eq .Values.kafka.configurations.client_listener_security_protocol "PLAINTEXT") }}
+  {{- else }}
+          sleep 60 && kafka_exporter --kafka.server=localhost:{{ .Values.kafka.configurations.client_port }}
+          --no-sasl.handshake --web.listen-address=:9308
+  {{- end }}
+{{- else }}
           sleep 60 && kafka_exporter --kafka.server=localhost:{{ .Values.kafka.configurations.client_port }}
           --no-sasl.handshake --web.listen-address=:9308
 {{- end }}
@@ -357,10 +366,10 @@ spec:
       env:
         - name: BITNAMI_DEBUG
           value: '{{ .Values.kafka_exporter.debug }}'
-{{- if .Values.kafka.secrets.client_passwords }}
+  {{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
         - name: KAFKA_CLIENT_PASSWORDS
-          value: 'cpln://secret/{{ .Values.kafka.name }}-secrets.client-passwords'
-{{- end }}
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.client-passwords'
+  {{- end }}
       image: {{ .Values.kafka_exporter.image }}
       inheritEnv: false
       memory: {{ .Values.kafka_exporter.memory }}
@@ -380,16 +389,18 @@ spec:
     debug: false
     suspend: {{ .Values.kafka.suspend }}
     timeoutSeconds: 5
+{{- if .Values.kafka.firewall }}
   firewallConfig:
+    {{- if or (hasKey .Values.kafka.firewall "external_inboundAllowCIDR") (hasKey .Values.kafka.firewall "external_outboundAllowCIDR") }}
     external:
-      inboundAllowCIDR: []
-      outboundAllowCIDR:
-        - 0.0.0.0/0
-      outboundAllowHostname: []
-      outboundAllowPort: []
+      inboundAllowCIDR: {{- if .Values.kafka.firewall.external_inboundAllowCIDR }}{{ .Values.kafka.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.kafka.firewall.external_outboundAllowCIDR }}{{ .Values.kafka.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.kafka.firewall "internal_inboundAllowType" }}
     internal:
-      inboundAllowType: {{ .Values.kafka.internalFirewall }}
-      inboundAllowWorkload: []
+      inboundAllowType: {{ default "[]" .Values.kafka.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
   identityLink: //identity/{{ .Values.kafka.name }}-identity
   localOptions: []
   rolloutOptions:
