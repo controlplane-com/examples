@@ -22,9 +22,11 @@ kafka:
     # external_outboundAllowCIDR: "111.222.333.444/16,111.222.444.333/32" # Provide a comma-separated list
   configurations:
     client_port: 9092 # Ports 9093 and 9094 are Reserved for internal components
-    client_listener_security_protocol: PLAINTEXT # PLAINTEXT / SASL_PLAINTEXT # kafka.secrets.client_passwords Must be configured!!!
+    client_listener_security_protocol: SASL_PLAINTEXT # PLAINTEXT / SASL_PLAINTEXT # kafka.secrets.client_passwords Must be configured!!!
+    default_replication_factor: 3 # default.replication.factor Can't be greater than the number of cluster replicas
+    auto_create_topics_enable: true # auto.create.topics.enable
   secrets:
-    # client_passwords: fkor3Dro52oodA # Must be for SASL_PLAINTEXT
+    client_passwords: fkor3Dro52oodA # Must be for SASL_PLAINTEXT
     kraft_cluster_id: bkdDtS1Rsf536si7BGM0JY
     inter_broker_password: HfcgCHp32e
     controller_password: ayd8iJwqXe
@@ -46,13 +48,13 @@ kafka_ui:
     external_inboundAllowCIDR: 0.0.0.0/0 # Provide a comma-separated list
     # external_outboundAllowCIDR: "111.222.333.444/16,111.222.444.333/32" # Provide a comma-separated list
 
-# kafka_client:
-#   name: kafka-client
-#   image: docker.io/bitnami/kafka:3.6-debian-11
-#   cpu: 125m
-#   memory: 150Mi
-#   # To disable all traffic, comment out the corresponding rule. Docs: https://docs.controlplane.com/concepts/security#firewall
-#   # firewall:
-#     # internal_inboundAllowType: "same-gvc" # Options: same-org / same-gvc 
-#     # external_inboundAllowCIDR: 0.0.0.0/0 # Provide a comma-separated list
-#     # external_outboundAllowCIDR: "111.222.333.444/16,111.222.444.333/32" # Provide a comma-separated list
+kafka_client:
+  name: kafka-client
+  image: docker.io/bitnami/kafka:3.6-debian-11
+  cpu: 125m
+  memory: 150Mi
+  # To disable all traffic, comment out the corresponding rule. Docs: https://docs.controlplane.com/concepts/security#firewall
+  # firewall:
+    # internal_inboundAllowType: "same-gvc" # Options: same-org / same-gvc 
+    # external_inboundAllowCIDR: 0.0.0.0/0 # Provide a comma-separated list
+    # external_outboundAllowCIDR: "111.222.333.444/16,111.222.444.333/32" # Provide a comma-separated list
