@@ -77,8 +77,10 @@ data:
     listener.name.internal.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="inter_broker_user" password="interbroker-password-placeholder" user_inter_broker_user="interbroker-password-placeholder" user_kafka-admin="password-placeholder-0";
     listener.name.internal.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="inter_broker_user" password="interbroker-password-placeholder";
     listener.name.internal.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="inter_broker_user" password="interbroker-password-placeholder";
-
     # End of SASL JAAS configuration
+
+    default.replication.factor={{ .Values.kafka.configurations.default_replication_factor }}
+    auto.create.topics.enable={{ .Values.kafka.configurations.auto_create_topics_enable }}
 
 ---
 kind: secret
@@ -407,7 +409,7 @@ spec:
     maxSurgeReplicas: 25%
     maxUnavailableReplicas: '1'
     minReadySeconds: 0
-    scalingPolicy: Parallel
+    scalingPolicy: OrderedReady
   securityOptions:
     filesystemGroupId: 1001
   supportDynamicTags: false
