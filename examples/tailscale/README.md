@@ -23,7 +23,7 @@ Any workload that allows access from this tailscale workload will be able to be 
        // Comment this section out if you want to define specific restrictions.
        {
          "action": "check",
-         "src": ["autogroup:members"],
+         "src": ["autogroup:member"],
          "dst": ["autogroup:self"],
          "users": ["autogroup:nonroot", "root"]
        }
@@ -31,14 +31,15 @@ Any workload that allows access from this tailscale workload will be able to be 
      "autoApprovers": {
        "routes": {
          // cpln internal
-         "192.168.0.0/16": ["autogroup:members"],
-         "240.240.0.0/16": ["autogroup:members"],
+         "192.168.0.0/16": ["autogroup:member"],
+         "240.240.0.0/16": ["autogroup:member"],
+         "10.0.0.0/16": ["autogroup:member"],
          // aws
-         "172.20.0.10/32": ["autogroup:members"],
+         "172.20.0.10/32": ["autogroup:member"],
          // azure
-         "10.1.0.10/32": ["autogroup:members"],
+         "10.1.0.10/32": ["autogroup:member"],
          // gcp-us-east1
-         "10.194.112.10/32": ["autogroup:members"]
+         "10.194.112.10/32": ["autogroup:member"]
        }
      }
    }
