@@ -33,9 +33,9 @@ spec:
           protocol: http
       livenessProbe:
         httpGet:
-          path: /health
+          path: /
           port: {{ .Values.workload.port | int }}
       readinessProbe:
         httpGet:
-          path: /health
+          path: /
           port: {{ .Values.workload.port | int }}
