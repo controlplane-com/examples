@@ -383,8 +383,7 @@ spec:
   firewallConfig:
     external:
       inboundAllowCIDR: []
-      outboundAllowCIDR:
-        - 0.0.0.0/0
+      outboundAllowCIDR: []
       outboundAllowHostname: []
       outboundAllowPort: []
     internal:

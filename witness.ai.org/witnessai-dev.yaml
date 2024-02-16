@@ -1,0 +1,3065 @@
+- kind: gvc
+  name: engageai-dev
+  description: engageai-dev
+  tags: {}
+  alias: 4m3nvny7ffv0m
+  version: 35
+  id: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  spec:
+    env:
+      - name: BASE_URL
+        value: dev.engageai.com
+      - name: ELASTICSEARCH_ADDRESSES
+        value: http://elasticsearch.engageai-dev.cpln.local:9200
+      - name: ELASTICSEARCH_PASSWORD
+        value: 34f#@F43d2k87mbv43
+      - name: ELASTICSEARCH_USERNAME
+        value: elastic
+      - name: KAFKA_BROKERS
+        value: >-
+          kafka-dev-cluster-0.kafka-dev-cluster,kafka-dev-cluster-1.kafka-dev-cluster,kafka-dev-cluster-2.kafka-dev-cluster
+      - name: OPENAI_API_KEY
+        value: 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
+      - name: POSTFIX_URL
+        value: engageai-dev.cpln.local
+      - name: REDIS_ADDRESSES
+        value: redis.engageai-dev.cpln.local:6379
+      - name: SERVICES_ATLAS
+        value: http://atlas.engageai-dev.cpln.local
+      - name: SERVICES_FILTERMGR
+        value: http://filter-manager.engageai-dev.cpln.local
+      - name: SERVICES_GROUPS
+        value: http://groups.engageai-dev.cpln.local:8080
+      - name: SERVICES_LLMMGR
+        value: http://llm-manager.engageai-dev.cpln.local
+      - name: SERVICES_POLICY
+        value: http://policy.engageai-dev.cpln.local
+      - name: SERVICES_PRIVATELLM
+        value: http://llm-server-witness-ai:8080
+      - name: SERVICES_REQUEST_MONITOR
+        value: http://request-monitor.engageai-dev.cpln.local
+      - name: SERVICES_USER
+        value: http://user.engageai-dev.cpln.local:8080
+      - name: WORKOS_API_KEY
+        value: >-
+          sk_test_a2V5XzAxSE5EU0s2RkdZWkVLSEZYOTQ1MkNXRk1HLHlsdHlNVHNUWFIzT2pCakxVVTBUdW5vTWo
+      - name: WORKOS_CLIENT_ID
+        value: client_01HNDSK6WZMZ22JX6W0ZXPYJR8
+    loadBalancer:
+      dedicated: true
+      trustedProxies: 0
+    pullSecretLinks:
+      - /org/engageai/secret/aws-ecr-115285544916
+      - /org/engageai/secret/aws-ecr-115285544916-2
+    staticPlacement:
+      locationLinks:
+        - /org/engageai/location/aws-us-west-2
+  status: {}
+  created: '2023-11-14T21:32:01.000Z'
+  lastModified: '2024-02-13T16:59:58.517Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload
+      rel: workload
+    - href: /org/engageai/gvc/engageai-dev/identity
+      rel: identity
+- kind: workload
+  name: admins
+  description: admins
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:24:56.763Z'
+  version: 10
+  id: 08071113-9811-4903-82b3-8b007a39c159
+  spec:
+    type: serverless
+    containers:
+      - name: admins
+        cpu: 50m
+        image: /org/engageai/image/admins:1.0.2
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR: []
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://admins-4m3nvny7ffv0m.cpln.app
+    endpoint: https://admins-4m3nvny7ffv0m.cpln.app
+    internalName: admins.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-01-24T23:13:38.868Z'
+  lastModified: '2024-02-12T16:24:57.124Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/admins
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/admins/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: anonymize
+  description: anonymize
+  tags:
+    cpln/deployTimestamp: '2024-02-15T00:08:33.118Z'
+  version: 99
+  id: c66bb094-e1af-4285-8ad0-65745b168124
+  spec:
+    type: serverless
+    containers:
+      - name: anonymize
+        cpu: '2'
+        image: /org/engageai/image/anonymize:1.0.30
+        inheritEnv: true
+        memory: 6Gi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: true
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/llm-manager
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://anonymize-4m3nvny7ffv0m.cpln.app
+    endpoint: https://anonymize-4m3nvny7ffv0m.cpln.app
+    internalName: anonymize.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:9153d59d2515a8041f8f4ff8e18b78657dbf2f93478e911a32e43987ed9ccffa
+          manifests:
+            - digest: >-
+                sha256:9153d59d2515a8041f8f4ff8e18b78657dbf2f93478e911a32e43987ed9ccffa
+              image: /org/engageai/image/anonymize:1.0.30
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-15T00:08:33.000Z'
+      resolvedForVersion: 99
+  created: '2023-11-14T23:24:23.844Z'
+  lastModified: '2024-02-15T00:08:33.568Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/anonymize
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/anonymize/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: atlas
+  description: atlas
+  tags: {}
+  version: 173
+  id: 734c487d-cd93-48d3-985a-a64959a97c1c
+  spec:
+    type: serverless
+    containers:
+      - name: atlas
+        cpu: 50m
+        image: /org/engageai/image/atlas:1.0.75
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 120
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/kafka-cluster-identity
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://atlas-4m3nvny7ffv0m.cpln.app
+    endpoint: https://atlas-4m3nvny7ffv0m.cpln.app
+    internalName: atlas.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:80c7e192374c8868cce8c7fa3cc1fbeb933679994c23b52be216188c953c5ce4
+          manifests:
+            - digest: >-
+                sha256:80c7e192374c8868cce8c7fa3cc1fbeb933679994c23b52be216188c953c5ce4
+              image: /org/engageai/image/atlas:1.0.75
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-15T15:59:17.000Z'
+      resolvedForVersion: 173
+  created: '2023-11-14T21:56:25.755Z'
+  lastModified: '2024-02-15T15:59:17.682Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/atlas
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/atlas/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: chat-ui
+  description: chat-ui
+  tags: {}
+  version: 25
+  id: 05745418-41cb-41f5-b5f7-6cb6064e3a34
+  spec:
+    type: stateful
+    containers:
+      - name: chat-ui
+        cpu: 50m
+        image: /org/engageai/image/chat-ui:8848d20
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 0
+        maxScale: 3
+        metric: cpu
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR: []
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    localOptions: []
+    rolloutOptions:
+      maxSurgeReplicas: 25%
+      maxUnavailableReplicas: '1'
+      minReadySeconds: 0
+      scalingPolicy: OrderedReady
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://chat-ui-4m3nvny7ffv0m.cpln.app
+    endpoint: https://chat-ui-4m3nvny7ffv0m.cpln.app
+    internalName: chat-ui.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-01-08T01:30:11.624Z'
+  lastModified: '2024-02-14T19:52:16.999Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/chat-ui
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/chat-ui/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: console
+  description: console
+  tags: {}
+  version: 56
+  id: 15d87ad2-2dce-466a-9f79-71dea6a032ac
+  spec:
+    type: serverless
+    containers:
+      - name: console
+        cpu: '1'
+        image: /org/engageai/image/console:506cce4
+        inheritEnv: false
+        memory: 512Mi
+        ports:
+          - number: 3000
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://console-4m3nvny7ffv0m.cpln.app
+    endpoint: https://console-4m3nvny7ffv0m.cpln.app
+    internalName: console.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:66556ff375637b9f1c4c9f1ad9e0308c9dcb9029d89efc797933fa4e589417fe
+          manifests:
+            - digest: >-
+                sha256:66556ff375637b9f1c4c9f1ad9e0308c9dcb9029d89efc797933fa4e589417fe
+              image: /org/engageai/image/console:506cce4
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-15T18:36:42.000Z'
+      resolvedForVersion: 56
+  created: '2023-11-14T21:56:35.714Z'
+  lastModified: '2024-02-15T18:36:42.954Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/console
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/console/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: deanonymize
+  description: deanonymize
+  tags:
+    Language: Python
+    Type: Model
+    cpln/deployTimestamp: '2024-02-15T00:08:41.218Z'
+  version: 94
+  id: 864fb66f-a67d-4fa7-8ef1-fe6cddf330b0
+  spec:
+    type: serverless
+    containers:
+      - name: deanonymize
+        cpu: '1'
+        image: /org/engageai/image/deanonymize:1.0.19
+        inheritEnv: true
+        memory: 2Gi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/llm-manager
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://deanonymize-4m3nvny7ffv0m.cpln.app
+    endpoint: https://deanonymize-4m3nvny7ffv0m.cpln.app
+    internalName: deanonymize.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:278cdf451dbd591bdae0e3558a933d638fdbf3c98d8d25aac5db524b28cd0bfe
+          manifests:
+            - digest: >-
+                sha256:278cdf451dbd591bdae0e3558a933d638fdbf3c98d8d25aac5db524b28cd0bfe
+              image: /org/engageai/image/deanonymize:1.0.19
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-15T00:08:41.000Z'
+      resolvedForVersion: 94
+  created: '2023-11-14T23:24:22.354Z'
+  lastModified: '2024-02-15T00:08:42.113Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/deanonymize
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/deanonymize/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: events
+  description: events
+  tags: {}
+  version: 80
+  id: b2b12c4c-d3b3-4396-b5cb-b59671b3d262
+  spec:
+    type: serverless
+    containers:
+      - name: events
+        cpu: 50m
+        image: /org/engageai/image/events:1.0.22
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/kafka-cluster-identity
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://events-4m3nvny7ffv0m.cpln.app
+    endpoint: https://events-4m3nvny7ffv0m.cpln.app
+    internalName: events.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:82bce00206a0a031137399dff5f59f5f6723f3ed9e897453704275d8bcb5d5ae
+          manifests:
+            - digest: >-
+                sha256:82bce00206a0a031137399dff5f59f5f6723f3ed9e897453704275d8bcb5d5ae
+              image: /org/engageai/image/events:1.0.22
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-16T02:19:55.000Z'
+      resolvedForVersion: 80
+  created: '2024-01-17T18:46:26.140Z'
+  lastModified: '2024-02-16T02:19:55.644Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/events
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/events/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: filter-manager
+  description: filter-manager
+  tags: {}
+  version: 55
+  id: 6ca064d4-93f8-4368-a478-01afd5b2fcec
+  spec:
+    type: serverless
+    containers:
+      - name: filter-manager
+        cpu: 50m
+        image: /org/engageai/image/filter-manager:1.0.42
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://filter-manager-4m3nvny7ffv0m.cpln.app
+    endpoint: https://filter-manager-4m3nvny7ffv0m.cpln.app
+    internalName: filter-manager.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:d371e0c0a4a9b6bfafae3c46df4cb4e60c7631dbae371d70a0aac8f5ac90d500
+          manifests:
+            - digest: >-
+                sha256:d371e0c0a4a9b6bfafae3c46df4cb4e60c7631dbae371d70a0aac8f5ac90d500
+              image: /org/engageai/image/filter-manager:1.0.42
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-14T19:48:34.000Z'
+      resolvedForVersion: 55
+  created: '2023-11-14T23:24:23.099Z'
+  lastModified: '2024-02-14T19:48:35.161Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/filter-manager
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/filter-manager/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: filter-preprocessor
+  description: filter-preprocessor
+  tags:
+    cpln/deployTimestamp: '2024-02-15T00:07:56.076Z'
+  version: 84
+  id: 1a00ce58-5074-44c5-a1d0-3c5e980d0789
+  spec:
+    type: serverless
+    containers:
+      - name: filter-preprocessor
+        cpu: 50m
+        image: /org/engageai/image/filter-preprocessor:1.0.14
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://filter-preprocessor-4m3nvny7ffv0m.cpln.app
+    endpoint: https://filter-preprocessor-4m3nvny7ffv0m.cpln.app
+    internalName: filter-preprocessor.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:2987d750f4aee983f3c1cd10de9235f3c0c7efcf00ecd60655dab3953bbe5b2a
+          manifests:
+            - digest: >-
+                sha256:2987d750f4aee983f3c1cd10de9235f3c0c7efcf00ecd60655dab3953bbe5b2a
+              image: /org/engageai/image/filter-preprocessor:1.0.14
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-15T00:07:56.000Z'
+      resolvedForVersion: 84
+  created: '2023-11-14T21:56:31.054Z'
+  lastModified: '2024-02-15T00:07:56.495Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/filter-preprocessor
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/filter-preprocessor/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: fl-post-malicious-url
+  description: fl-post-malicious-url
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:07.003Z'
+  version: 29
+  id: ec8899bd-d84a-4307-b0d8-b18e4e26f49f
+  spec:
+    type: serverless
+    containers:
+      - name: fl-post-malicious-url
+        cpu: 2000m
+        image: /org/engageai/image/fl-post-malicious-url:1.0.7
+        inheritEnv: true
+        memory: 4096Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://fl-post-malicious-url-4m3nvny7ffv0m.cpln.app
+    endpoint: https://fl-post-malicious-url-4m3nvny7ffv0m.cpln.app
+    internalName: fl-post-malicious-url.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-01-22T20:34:31.377Z'
+  lastModified: '2024-02-12T16:25:07.259Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-post-malicious-url
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-post-malicious-url/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: fl-post-relevance
+  description: fl-post-relevance
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:07.988Z'
+  version: 20
+  id: f5b2c822-5f4a-43cd-b640-5eb86a7262fe
+  spec:
+    type: serverless
+    containers:
+      - name: fl-post-relevance
+        cpu: 2000m
+        env: []
+        image: /org/engageai/image/fl-post-relevance:1.0.1
+        inheritEnv: true
+        memory: 4096Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://fl-post-relevance-4m3nvny7ffv0m.cpln.app
+    endpoint: https://fl-post-relevance-4m3nvny7ffv0m.cpln.app
+    internalName: fl-post-relevance.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:f5076cdf9acb2179f451cde365bc26970d6802f1cda7809f49b073f4208edd66
+          manifests:
+            - digest: >-
+                sha256:f5076cdf9acb2179f451cde365bc26970d6802f1cda7809f49b073f4208edd66
+              image: /org/engageai/image/fl-post-relevance:1.0.1
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:08.000Z'
+      resolvedForVersion: 20
+  created: '2024-01-24T15:42:22.847Z'
+  lastModified: '2024-02-12T16:25:08.571Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-post-relevance
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-post-relevance/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: fl-pre-code-detection
+  description: fl-pre-code-detection
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:08.907Z'
+  version: 51
+  id: b5f7853b-6233-4bdd-a45b-fda51e6178a0
+  spec:
+    type: serverless
+    containers:
+      - name: fl-pre-code-detection
+        cpu: 2000m
+        env: []
+        image: /org/engageai/image/fl-pre-code-detection:1.0.16
+        inheritEnv: true
+        memory: 4096Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://fl-pre-code-detection-4m3nvny7ffv0m.cpln.app
+    endpoint: https://fl-pre-code-detection-4m3nvny7ffv0m.cpln.app
+    internalName: fl-pre-code-detection.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:ff858f873bf84630af9be7745aed8d930e149eb8389bc4a44d7527ae44049542
+          manifests:
+            - digest: >-
+                sha256:ff858f873bf84630af9be7745aed8d930e149eb8389bc4a44d7527ae44049542
+              image: /org/engageai/image/fl-pre-code-detection:1.0.16
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:09.000Z'
+      resolvedForVersion: 51
+  created: '2024-01-17T22:36:58.632Z'
+  lastModified: '2024-02-12T16:25:09.679Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-code-detection
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-code-detection/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: fl-pre-language-classifier
+  description: fl-pre-language-classifier
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:10.003Z'
+  version: 21
+  id: e218d3e4-faa0-4f23-bf3b-64f079209003
+  spec:
+    type: serverless
+    containers:
+      - name: fl-pre-language-classifier
+        cpu: 2000m
+        env: []
+        image: /org/engageai/image/fl-pre-language-classifier:1.0.4
+        inheritEnv: true
+        memory: 4096Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://fl-pre-language-classifier-4m3nvny7ffv0m.cpln.app
+    endpoint: https://fl-pre-language-classifier-4m3nvny7ffv0m.cpln.app
+    internalName: fl-pre-language-classifier.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:7f4690ffb879b321a5d457ee557cb88e98f484dda0653f2d85e5345e41c26392
+          manifests:
+            - digest: >-
+                sha256:7f4690ffb879b321a5d457ee557cb88e98f484dda0653f2d85e5345e41c26392
+              image: /org/engageai/image/fl-pre-language-classifier:1.0.4
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:10.000Z'
+      resolvedForVersion: 21
+  created: '2024-01-25T10:48:19.377Z'
+  lastModified: '2024-02-12T16:25:10.634Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-language-classifier
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: >-
+        /org/engageai/gvc/engageai-dev/workload/fl-pre-language-classifier/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: fl-pre-malicious-url
+  description: fl-pre-malicious-url
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:10.992Z'
+  version: 15
+  id: fa50754d-40c9-4690-a789-f8374e843b55
+  spec:
+    type: serverless
+    containers:
+      - name: fl-pre-malicious-url
+        cpu: 50m
+        image: /org/engageai/image/fl-pre-malicious-url:1.0.5
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR: []
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://fl-pre-malicious-url-4m3nvny7ffv0m.cpln.app
+    endpoint: https://fl-pre-malicious-url-4m3nvny7ffv0m.cpln.app
+    internalName: fl-pre-malicious-url.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-01-22T20:31:31.702Z'
+  lastModified: '2024-02-12T16:25:11.256Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-malicious-url
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-malicious-url/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: fl-pre-regex-scanner
+  description: fl-pre-regex-scanner
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:11.921Z'
+  version: 27
+  id: c5be75eb-cc4f-4176-b431-4e248bdf168b
+  spec:
+    type: serverless
+    containers:
+      - name: fl-pre-regex-scanner
+        cpu: 50m
+        env: []
+        image: /org/engageai/image/fl-pre-regex-scanner:1.0.7
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 1
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://fl-pre-regex-scanner-4m3nvny7ffv0m.cpln.app
+    endpoint: https://fl-pre-regex-scanner-4m3nvny7ffv0m.cpln.app
+    internalName: fl-pre-regex-scanner.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:4cff8c0c0c748b8162bce3dfa2b13cc5257985a5ff21ad3a83bc864769697581
+          manifests:
+            - digest: >-
+                sha256:4cff8c0c0c748b8162bce3dfa2b13cc5257985a5ff21ad3a83bc864769697581
+              image: /org/engageai/image/fl-pre-regex-scanner:1.0.7
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:12.000Z'
+      resolvedForVersion: 27
+  created: '2024-01-23T14:21:53.469Z'
+  lastModified: '2024-02-12T16:25:12.575Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-regex-scanner
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-regex-scanner/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: fl-pre-secrets-leakage
+  description: fl-pre-secrets-leakage
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:12.936Z'
+  version: 43
+  id: e52685ba-102e-4c06-a064-555cab14b137
+  spec:
+    type: serverless
+    containers:
+      - name: fl-pre-secrets-leakage
+        cpu: 50m
+        env: []
+        image: /org/engageai/image/fl-pre-secrets-leakage:1.0.11
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 1
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://fl-pre-secrets-leakage-4m3nvny7ffv0m.cpln.app
+    endpoint: https://fl-pre-secrets-leakage-4m3nvny7ffv0m.cpln.app
+    internalName: fl-pre-secrets-leakage.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:95f06f0bebdd459451ea32b0510c25ae578e0d6ae3fcf750232e1786d73b9ab4
+          manifests:
+            - digest: >-
+                sha256:95f06f0bebdd459451ea32b0510c25ae578e0d6ae3fcf750232e1786d73b9ab4
+              image: /org/engageai/image/fl-pre-secrets-leakage:1.0.11
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:13.000Z'
+      resolvedForVersion: 43
+  created: '2024-01-17T22:37:41.938Z'
+  lastModified: '2024-02-12T16:25:13.513Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-secrets-leakage
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: >-
+        /org/engageai/gvc/engageai-dev/workload/fl-pre-secrets-leakage/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: fl-pre-sentiment-analyzer
+  description: fl-pre-sentiment-analyzer
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:13.882Z'
+  version: 15
+  id: 5d721acb-776e-4b6d-9cba-32158c3d79cd
+  spec:
+    type: serverless
+    containers:
+      - name: fl-pre-sentiment-analyzer
+        cpu: 50m
+        env: []
+        image: /org/engageai/image/fl-pre-sentiment-analyzer:1.0.2
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 1
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/llm-manager
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://fl-pre-sentiment-analyzer-4m3nvny7ffv0m.cpln.app
+    endpoint: https://fl-pre-sentiment-analyzer-4m3nvny7ffv0m.cpln.app
+    internalName: fl-pre-sentiment-analyzer.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:ed1241b9b50103bc7f900cae6f092cb3debb7a0edb305e41e407157f616c5e4b
+          manifests:
+            - digest: >-
+                sha256:ed1241b9b50103bc7f900cae6f092cb3debb7a0edb305e41e407157f616c5e4b
+              image: /org/engageai/image/fl-pre-sentiment-analyzer:1.0.2
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:14.000Z'
+      resolvedForVersion: 15
+  created: '2024-02-01T15:52:03.153Z'
+  lastModified: '2024-02-12T16:25:14.442Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-sentiment-analyzer
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: >-
+        /org/engageai/gvc/engageai-dev/workload/fl-pre-sentiment-analyzer/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: fl-pre-toxicity
+  description: fl-pre-toxicity
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:14.857Z'
+  version: 19
+  id: 37d3446c-4e1d-45a4-9036-cea015f05b60
+  spec:
+    type: serverless
+    containers:
+      - name: fl-pre-toxicity
+        cpu: 2000m
+        env: []
+        image: /org/engageai/image/fl-pre-toxicity:1.0.3
+        inheritEnv: true
+        memory: 4096Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://fl-pre-toxicity-4m3nvny7ffv0m.cpln.app
+    endpoint: https://fl-pre-toxicity-4m3nvny7ffv0m.cpln.app
+    internalName: fl-pre-toxicity.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:02ed861a3006581a2f243d99973808b8ff84138ea54111331abc3e589dd2189c
+          manifests:
+            - digest: >-
+                sha256:02ed861a3006581a2f243d99973808b8ff84138ea54111331abc3e589dd2189c
+              image: /org/engageai/image/fl-pre-toxicity:1.0.3
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:15.000Z'
+      resolvedForVersion: 19
+  created: '2024-01-25T02:49:56.345Z'
+  lastModified: '2024-02-12T16:25:15.761Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-toxicity
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/fl-pre-toxicity/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: groups
+  description: groups
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:15.937Z'
+  version: 17
+  id: a1e01e5e-24cb-42a6-8a33-6aacb26d0e67
+  spec:
+    type: stateful
+    containers:
+      - name: groups
+        cpu: 50m
+        image: /org/engageai/image/groups:1.0.10
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 0
+        maxScale: 3
+        metric: cpu
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    rolloutOptions:
+      maxSurgeReplicas: 25%
+      maxUnavailableReplicas: '1'
+      minReadySeconds: 0
+      scalingPolicy: OrderedReady
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://groups-4m3nvny7ffv0m.cpln.app
+    endpoint: https://groups-4m3nvny7ffv0m.cpln.app
+    internalName: groups.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-01-10T20:38:35.957Z'
+  lastModified: '2024-02-12T16:25:16.217Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/groups
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/groups/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: httpbin
+  description: Tailscale Dependency
+  tags:
+    cpln/release: cpln-release-tailscale-dev
+  version: 6
+  id: 08cc3116-7830-4b8d-878c-ebd478985493
+  spec:
+    type: serverless
+    containers:
+      - name: httpbin
+        cpu: 100m
+        image: kennethreitz/httpbin
+        inheritEnv: false
+        memory: 128Mi
+        ports:
+          - number: 80
+            protocol: http
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            httpHeaders: []
+            path: /
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR: []
+        outboundAllowCIDR: []
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: workload-list
+        inboundAllowWorkload:
+          - /org/engageai/gvc/engageai-dev/workload/tailscale
+    localOptions: []
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://httpbin-4m3nvny7ffv0m.cpln.app
+    endpoint: https://httpbin-4m3nvny7ffv0m.cpln.app
+    internalName: httpbin.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-01-08T23:40:39.984Z'
+  lastModified: '2024-01-18T00:49:39.740Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/httpbin
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/httpbin/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: jailbreak
+  description: jailbreak
+  tags:
+    cpln/deployTimestamp: '2024-02-15T00:08:07.247Z'
+  version: 118
+  id: c1456e33-13d5-4dfd-a899-7ed4d22562de
+  spec:
+    type: serverless
+    containers:
+      - name: jailbreak
+        cpu: '2'
+        image: /org/engageai/image/jailbreak:1.0.42
+        inheritEnv: true
+        memory: 4Gi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/llm-manager
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://jailbreak-4m3nvny7ffv0m.cpln.app
+    endpoint: https://jailbreak-4m3nvny7ffv0m.cpln.app
+    internalName: jailbreak.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:8210cf594c5af7a77f565df226c9d5fc2c6ffd16412674dbe337b55ba1a41af7
+          manifests:
+            - digest: >-
+                sha256:8210cf594c5af7a77f565df226c9d5fc2c6ffd16412674dbe337b55ba1a41af7
+              image: /org/engageai/image/jailbreak:1.0.42
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-15T00:08:07.000Z'
+      resolvedForVersion: 118
+  created: '2023-11-14T21:56:34.180Z'
+  lastModified: '2024-02-15T00:08:08.191Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/jailbreak
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/jailbreak/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: kafka-ui-std
+  description: kafka-ui
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:10:54.154Z'
+  version: 12
+  id: 53fa95d1-ac33-4b38-ab15-157991226d73
+  spec:
+    type: standard
+    containers:
+      - name: kafka-ui
+        cpu: 250m
+        env:
+          - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+            value: >-
+              kafka-dev-cluster-0.kafka-dev-cluster:9092,kafka-dev-cluster-1.kafka-dev-cluster:9092,kafka-dev-cluster-2.kafka-dev-cluster:9092
+          - name: KAFKA_CLUSTERS_0_NAME
+            value: kafka-dev-cluster
+          - name: KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL
+            value: PLAINTEXT
+          - name: KAFKA_CLUSTERS_0_PROPERTIES_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM
+            value: ''
+        image: provectuslabs/kafka-ui
+        inheritEnv: false
+        memory: 500Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 0
+        maxScale: 1
+        metric: cpu
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 95
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR: []
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://kafka-ui-std-4m3nvny7ffv0m.cpln.app
+    endpoint: https://kafka-ui-std-4m3nvny7ffv0m.cpln.app
+    internalName: kafka-ui-std.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2023-11-22T07:54:22.733Z'
+  lastModified: '2024-02-14T21:54:40.923Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/kafka-ui-std
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/kafka-ui-std/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: llm-manager
+  description: llm-manager
+  tags: {}
+  version: 62
+  id: 475c3d67-7e7e-44a7-b5a0-5ba326ce77ef
+  spec:
+    type: serverless
+    containers:
+      - name: llm-manager
+        cpu: 50m
+        image: /org/engageai/image/llm-manager:1.0.29
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 20
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/llm-manager
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://llm-manager-4m3nvny7ffv0m.cpln.app
+    endpoint: https://llm-manager-4m3nvny7ffv0m.cpln.app
+    internalName: llm-manager.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:d105895a7898b79e11065e04a15d036794ac870e78d4d793c1f9cef52a498bed
+          manifests:
+            - digest: >-
+                sha256:d105895a7898b79e11065e04a15d036794ac870e78d4d793c1f9cef52a498bed
+              image: /org/engageai/image/llm-manager:1.0.29
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-14T19:44:48.000Z'
+      resolvedForVersion: 62
+  created: '2023-11-14T21:56:37.281Z'
+  lastModified: '2024-02-14T19:44:51.350Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/llm-manager
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/llm-manager/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: no-op
+  description: No Operation Filter
+  tags:
+    cpln/deployTimestamp: '2024-02-15T00:07:42.506Z'
+  version: 74
+  id: 102afbb1-383c-4e07-867b-182187310233
+  spec:
+    type: standard
+    containers:
+      - name: no-op-filter
+        cpu: 50m
+        image: /org/engageai/image/no-op-filter:1.0.15
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 0
+        maxScale: 3
+        metric: cpu
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR: []
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://no-op-4m3nvny7ffv0m.cpln.app
+    endpoint: https://no-op-4m3nvny7ffv0m.cpln.app
+    internalName: no-op.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:9a0e0357ead336486dfa54ed879bdbbb1d28e8570c31a3f1755f957592bb9e2c
+          manifests:
+            - digest: >-
+                sha256:9a0e0357ead336486dfa54ed879bdbbb1d28e8570c31a3f1755f957592bb9e2c
+              image: /org/engageai/image/no-op-filter:1.0.15
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-15T00:07:44.000Z'
+      resolvedForVersion: 74
+  created: '2023-12-01T17:26:38.259Z'
+  lastModified: '2024-02-15T00:07:44.439Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/no-op
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/no-op/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: nudge
+  description: nudge
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:21.937Z'
+  version: 20
+  id: 39d604c4-64e6-4531-967f-06e0f4d6a84a
+  spec:
+    type: serverless
+    containers:
+      - name: nudge
+        cpu: 50m
+        image: /org/engageai/image/nudge:1.0.3
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR: []
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://nudge-4m3nvny7ffv0m.cpln.app
+    endpoint: https://nudge-4m3nvny7ffv0m.cpln.app
+    internalName: nudge.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:a8df898692bee76edc73e93003bf9f5adfca1cfa73c8489824bddf5262bec12d
+          manifests:
+            - digest: >-
+                sha256:a8df898692bee76edc73e93003bf9f5adfca1cfa73c8489824bddf5262bec12d
+              image: /org/engageai/image/nudge:1.0.3
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:22.000Z'
+      resolvedForVersion: 20
+  created: '2024-01-17T18:46:05.981Z'
+  lastModified: '2024-02-12T16:25:22.720Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/nudge
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/nudge/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: observability
+  description: observability
+  tags: {}
+  version: 33
+  id: bc24e99f-69c8-49be-bf23-c592a05aa142
+  spec:
+    type: serverless
+    containers:
+      - name: observability
+        cpu: 50m
+        image: /org/engageai/image/observability:1.0.15
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://observability-4m3nvny7ffv0m.cpln.app
+    endpoint: https://observability-4m3nvny7ffv0m.cpln.app
+    internalName: observability.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:ab1ea4b76ed7e86282ef1d831bc1bdcba1a0161a78de90b6b49b10b7991956f5
+          manifests:
+            - digest: >-
+                sha256:ab1ea4b76ed7e86282ef1d831bc1bdcba1a0161a78de90b6b49b10b7991956f5
+              image: /org/engageai/image/observability:1.0.15
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-14T19:42:48.000Z'
+      resolvedForVersion: 33
+  created: '2023-11-14T21:56:27.437Z'
+  lastModified: '2024-02-14T19:42:48.683Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/observability
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/observability/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: pa-copilot-request
+  description: pa-copilot-request
+  tags: {}
+  version: 46
+  id: 32d0a7d8-ca76-4b7a-82b1-23d7d9a3b7ff
+  spec:
+    type: stateful
+    containers:
+      - name: pa-copilot-request
+        cpu: 50m
+        image: /org/engageai/image/pa-copilot-request:1.0.16
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 0
+        maxScale: 1
+        metric: cpu
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    rolloutOptions:
+      maxSurgeReplicas: 25%
+      maxUnavailableReplicas: '1'
+      minReadySeconds: 0
+      scalingPolicy: OrderedReady
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://pa-copilot-request-4m3nvny7ffv0m.cpln.app
+    endpoint: https://pa-copilot-request-4m3nvny7ffv0m.cpln.app
+    internalName: pa-copilot-request.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-01-10T20:36:21.570Z'
+  lastModified: '2024-02-14T19:42:03.290Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/pa-copilot-request
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/pa-copilot-request/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: policy
+  description: policy
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:25.097Z'
+  version: 42
+  id: b7019a04-e57d-40ed-adc0-a3fcd0775984
+  spec:
+    type: serverless
+    containers:
+      - name: policy
+        cpu: 50m
+        image: /org/engageai/image/policy:1.0.21
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://policy-4m3nvny7ffv0m.cpln.app
+    endpoint: https://policy-4m3nvny7ffv0m.cpln.app
+    internalName: policy.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:b56a2ef34cf858091cb76320c3f833f210120373d0d2a74a53f3cff7b790ac91
+          manifests:
+            - digest: >-
+                sha256:b56a2ef34cf858091cb76320c3f833f210120373d0d2a74a53f3cff7b790ac91
+              image: /org/engageai/image/policy:1.0.21
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:25.000Z'
+      resolvedForVersion: 42
+  created: '2023-11-14T21:56:31.852Z'
+  lastModified: '2024-02-12T16:25:25.741Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/policy
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/policy/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: prompt-runner
+  description: prompt-runner
+  tags:
+    cpln/deployTimestamp: '2024-02-16T15:58:58.217Z'
+  version: 31
+  id: efcc0076-0d68-4f17-8b19-ae672776fde8
+  spec:
+    type: serverless
+    containers:
+      - name: prompt-runner
+        cpu: 50m
+        env:
+          - name: DEBUG
+            value: 'false'
+          - name: SLACK_CHANNEL
+            value: backend_prompt_runner
+          - name: SLACK_ENABLED
+            value: 'true'
+          - name: SLACK_HOOK
+            value: >-
+              https://hooks.slack.com/services/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
+        image: /org/engageai/image/prompt-runner:1.0.12
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 1
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://prompt-runner-4m3nvny7ffv0m.cpln.app
+    endpoint: https://prompt-runner-4m3nvny7ffv0m.cpln.app
+    internalName: prompt-runner.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-02-05T18:04:55.817Z'
+  lastModified: '2024-02-16T15:58:58.311Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/prompt-runner
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/prompt-runner/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: proxy
+  description: proxy
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:27.206Z'
+  version: 24
+  id: 199344c7-d2ef-47af-8a51-a1697b158bc9
+  spec:
+    type: standard
+    containers:
+      - name: squid-proxy
+        cpu: '1'
+        image: 115285544916.dkr.ecr.us-west-2.amazonaws.com/proxy.py:latest
+        inheritEnv: true
+        memory: 1Gi
+        ports:
+          - number: 4128
+            protocol: tcp
+      - name: icapeg
+        cpu: '1'
+        image: 115285544916.dkr.ecr.us-west-2.amazonaws.com/icapeg:latest
+        inheritEnv: true
+        memory: 1Gi
+        ports:
+          - number: 8080
+            protocol: tcp
+          - number: 8081
+            protocol: tcp
+          - number: 8082
+            protocol: tcp
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 0
+        maxScale: 3
+        metric: cpu
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://proxy-4m3nvny7ffv0m.cpln.app
+    endpoint: https://proxy-4m3nvny7ffv0m.cpln.app
+    internalName: proxy.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:2532185efe290b468c4802cb5ab2ccaf4d9dafe2e30e70b1ff4209c789691336
+          manifests:
+            - digest: >-
+                sha256:2532185efe290b468c4802cb5ab2ccaf4d9dafe2e30e70b1ff4209c789691336
+              image: 115285544916.dkr.ecr.us-west-2.amazonaws.com/proxy.py:latest
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+        - digest: >-
+            sha256:5d23a3a781c91d27f720b1f9ade5c54204745708f418ec142abd6db4e404f775
+          manifests:
+            - digest: >-
+                sha256:5d23a3a781c91d27f720b1f9ade5c54204745708f418ec142abd6db4e404f775
+              image: 115285544916.dkr.ecr.us-west-2.amazonaws.com/icapeg:latest
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:27.000Z'
+      resolvedForVersion: 24
+  created: '2024-01-23T20:05:15.160Z'
+  lastModified: '2024-02-12T16:25:28.463Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/proxy
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/proxy/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: py-service-template
+  description: py-service-template
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:28.294Z'
+  version: 17
+  id: 0cd4c812-03e3-4bfa-9eea-ff6dd9379eaa
+  spec:
+    type: serverless
+    containers:
+      - name: py-service-template
+        cpu: 50m
+        env: []
+        image: /org/engageai/image/py-service-template:1.0.55
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/llm-manager
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://py-service-template-4m3nvny7ffv0m.cpln.app
+    endpoint: https://py-service-template-4m3nvny7ffv0m.cpln.app
+    internalName: py-service-template.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:05e890ebdb2cd62c750fb2b2b2f1d9dbce58cb107d07940337dc18c1631140e8
+          manifests:
+            - digest: >-
+                sha256:05e890ebdb2cd62c750fb2b2b2f1d9dbce58cb107d07940337dc18c1631140e8
+              image: /org/engageai/image/py-service-template:1.0.55
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:28.000Z'
+      resolvedForVersion: 17
+  created: '2024-01-30T16:53:25.031Z'
+  lastModified: '2024-02-12T16:25:28.869Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/py-service-template
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/py-service-template/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: rag
+  description: rag
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:29.270Z'
+  version: 23
+  id: 9661d05e-f3f0-413d-b672-dfefadb02c54
+  spec:
+    type: serverless
+    containers:
+      - name: rag
+        cpu: 50m
+        env: []
+        image: /org/engageai/image/rag:1.0.11
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-gvc
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://rag-4m3nvny7ffv0m.cpln.app
+    endpoint: https://rag-4m3nvny7ffv0m.cpln.app
+    internalName: rag.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:46101c06592d0bdb93c0d9dbc8001ab865262e978430e25998cd0e265fe70f73
+          manifests:
+            - digest: >-
+                sha256:46101c06592d0bdb93c0d9dbc8001ab865262e978430e25998cd0e265fe70f73
+              image: /org/engageai/image/rag:1.0.11
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:29.000Z'
+      resolvedForVersion: 23
+  created: '2024-01-17T22:49:49.393Z'
+  lastModified: '2024-02-12T16:25:29.935Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/rag
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/rag/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: request-monitor
+  description: request-monitor
+  tags: {}
+  version: 169
+  id: 8f155d1e-b03c-4ffb-944b-e1ba0b133765
+  spec:
+    type: serverless
+    containers:
+      - name: request-monitor
+        cpu: 50m
+        env:
+          - name: SERVICES_FILTERMGR
+            value: http://filter-manager.engageai-dev.cpln.local
+          - name: SERVICES_POLICY
+            value: http://policy.engageai-dev.cpln.local
+        image: /org/engageai/image/request-monitor:1.0.105
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 20
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://request-monitor-4m3nvny7ffv0m.cpln.app
+    endpoint: https://request-monitor-4m3nvny7ffv0m.cpln.app
+    internalName: request-monitor.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:26d8d073b039a1ea99ff53c171d6609282742bef080e48be3c4ed6c867e0ed83
+          manifests:
+            - digest: >-
+                sha256:26d8d073b039a1ea99ff53c171d6609282742bef080e48be3c4ed6c867e0ed83
+              image: /org/engageai/image/request-monitor:1.0.105
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-14T19:12:45.000Z'
+      resolvedForVersion: 169
+  created: '2023-11-14T21:56:34.958Z'
+  lastModified: '2024-02-14T19:12:45.233Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/request-monitor
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/request-monitor/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: schemas
+  description: schemas
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:31.908Z'
+  version: 89
+  id: c1707344-0df4-4dc2-b74c-32e5af9e2e94
+  spec:
+    type: serverless
+    containers:
+      - name: schemas
+        cpu: 50m
+        image: /org/engageai/image/schemas:1.0.240
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://schemas-4m3nvny7ffv0m.cpln.app
+    endpoint: https://schemas-4m3nvny7ffv0m.cpln.app
+    internalName: schemas.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:f48af8539c4fbc72ca17b69a01f4c978d55573ab3f7f34543b3c90e525a0269e
+          manifests:
+            - digest: >-
+                sha256:f48af8539c4fbc72ca17b69a01f4c978d55573ab3f7f34543b3c90e525a0269e
+              image: /org/engageai/image/schemas:1.0.240
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:32.000Z'
+      resolvedForVersion: 89
+  created: '2023-11-14T23:24:20.855Z'
+  lastModified: '2024-02-12T16:25:32.980Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/schemas
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/schemas/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: scorekeeper
+  description: scorekeeper
+  tags: {}
+  version: 157
+  id: 1a4130ea-00d3-4e68-bfbc-505c94c9bca7
+  spec:
+    type: serverless
+    containers:
+      - name: scorekeeper
+        cpu: 50m
+        env:
+          - name: SERVICES_FILTERMGR
+            value: http://filter-manager.engageai-dev.cpln.local
+          - name: SERVICES_POLICY
+            value: http://policy.engageai-dev.cpln.local
+        image: /org/engageai/image/scorekeeper:1.0.61
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 20
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://scorekeeper-4m3nvny7ffv0m.cpln.app
+    endpoint: https://scorekeeper-4m3nvny7ffv0m.cpln.app
+    internalName: scorekeeper.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:4011e4722d3fea8cd8c3225cf99b690544f53025811df817f9e9a027732ca2b6
+          manifests:
+            - digest: >-
+                sha256:4011e4722d3fea8cd8c3225cf99b690544f53025811df817f9e9a027732ca2b6
+              image: /org/engageai/image/scorekeeper:1.0.61
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-16T19:53:05.000Z'
+      resolvedForVersion: 157
+  created: '2023-12-20T00:20:47.484Z'
+  lastModified: '2024-02-16T19:53:06.123Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/scorekeeper
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/scorekeeper/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: scraper-client
+  description: scraper-client
+  tags: {}
+  version: 31
+  id: 0ce30df2-54ba-4ca9-87b6-47601d0333b0
+  spec:
+    type: serverless
+    containers:
+      - name: scraper-client
+        cpu: 50m
+        image: /org/engageai/image/scraper-client:1.0.19
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://scraper-client-4m3nvny7ffv0m.cpln.app
+    endpoint: https://scraper-client-4m3nvny7ffv0m.cpln.app
+    internalName: scraper-client.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:5db7d1b79392f84f7cf441373dd5105e41a4ab28020a1667902cfcc8f55878c5
+          manifests:
+            - digest: >-
+                sha256:5db7d1b79392f84f7cf441373dd5105e41a4ab28020a1667902cfcc8f55878c5
+              image: /org/engageai/image/scraper-client:1.0.19
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-14T19:53:08.000Z'
+      resolvedForVersion: 31
+  created: '2023-11-14T21:56:32.620Z'
+  lastModified: '2024-02-14T19:53:09.199Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/scraper-client
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/scraper-client/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: scraper-manager
+  description: scraper-manager
+  tags: {}
+  version: 30
+  id: 1eb70ae2-5d6e-4893-8344-6d5aecb07fdf
+  spec:
+    type: serverless
+    containers:
+      - name: scraper-manager
+        cpu: 50m
+        image: /org/engageai/image/scraper-manager:1.0.82
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://scraper-manager-4m3nvny7ffv0m.cpln.app
+    endpoint: https://scraper-manager-4m3nvny7ffv0m.cpln.app
+    internalName: scraper-manager.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:d67f4947dfa24c45b27523476c349d4d179e7f7900961e64a189f2ad808da693
+          manifests:
+            - digest: >-
+                sha256:d67f4947dfa24c45b27523476c349d4d179e7f7900961e64a189f2ad808da693
+              image: /org/engageai/image/scraper-manager:1.0.82
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-14T19:54:43.000Z'
+      resolvedForVersion: 30
+  created: '2023-11-14T21:56:24.196Z'
+  lastModified: '2024-02-14T19:54:44.224Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/scraper-manager
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/scraper-manager/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: site
+  description: site
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:36.460Z'
+  version: 36
+  id: 4a8bd9bc-1b94-4896-b9c3-bb5db6ec2713
+  spec:
+    type: serverless
+    containers:
+      - name: site
+        cpu: 50m
+        image: /org/engageai/image/site:1.0.17
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 20
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://site-4m3nvny7ffv0m.cpln.app
+    endpoint: https://site-4m3nvny7ffv0m.cpln.app
+    internalName: site.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:d212a11576a167d5d993bf999dc3741c87f90d92de71e7125e6076fab9944279
+          manifests:
+            - digest: >-
+                sha256:d212a11576a167d5d993bf999dc3741c87f90d92de71e7125e6076fab9944279
+              image: /org/engageai/image/site:1.0.17
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:42.000Z'
+      resolvedForVersion: 36
+  created: '2023-11-14T21:56:24.976Z'
+  lastModified: '2024-02-12T16:25:43.423Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/site
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/site/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: site-querier
+  description: site-querier
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:37.992Z'
+  version: 26
+  id: f23044f0-ede0-412f-abb5-bdf72999ef3c
+  spec:
+    type: serverless
+    containers:
+      - name: site-querier
+        cpu: 50m
+        image: /org/engageai/image/site-querier:1.0.9
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://site-querier-4m3nvny7ffv0m.cpln.app
+    endpoint: https://site-querier-4m3nvny7ffv0m.cpln.app
+    internalName: site-querier.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:87f80be6e0dab670e2ba91bb5764d99f148129c9d32f11eb512d2641622630d6
+          manifests:
+            - digest: >-
+                sha256:87f80be6e0dab670e2ba91bb5764d99f148129c9d32f11eb512d2641622630d6
+              image: /org/engageai/image/site-querier:1.0.9
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:41.000Z'
+      resolvedForVersion: 26
+  created: '2023-11-14T21:56:36.494Z'
+  lastModified: '2024-02-12T16:25:41.370Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/site-querier
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/site-querier/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: tailscale
+  description: tailscale
+  tags:
+    app.cpln.io/instance: tailscale-dev
+    app.cpln.io/managed-by: Helm
+    app.cpln.io/name: tailscale
+    app.cpln.io/version: 1.16.0
+    cpln/checksum: dc1a9d446ac279274a9f5bb54cc883c1df3d32bd62560e8ee50da0d177bb7449
+    cpln/deployTimestamp: '2024-02-14T19:19:45.958Z'
+    cpln/release: cpln-release-tailscale-dev
+    helm.sh/chart: tailscale-0.1.0
+  version: 12
+  id: 9dc10638-55af-4ef1-8d0b-30c182d9b235
+  spec:
+    type: standard
+    containers:
+      - name: tailscale
+        cpu: 500m
+        env:
+          - name: KUBERNETES_SERVICE_HOST
+            value: ''
+          - name: TS_ACCEPT_DNS
+            value: 'false'
+          - name: TS_AUTHKEY
+            value: cpln://secret/tailscale.authkey
+          - name: TS_HOSTNAME
+            value: witness-dev
+          - name: TS_KUBE_SECRET
+            value: ''
+          - name: TS_ROUTES
+            value: 192.168.0.0/16,240.240.0.0/16,172.20.0.10/32,10.0.0.0/16
+          - name: TS_USERSPACE
+            value: 'true'
+        image: tailscale/tailscale:latest
+        inheritEnv: false
+        memory: 128Mi
+        ports: []
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 0
+        maxScale: 1
+        metric: disabled
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 50
+      capacityAI: false
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR: []
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/tailscale
+    localOptions:
+      - autoscaling:
+          maxConcurrency: 0
+          maxScale: 1
+          metric: disabled
+          minScale: 1
+          scaleToZeroDelay: 300
+          target: 50
+        capacityAI: false
+        debug: false
+        location: /org/engageai/location/aws-us-west-2
+        suspend: false
+        timeoutSeconds: 5
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://tailscale-4m3nvny7ffv0m.cpln.app
+    endpoint: https://tailscale-4m3nvny7ffv0m.cpln.app
+    internalName: tailscale.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-01-08T23:40:38.323Z'
+  lastModified: '2024-02-14T19:19:46.124Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/tailscale
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/tailscale/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: topic-intention
+  description: topic-intention
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:40.575Z'
+  version: 25
+  id: 81cd37c2-90e3-4942-a515-f07c61e5c2a7
+  spec:
+    type: serverless
+    containers:
+      - name: topic-intention
+        cpu: 50m
+        image: /org/engageai/image/topic-intention:1.0.18
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 1
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 5
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR: []
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: none
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/llm-manager
+    localOptions: []
+    supportDynamicTags: false
+  status:
+    canonicalEndpoint: https://topic-intention-4m3nvny7ffv0m.cpln.app
+    endpoint: https://topic-intention-4m3nvny7ffv0m.cpln.app
+    internalName: topic-intention.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+  created: '2024-01-18T16:15:34.006Z'
+  lastModified: '2024-02-12T16:25:40.858Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/topic-intention
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/topic-intention/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: workload
+  name: user
+  description: user
+  tags:
+    cpln/deployTimestamp: '2024-02-12T16:25:41.628Z'
+  version: 17
+  id: 97a022c7-df9f-4aeb-b1c6-57e6f014bf37
+  spec:
+    type: serverless
+    containers:
+      - name: user
+        cpu: 50m
+        image: /org/engageai/image/user:1.0.16
+        inheritEnv: true
+        memory: 128Mi
+        ports:
+          - number: 8080
+            protocol: http
+    defaultOptions:
+      autoscaling:
+        maxConcurrency: 1000
+        maxScale: 3
+        metric: concurrency
+        minScale: 1
+        scaleToZeroDelay: 300
+        target: 100
+      capacityAI: true
+      debug: false
+      suspend: false
+      timeoutSeconds: 10
+    firewallConfig:
+      external:
+        inboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowCIDR:
+          - 0.0.0.0/0
+        outboundAllowHostname: []
+        outboundAllowPort: []
+      internal:
+        inboundAllowType: same-org
+        inboundAllowWorkload: []
+    identityLink: /org/engageai/gvc/engageai-dev/identity/kafka-cluster-identity
+    localOptions: []
+    supportDynamicTags: true
+  status:
+    canonicalEndpoint: https://user-4m3nvny7ffv0m.cpln.app
+    endpoint: https://user-4m3nvny7ffv0m.cpln.app
+    internalName: user.engageai-dev.cpln.local
+    parentId: 512783a1-a94b-4b4e-ae5a-6fda89589ae6
+    resolvedImages:
+      images:
+        - digest: >-
+            sha256:06850a494ea9a1577f1681e9fa63dbed1c4c98f809667e0c367a5f0b94636476
+          manifests:
+            - digest: >-
+                sha256:06850a494ea9a1577f1681e9fa63dbed1c4c98f809667e0c367a5f0b94636476
+              image: /org/engageai/image/user:1.0.16
+              mediaType: application/vnd.docker.distribution.manifest.v2+json
+      resolvedAt: '2024-02-12T16:25:42.000Z'
+      resolvedForVersion: 17
+  created: '2024-01-23T07:04:15.165Z'
+  lastModified: '2024-02-12T16:25:43.173Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/workload/user
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev/workload/user/deployment
+      rel: deployment
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: identity
+  name: llm-manager
+  description: llm-manager
+  tags: {}
+  networkResources:
+    - name: llm-server-witness-ai
+      FQDN: llm-server.witness.ai
+      agentLink: /org/engageai/agent/aws-agent
+      ports:
+        - 8080
+        - 8081
+    - name: ml-dev-1
+      FQDN: ip-172-31-2-64.us-west-2.compute.internal
+      agentLink: /org/engageai/agent/aws-agent
+      ports:
+        - 8080
+        - 8081
+  version: 4
+  id: 67aad669-21fd-47a3-9a54-baeeda5f3319
+  status:
+    objectName: cpln-engageai-engagea-4s90ghrt
+  created: '2023-12-01T23:27:52.557Z'
+  lastModified: '2023-12-20T01:09:45.889Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/identity/llm-manager
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: identity
+  name: kafka-cluster-identity
+  description: Auto-managed identity for the workload "kafka-cluster"
+  tags: {}
+  version: 3
+  id: 747c89bc-d300-4921-8543-7e158768df89
+  status:
+    objectName: cpln-engageai-engagea-jbd10cz2
+  created: '2023-11-14T21:32:26.188Z'
+  lastModified: '2023-11-14T21:33:13.270Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/identity/kafka-cluster-identity
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
+- kind: identity
+  name: tailscale
+  description: >-
+    Identity for the workload "tailscale" used to grant access to the tailscale
+    secret
+  tags:
+    cpln/release: cpln-release-tailscale-dev
+  version: 2
+  id: df74ae38-1975-4b5c-9ceb-01acfede152a
+  status:
+    objectName: cpln-engageai-engagea-w6ceddfr
+  created: '2024-01-08T23:40:35.547Z'
+  lastModified: '2024-01-08T23:40:35.573Z'
+  links:
+    - href: /org/engageai/gvc/engageai-dev/identity/tailscale
+      rel: self
+    - href: /org/engageai
+      rel: org
+    - href: /org/engageai/gvc/engageai-dev
+      rel: gvc
