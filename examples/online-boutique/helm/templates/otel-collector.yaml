@@ -37,6 +37,11 @@ data:
           site: ${DD_SITE}
           key: ${DD_API_KEY}
 
+      otlp:
+        endpoint: tracing.controlplane:80
+        tls:
+          insecure: true
+
     service:
       telemetry:
         logs:
@@ -46,7 +51,7 @@ data:
         traces:
           receivers: [otlp]
           processors: [filter/httpmetrics, batch]
-          exporters: [datadog]
+          exporters: [datadog, otlp]
 ---
 kind: secret
 name: datadog-config-{{ .Values.online_boutique.gvc }}
@@ -88,7 +93,7 @@ spec:
           value: 'cpln://secret/datadog-config-{{ .Values.online_boutique.gvc }}.DD_API_KEY'
         - name: DD_SITE
           value: 'cpln://secret/datadog-config-{{ .Values.online_boutique.gvc }}.DD_SITE'
-      image: 'otel/opentelemetry-collector-contrib:0.83.0'
+      image: {{ .Values.tracing.image }}
       inheritEnv: false
       memory: {{ .Values.tracing.otel.memory }}
       ports:

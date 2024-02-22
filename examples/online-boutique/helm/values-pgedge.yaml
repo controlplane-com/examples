@@ -20,6 +20,16 @@ tracing:
   #   DD_SITE: DD_SITE_VALUE ## For Example: datadoghq.com
   #   cpu: 100m
   #   memory: 200Mi
+# tracing:
+#   image: 'otel/opentelemetry-collector-contrib:0.94.0'
+#   otel_workload: 'otel-collector'
+#   otel_port: '4317'
+#   sampling: 100
+#   # Do not set DD_API_KEY_VALUE and DD_SITE_VALUE below inside quotation mark
+#   DD_API_KEY: DD_API_KEY_VALUE
+#   DD_SITE: DD_SITE_VALUE ## For Example: datadoghq.com
+#   cpu: 100m
+#   memory: 200Mi
 
 
 image:
