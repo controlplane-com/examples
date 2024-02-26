@@ -1,0 +1,37 @@
+# Default values for kong.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+kong:
+  image: kong:latest
+  suspend: false
+  gvc: dev
+  create_gvc: false # If deployed in existing GVC, set to false
+  name: kong-dbless # Choose a unique name so you don't override other clusters on your system
+  location: aws-us-east-2 # Relevant only if create_gvc=true
+  replicas: 1
+  cpu: 2 # For millicores us 'm' like 500m
+  memory: 4000Mi # Gi / Mi
+  # To disable all traffic, comment out the corresponding rule. Docs: https://docs.controlplane.com/concepts/security#firewall
+  firewall:
+    internal_inboundAllowType: "same-org" # Options: same-org / same-gvc
+    external_inboundAllowCIDR: 0.0.0.0/0 # Provide a comma-separated list
+    external_outboundAllowCIDR: "0.0.0.0/0" # Provide a comma-separated list
+  configurations:
+    kong:
+      KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8002"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444"
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+    ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
+    # postgres: # This is supported in single-location GVCs, for multi region DB use pgEdge
+    #   POSTGRES_DB: kong
+    #   POSTGRES_PASSWORD: ofk430f259409438jd923r1803j4
+    #   POSTGRES_USER: kong
+    #   image: postgres:9.5
+    #   cpu: 1 # For millicores us 'm' like 500m
+    #   memory: 1500Mi # Gi / Mi
+    dbless:
+      KONG_DECLARATIVE_CONFIG: "/opt/kong/kong.yaml"
+    
+
+

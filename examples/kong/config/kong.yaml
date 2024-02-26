@@ -1,0 +1,13 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+- host: nginx.dev.cpln.local
+  name: nginx-dev
+  port: 80
+  protocol: http
+  routes:
+  - name: example
+    paths:
+    - /nginx-dev
+    strip_path: true

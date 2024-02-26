@@ -1,0 +1,302 @@
+{{- if .Values.kong.create_gvc }}
+kind: gvc
+name: {{ .Values.kong.gvc }}
+description: {{ .Values.kong.name }}
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/{{ .Values.kong.location }}
+{{- end }}
+{{- if .Values.kong.configurations.dbless }}
+---
+kind: secret
+name: {{ .Values.kong.name }}-{{ .Values.kong.gvc }}-yaml
+description: kong-yaml
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+{{ .Files.Get "config/kong.yaml" | indent 4 }}
+---
+kind: policy
+name: {{ .Values.kong.name }}-{{ .Values.kong.gvc }}-policy
+tags: {}
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.kong.gvc }}/identity/{{ .Values.kong.name }}-identity
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-yaml
+{{- end }}
+{{- if .Values.kong.configurations.postgres }}
+---
+kind: secret
+name: {{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret
+description: kong-postgres-secret
+tags: {}
+type: dictionary
+data:
+  POSTGRES_DB: {{ .Values.kong.configurations.postgres.POSTGRES_DB }}
+  POSTGRES_PASSWORD: {{ .Values.kong.configurations.postgres.POSTGRES_PASSWORD }}
+  POSTGRES_USER: {{ .Values.kong.configurations.postgres.POSTGRES_USER }}
+---
+kind: identity
+name: {{ .Values.kong.name }}-db-identity
+gvc: {{ .Values.kong.gvc }}
+tags: {}
+---
+kind: policy
+name: {{ .Values.kong.name }}-{{ .Values.kong.gvc }}-policy
+tags: {}
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.kong.gvc }}/identity/{{ .Values.kong.name }}-db-identity
+      - //gvc/{{ .Values.kong.gvc }}/identity/{{ .Values.kong.name }}-identity
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret
+---
+kind: volumeset
+name: {{ .Values.kong.name }}-data
+gvc: {{ .Values.kong.gvc }}
+description: kong-data
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 20
+  performanceClass: general-purpose-ssd
+  snapshots:
+    createFinalSnapshot: true
+    retentionDuration: 7d
+    schedule: 0 0 9 * *
+---
+kind: workload
+name: {{ .Values.kong.name }}-db
+gvc: {{ .Values.kong.gvc }}
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: kong-db
+      cpu: '{{ .Values.kong.configurations.postgres.cpu }}'
+      env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pg_data
+        - name: POSTGRES_DB
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_DB
+        - name: POSTGRES_PASSWORD
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_PASSWORD
+        - name: POSTGRES_USER
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_USER
+      image: {{ .Values.kong.configurations.postgres.image }}
+      inheritEnv: false
+      memory: {{ .Values.kong.configurations.postgres.memory }}
+      ports:
+        - number: 5432
+          protocol: tcp
+      readinessProbe:
+        exec:
+          command:
+            - pg_isready
+            - '-d'
+            - {{ .Values.kong.configurations.postgres.POSTGRES_DB }}
+            - '-U'
+            - {{ .Values.kong.configurations.postgres.POSTGRES_USER }}
+        failureThreshold: 3
+        initialDelaySeconds: 10
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 15
+      livenessProbe:
+        exec:
+          command:
+            - pg_isready
+            - '-d'
+            - {{ .Values.kong.configurations.postgres.POSTGRES_DB }}
+            - '-U'
+            - {{ .Values.kong.configurations.postgres.POSTGRES_USER }}
+        failureThreshold: 3
+        initialDelaySeconds: 60
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 15
+      volumes:
+        - path: /var/lib/postgresql/data
+          recoveryPolicy: retain
+          uri: cpln://volumeset/{{ .Values.kong.name }}-data
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: workload-list
+      inboundAllowWorkload:
+        - //workload/{{ .Values.kong.name }}
+  identityLink: //identity/{{ .Values.kong.name }}-db-identity
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: OrderedReady
+  supportDynamicTags: false
+{{- end }}
+---
+kind: identity
+name: {{ .Values.kong.name }}-identity
+gvc: {{ .Values.kong.gvc }}
+tags: {}
+---
+kind: workload
+name: {{ .Values.kong.name }}
+gvc: {{ .Values.kong.gvc }}
+description: kong
+tags: {}
+spec:
+  type: standard
+  containers:
+    - name: kong
+      args:
+        - '-c'
+        - |-
+          kong migrations bootstrap && \
+          kong migrations up && kong migrations finish && \
+          kong start -vv && tail -f /usr/local/kong/logs/error.log
+      command: /bin/bash
+      cpu: '{{ .Values.kong.cpu }}'
+      env:
+        - name: KONG_ADMIN_GUI_LISTEN
+          value: {{ .Values.kong.configurations.kong.KONG_ADMIN_GUI_LISTEN }}
+        - name: KONG_ADMIN_LISTEN
+          value: {{ .Values.kong.configurations.kong.KONG_ADMIN_LISTEN }}
+        - name: KONG_PROXY_LISTEN
+          value: {{ .Values.kong.configurations.kong.KONG_PROXY_LISTEN }}
+        - name: KONG_ADMIN_ACCESS_LOG
+          value: /dev/stdout
+        - name: KONG_ADMIN_ERROR_LOG
+          value: /dev/stderr
+        - name: KONG_PROXY_ACCESS_LOG
+          value: /dev/stdout
+        - name: KONG_PROXY_ERROR_LOG
+          value: /dev/stderr
+{{- if .Values.kong.configurations.postgres }}
+        - name: KONG_DATABASE
+          value: postgres
+        - name: KONG_PG_HOST
+          value: {{ .Values.kong.name }}-db.{{ .Values.kong.gvc }}.cpln.local
+        - name: KONG_PG_DATABASE
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_DB
+        - name: KONG_PG_PASSWORD
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_PASSWORD
+        - name: KONG_PG_USER
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_USER
+{{- end }}
+{{- if .Values.kong.configurations.dbless }}
+        - name: KONG_DATABASE
+          value: off
+        - name: KONG_DECLARATIVE_CONFIG
+          value: {{ .Values.kong.configurations.dbless.KONG_DECLARATIVE_CONFIG }}
+{{- end }}
+      image: {{ .Values.kong.image }}
+      inheritEnv: false
+      livenessProbe:
+        exec:
+          command:
+            - kong
+            - health
+        failureThreshold: 3
+        initialDelaySeconds: 60
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 10
+      memory: {{ .Values.kong.memory }}
+      ports:
+      {{- $portsStr := include "chart.parseKongProxyListen" . -}}
+      {{- $ports := splitList "," $portsStr -}}
+      {{- range $port := $ports }}
+        - number: {{ $port | int }}
+          protocol: http
+      {{- end }}
+      {{- $portsStr := include "chart.parseKongAdminGUIListen" . -}}
+      {{- $ports := splitList "," $portsStr -}}
+      {{- range $port := $ports }}
+        - number: {{ $port | int }}
+          protocol: http
+      {{- end }}
+      {{- $portsStr := include "chart.parseKongAdminListen" . -}}
+      {{- $ports := splitList "," $portsStr -}}
+      {{- range $port := $ports }}
+        - number: {{ $port | int }}
+          protocol: http
+      {{- end }}
+      readinessProbe:
+        exec:
+          command:
+            - kong
+            - health
+        failureThreshold: 10
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 10
+      volumes:
+        - path: /var/run/kong
+          recoveryPolicy: retain
+          uri: scratch://kong
+        - path: {{ .Values.kong.configurations.dbless.KONG_DECLARATIVE_CONFIG }}
+          recoveryPolicy: retain
+          uri: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-yaml
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: {{ .Values.kong.suspend }}
+    timeoutSeconds: 5
+{{- if .Values.kong.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.kong.firewall "external_inboundAllowCIDR") (hasKey .Values.kong.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.kong.firewall.external_inboundAllowCIDR }}{{ .Values.kong.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.kong.firewall.external_outboundAllowCIDR }}{{ .Values.kong.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.kong.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.kong.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  identityLink: //identity/{{ .Values.kong.name }}-identity
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: OrderedReady
+  supportDynamicTags: false
+
