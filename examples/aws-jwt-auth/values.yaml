@@ -4,14 +4,14 @@
 gvc: aws-jwt-auth
 
 image:
-  repository: ubuntu
-  tag: 24.04
+  repository: kennethreitz/httpbin
+  tag: latest
 
 nameOverride: hello-world
 
 workload:
   name: hello-world
-  port: 8080
+  port: 80
   capacityAI: false
   timeoutSeconds: 5
 
