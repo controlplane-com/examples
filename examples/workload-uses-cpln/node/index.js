@@ -8,11 +8,6 @@ const port = 3000;
 const app = express();
 
 // Define a route handler for GET requests on the root URL '/'
-app.get("/error", (req, res) => {
-  throw new Error("Test!");
-});
-
-// Define a route handler for GET requests on the root URL '/'
 app.get("/", (req, res) => {
   // Setup info
   const about = {
