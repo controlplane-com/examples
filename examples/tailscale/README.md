@@ -10,7 +10,7 @@ Any workload that allows access from this tailscale workload will be able to be 
 
 1. In the Tailscale Admin UI modify the existing [acl](https://login.tailscale.com/admin/acls/file) to include the following autoApprovers section:
 
-   ```json
+   ```yaml
    {
      // Access control lists.
      "acls": [
@@ -47,7 +47,7 @@ Any workload that allows access from this tailscale workload will be able to be 
 
    1. In the Tailscale Admin UI DNS Tab, add a custom nameserver for `cpln.local`:
 
-      ![add custom nameserver](images/addCustomNameserver.png)
+      <img src="images/addCustomNameserver.png" alt="custom-nameserver" width="400"/>
 
 ### Add the tailscale workload:
 
@@ -76,16 +76,16 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
    1. Check the Tailscale Admin UI [Machines tab](https://login.tailscale.com/admin/machines) to verify that the cpln-test machine is connected:
 
       1. Click the "..." options for the machine and select "Edit route settings...".
-
-         ![edit route settings](images/selectEditRouteSettings.png)
+  
+         <img src="images/selectEditRouteSettings.png" alt="route-settings" width="400"/>
 
       1. Verify that the routes are all approved.
 
-         ![verify routes approved](images/verifyRoutesApproved.png)
+         <img src="images/verifyRoutesApproved.png" alt="routes-approved" width="400"/>
 
    1. Verify that your local machine is also connected to the same tailscale network.
 
-      ![local connected to tailscale](images/connected.png)
+      <img src="images/connected.png" alt="connected" width="400"/>
 
    1. Try to connect to the httpbin workload using the Control Plane internal endpoint from you local machine. You can also complete this step by opening a web browser.
 
