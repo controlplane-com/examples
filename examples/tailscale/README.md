@@ -49,6 +49,10 @@ Any workload that allows access from this tailscale workload will be able to be 
 
       <img src="images/addCustomNameserver.png" alt="custom-nameserver" width="400"/>
 
+   1. If you are accessing stateful workload endpoints for each replica, then an additional entry will need to be made for each GVC that is accessed:
+
+      The format for each custom nameserver is `${gvcAlias}.svc.cluster.local`.
+
 ### Add the tailscale workload:
 
 **HELM**
