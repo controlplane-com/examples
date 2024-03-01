@@ -45,13 +45,13 @@ Any workload that allows access from this tailscale workload will be able to be 
    }
    ```
 
-   1. In the Tailscale Admin UI DNS Tab, add a custom nameserver for `cpln.local`:
+1. In the Tailscale Admin UI DNS Tab, add a custom nameserver for `cpln.local`:
 
-      <img src="images/addCustomNameserver.png" alt="custom-nameserver" width="400"/>
+   <img src="images/addCustomNameserver.png" alt="custom-nameserver" width="400"/>
 
-   1. If you are accessing stateful workload endpoints for each replica, then an additional entry will need to be made for each GVC that is accessed:
+1. If you are accessing stateful workload endpoints for each replica, then an additional entry will need to be made for each GVC that is accessed:
 
-      The format for each custom nameserver is `${gvcAlias}.svc.cluster.local`.
+   The format for each custom nameserver is `${gvcAlias}.svc.cluster.local`.
 
 ### Add the tailscale workload:
 
@@ -87,19 +87,19 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
 
          <img src="images/verifyRoutesApproved.png" alt="routes-approved" width="400"/>
 
-   1. Verify that your local machine is also connected to the same tailscale network.
+1. Verify that your local machine is also connected to the same tailscale network.
 
-      <img src="images/connected.png" alt="connected" width="400"/>
+   <img src="images/connected.png" alt="connected" width="400"/>
 
-   1. Try to connect to the httpbin workload using the Control Plane internal endpoint from you local machine. You can also complete this step by opening a web browser.
+1. Try to connect to the httpbin workload using the Control Plane internal endpoint from you local machine. You can also complete this step by opening a web browser.
 
-      Replace the $GVC with the one specified in the values.yaml file above.
+   Replace the $GVC with the one specified in the values.yaml file above.
 
-      ```bash
-      curl httpbin.$GVC.cpln.local:80/headers
-      ```
+   ```bash
+   curl httpbin.$GVC.cpln.local:80/headers
+   ```
 
-   1. Any additional workloads that you would like to reach can be updated so that the internal firewall allows access from the tailscale workload.
+1. Any additional workloads that you would like to reach can be updated so that the internal firewall allows access from the tailscale workload.
 
 ### Cleanup
 
