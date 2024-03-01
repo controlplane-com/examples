@@ -6,7 +6,7 @@ The executable of the CLI is: `cpln`.
 
 The [Identity](https://docs.controlplane.com/reference/identity) that is associated with the Workload must be granted the permissions for the commands that will be executed. This is accomplished by creating a [Policy](https://docs.controlplane.com/reference/policy) for each resource that will be modified and binding the necessary permission to the identity.
 
-The `CPLN_TOKEN` environment variable is automatically injected into each workload and is utilized by the CLI for authentication and authorization. For a comprehensive list of built-in environment variables available to the workload, please [click here](https://docs.controlplane.com/reference/workload#built-in-env).
+The `CPLN_TOKEN` and `CPLN_ENDPOINT` environment variables are automatically injected into each workload and is utilized by the CLI for authentication and authorization. For a comprehensive list of built-in environment variables available to the workload, please [click here](https://docs.controlplane.com/reference/workload#built-in-env). When using a rest client from code in a running container, these same environment variables can be used for the `Authentication` header and api url.
 
 ## Installing the CLI within your container
 
