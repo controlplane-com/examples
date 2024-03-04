@@ -192,14 +192,16 @@ spec:
           value: {{ .Values.kong.configurations.kong.KONG_ADMIN_LISTEN }}
         - name: KONG_PROXY_LISTEN
           value: {{ .Values.kong.configurations.kong.KONG_PROXY_LISTEN }}
+        - name: KONG_LOG_LEVEL
+          value: {{ .Values.kong.configurations.kong.KONG_LOG_LEVEL }}
         - name: KONG_ADMIN_ACCESS_LOG
-          value: /dev/stdout
+          value: /usr/local/kong/logs/access.log
         - name: KONG_ADMIN_ERROR_LOG
-          value: /dev/stderr
+          value: /usr/local/kong/logs/error.log
         - name: KONG_PROXY_ACCESS_LOG
-          value: /dev/stdout
+          value: /usr/local/kong/logs/access.log
         - name: KONG_PROXY_ERROR_LOG
-          value: /dev/stderr
+          value: /usr/local/kong/logs/error.log
 {{- if .Values.kong.configurations.postgres }}
         - name: KONG_DATABASE
           value: postgres
@@ -264,9 +266,11 @@ spec:
         - path: /var/run/kong
           recoveryPolicy: retain
           uri: scratch://kong
+{{- if .Values.kong.configurations.dbless }}
         - path: {{ .Values.kong.configurations.dbless.KONG_DECLARATIVE_CONFIG }}
           recoveryPolicy: retain
           uri: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-yaml
+{{- end }}
   defaultOptions:
     autoscaling:
       maxConcurrency: 0
