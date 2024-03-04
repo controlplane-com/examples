@@ -1,6 +1,6 @@
 {{- if .Values.kafka_ui }}
 kind: workload
-name: {{ .Values.kafka_ui.name }}
+name: {{ .Values.kafka.name }}-{{ .Values.kafka_ui.name }}
 description: kafka-ui
 gvc: {{ .Values.kafka.gvc }}
 spec:

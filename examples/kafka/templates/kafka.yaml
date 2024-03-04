@@ -260,7 +260,7 @@ data:
     fi
 
     WORKLOAD_NAME=$(echo $CPLN_WORKLOAD | sed 's|.*/workload/\([^/]*\)$|\1|')
-    replace_placeholder "advertised-address-placeholder" "${POD_NAME}.${WORKLOAD_NAME}"
+    replace_placeholder "advertised-address-placeholder" "${POD_NAME}.${WORKLOAD_NAME}.${CPLN_GVC_ALIAS}.svc.cluster.local"
 
     if [[ "${EXTERNAL_ACCESS_ENABLED:-false}" =~ ^(yes|true)$ ]]; then
         configure_external_access
@@ -453,7 +453,7 @@ spec:
   rolloutOptions:
     maxSurgeReplicas: 25%
     maxUnavailableReplicas: '1'
-    minReadySeconds: 0
+    minReadySeconds: {{ .Values.kafka.minReadySeconds }}
     scalingPolicy: OrderedReady
   securityOptions:
     filesystemGroupId: 1001
