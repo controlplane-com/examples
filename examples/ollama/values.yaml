@@ -1,0 +1,67 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Alternatives: llava, gemmma, mistral, etc.
+defaultModel: llama2 
+
+gvc:
+  name: ollama-example
+  locations:
+    - //location/aws-us-east-2
+    # - //location/aws-us-west-2
+    # - //location/azure-eastus2
+    # - //location/gcp-us-east1
+
+
+identity: ollama-example
+
+workload:
+  name: ollama-example
+  containers:
+    ui:
+      name: ollama-ui
+      image: ghcr.io/open-webui/open-webui:main
+      port: 8080
+      resources:
+        cpu: 200m
+        memory: 512Mi
+    api:
+      name: ollama
+      image: ollama/ollama
+      port: 11434
+      resources:
+        cpu: "4"
+        memory: 7Gi
+      gpu: 
+        nvidia:
+          model: t4
+          quantity: 1
+
+volumeset:
+  name: ollama-example
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+  snapshots:
+    retentionDuration: 7d
+
+entrypoint:
+  name: ollama-example
+  payload: |
+    #!/bin/bash
+    # Define the model directory
+    MODEL_DIR="/root/.ollama/models/manifests/registry.ollama.ai/library/$DEFAULT_MODELS/"
+    # Start ollama serve in the background
+    /bin/ollama serve &
+    # Check if the model directory exists
+    if [ ! -d "$MODEL_DIR" ]; then
+        echo "Model directory not found. Pulling the $DEFAULT_MODELS model..."
+        # Pull the $DEFAULT_MODELS model using the Ollama API
+        apt-get update && apt-get install curl -y
+        curl http://localhost:11434/api/pull -d '{
+            "name": "$DEFAULT_MODELS"
+        }'
+    else
+        echo "Model directory exists. No action required."
+    fi
+    # Keep the script running
+    while true; do sleep 86400; done
