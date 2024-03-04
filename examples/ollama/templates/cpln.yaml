@@ -1,0 +1,145 @@
+kind: gvc
+name: {{ .Values.gvc.name }}
+description: {{ .Values.gvc.name }}
+spec:
+  staticPlacement:
+    locationLinks:
+      {{- range .Values.gvc.locations }}
+      - {{ . }}
+      {{- end }}
+---
+kind: workload
+gvc: {{ .Values.gvc.name }}
+name: {{ .Values.workload.name }}
+description: {{ .Values.workload.name }}
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: {{ .Values.workload.containers.ui.name }}
+      cpu: {{ .Values.workload.containers.ui.resources.cpu }}
+      env:
+        - name: DEFAULT_MODELS
+          value: {{ .Values.defaultModel }}
+        - name: OLLAMA_API_BASE_URL
+          value: http://localhost:{{ .Values.workload.containers.api.port }}/api
+      image: {{ .Values.workload.containers.ui.image }}
+      inheritEnv: false
+      memory: {{ .Values.workload.containers.ui.resources.memory }}
+      ports:
+        - number: {{ .Values.workload.containers.ui.port }}
+          protocol: http
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          httpHeaders: []
+          path: /
+          port: {{ .Values.workload.containers.ui.port }}
+          scheme: HTTP
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      volumes:
+        - path: /app/backend/data
+          recoveryPolicy: retain
+          uri: cpln://volumeset/{{ .Values.volumeset.name }}
+    - name: {{ .Values.workload.containers.api.name }}
+      args:
+        - '-c'
+        - /startup/entrypoint.sh
+      command: bash
+      cpu: {{ .Values.workload.containers.api.resources.cpu }}
+      {{- if .Values.workload.containers.api.gpu }}
+      gpu: 
+        {{- toYaml .Values.workload.containers.api.gpu | nindent 8 }}
+      {{- end }}
+      image: {{ .Values.workload.containers.api.image }}
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 180
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: {{ .Values.workload.containers.api.port }}
+        timeoutSeconds: 1
+      memory: {{ .Values.workload.containers.api.resources.memory }}
+      ports:
+        - number: {{ .Values.workload.containers.api.port }}
+          protocol: http
+      readinessProbe:
+        failureThreshold: 6
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: {{ .Values.workload.containers.api.port }}
+        timeoutSeconds: 1
+      volumes:
+        - path: /root/.ollama
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/{{ .Values.volumeset.name }}'
+        - path: /startup/entrypoint.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.entrypoint.name }}'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    timeoutSeconds: 600
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+  identityLink: //gvc/{{ .Values.gvc.name }}/identity/{{ .Values.identity }}
+---
+kind: identity
+gvc: {{ .Values.gvc.name }}
+name: {{ .Values.identity }}
+description: Auto-managed identity for the workload {{ .Values.workload.name }}
+tags: {}
+---
+kind: volumeset
+gvc: {{ .Values.gvc.name }}
+name: {{ .Values.volumeset.name }}
+description: {{ .Values.volumeset.name }}
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: {{ .Values.volumeset.initialCapacity }}
+  performanceClass: {{ .Values.volumeset.performanceClass }}
+  snapshots:
+    createFinalSnapshot: true
+    retentionDuration: {{ .Values.volumeset.snapshots.retentionDuration }}
+---
+kind: secret
+name: {{ .Values.entrypoint.name }}
+description: The entrypoint for the ollama container
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+{{ .Values.entrypoint.payload | indent 4}}
+---
+kind: policy
+name: {{ .Values.entrypoint.name }}
+description: Gives access to the ollama entrypoint
+tags: {}
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.gvc.name }}/identity/{{ .Values.identity }}
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.entrypoint.name }}
+
