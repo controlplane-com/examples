@@ -22,14 +22,16 @@ kong:
       KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8002"
       KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444"
       KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_LOG_LEVEL: "notice" # https://nginx.org/en/docs/ngx_core_module.html#error_log
     ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
     # postgres: # This is supported in single-location GVCs, for multi region DB use pgEdge
     #   POSTGRES_DB: kong
     #   POSTGRES_PASSWORD: ofk430f259409438jd923r1803j4
     #   POSTGRES_USER: kong
-    #   image: postgres:9.5
+    #   image: postgres:16.2
     #   cpu: 1 # For millicores us 'm' like 500m
     #   memory: 1500Mi # Gi / Mi
+    ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
     dbless:
       KONG_DECLARATIVE_CONFIG: "/opt/kong/kong.yaml"
     
