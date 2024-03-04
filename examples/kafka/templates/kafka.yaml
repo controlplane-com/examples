@@ -12,16 +12,32 @@ spec:
 ---
 {{- end }}
 
+{{- $root := . -}}
+{{- $logDirs := split "," $root.Values.kafka.logDirs }}
+{{- $counter := 0 }}
+{{- range $index, $path := $logDirs }}
 kind: volumeset
-name: {{ .Values.kafka.name }}-data
-description: {{ .Values.kafka.name }} data
-gvc: {{ .Values.kafka.gvc }}
+name: {{ $root.Values.kafka.name }}-logs-{{ $counter }}
+description: {{ $root.Values.kafka.name }} logs {{ $counter }}
+gvc: {{ $root.Values.kafka.gvc }}
 tags: {}
 spec:
-  fileSystemType: ext4
-  initialCapacity: {{ .Values.kafka.volume_size }}
-  performanceClass: general-purpose-ssd
+  initialCapacity: {{ $root.Values.kafka.volumes.logs.initialCapacity }}
+  performanceClass: {{ $root.Values.kafka.volumes.logs.performanceClass }}
+  fileSystemType: {{ $root.Values.kafka.volumes.logs.fileSystemType }}
+  autoscaling:
+    maxCapacity: {{ $root.Values.kafka.volumes.logs.maxCapacity }}
+    minFreePercentage: {{ $root.Values.kafka.volumes.logs.minFreePercentage }}
+    scalingFactor: 1.1
+{{- if $root.Values.kafka.volumes.logs.snapshots }}
+  snapshots:
+    createFinalSnapshot: {{ $root.Values.kafka.volumes.logs.snapshots.createFinalSnapshot }}
+    retentionDuration: {{ $root.Values.kafka.volumes.logs.snapshots.retentionDuration }}
+    schedule: {{ $root.Values.kafka.volumes.logs.snapshots.schedule }}
+{{- end }}
 ---
+{{- $counter = add $counter 1 }}
+{{- end }}
 
 kind: identity
 name: {{ .Values.kafka.name }}-identity
@@ -39,31 +55,39 @@ data:
   payload: |
     # Listeners configuration
 
-    listeners=CLIENT://:{{ .Values.kafka.configurations.client_port }},INTERNAL://:9094,CONTROLLER://:9093
+    listeners-placeholder
     advertised.listeners=CLIENT://advertised-address-placeholder:{{ .Values.kafka.configurations.client_port }},INTERNAL://advertised-address-placeholder:9094
 {{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
-    listener.security.protocol.map=CLIENT:{{ .Values.kafka.configurations.client_listener_security_protocol }},INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT
+    listener.security.protocol.map=CLIENT:{{ .Values.kafka.configurations.client_listener_security_protocol }},INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT,CLIENT2:PLAINTEXT
 {{- else }}
-    listener.security.protocol.map=CLIENT:PLAINTEXT,INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT
+    listener.security.protocol.map=CLIENT:PLAINTEXT,INTERNAL:SASL_PLAINTEXT,CONTROLLER:SASL_PLAINTEXT,CLIENT2:PLAINTEXT
 {{- end }}
 
     # KRaft process roles
-    process.roles=controller,broker
+    process.roles=process-roles-placeholder
 
     #node.id=
     controller.listener.names=CONTROLLER
-    controller.quorum.voters={{- if eq (int .Values.kafka.replicas) 1 -}}
-    0@{{ .Values.kafka.name }}-0.{{ .Values.kafka.name }}:9093
-    {{- else -}}
-    0@{{ .Values.kafka.name }}-0.{{ .Values.kafka.name }}:9093,1@{{ .Values.kafka.name }}-1.{{ .Values.kafka.name }}:9093,2@{{ .Values.kafka.name }}-2.{{ .Values.kafka.name }}:9093
+    {{$replicaCount := int .Values.kafka.replicas -}}
+    {{- if eq $replicaCount 2 -}}
+    {{- fail "Invalid number of Kraft replicas: must not be 2" -}}
+    {{- end -}}
+    controller.quorum.voters= {{- $result := "" }}
+    {{- range $i := until $replicaCount }}
+      {{- if and (ge $i 0) (lt $i 5) }}
+        {{- if $i }}
+          {{- $result = print $result "," }}
+        {{- end }}
+        {{- $result = print $result (printf "%d@%s-%d.%s:9093" $i $.Values.kafka.name $i $.Values.kafka.name) }}
+      {{- end }}
     {{- end }}
-
+    {{- $result }}
 
     # Kraft Controller listener SASL settings
     sasl.mechanism.controller.protocol=PLAIN
     listener.name.controller.sasl.enabled.mechanisms=PLAIN
     listener.name.controller.plain.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="controller_user" password="controller-password-placeholder" user_controller_user="controller-password-placeholder";
-    log.dir=/bitnami/kafka/data
+    # log.dir=/bitnami/kafka/data
     sasl.enabled.mechanisms=PLAIN,SCRAM-SHA-256,SCRAM-SHA-512
 
     # Interbroker configuration
@@ -81,6 +105,8 @@ data:
 
     default.replication.factor={{ .Values.kafka.configurations.default_replication_factor }}
     auto.create.topics.enable={{ .Values.kafka.configurations.auto_create_topics_enable }}
+    log.dirs={{ .Values.kafka.logDirs }}
+    log.retention.hours={{ .Values.kafka.configurations.log_retention_hours }}
 
 ---
 kind: secret
@@ -154,7 +180,7 @@ data:
     replace_placeholder() {
         local placeholder="${1:?missing placeholder value}"
         local password="${2:?missing password value}"
-        sed -i "s/$placeholder/$password/g" "$KAFKA_CONFIG_FILE"
+        sed -i "s|$placeholder|$password|g" "$KAFKA_CONFIG_FILE"
     }
 
     configure_external_access() {
@@ -210,6 +236,15 @@ data:
     export KAFKA_CFG_NODE_ID="$POD_ID"
     # POD_ROLE=$(echo "$POD_NAME" | rev | cut -d'-' -f 2 | rev)
 
+    # Configure POD Role
+    if [ "$POD_ID" -le 4 ]; then
+      replace_placeholder "process-roles-placeholder" "controller,broker"
+      replace_placeholder "listeners-placeholder" "listeners=CLIENT://:{{ .Values.kafka.configurations.client_port }},INTERNAL://:9094,CONTROLLER://:9093"
+    else
+      replace_placeholder "process-roles-placeholder" "broker"
+      replace_placeholder "listeners-placeholder" "listeners=CLIENT://:{{ .Values.kafka.configurations.client_port }},INTERNAL://:9094,CLIENT2://:9093"
+    fi
+
     # Configure node.id and/or broker.id
     if [[ -f "/bitnami/kafka/data/meta.properties" ]]; then
         if grep -q "broker.id" /bitnami/kafka/data/meta.properties; then
@@ -232,6 +267,15 @@ data:
     fi
 
     configure_kafka_sasl
+
+    {{- $root := . -}}
+    {{- $logDirs := split "," $root.Values.kafka.logDirs }}
+    {{- $counter := 0 }}
+    {{- range $path := $logDirs }}
+    rm -fr {{ $path }}/lost+found
+    {{- $counter = add $counter 1 }}
+    {{- end }}
+
 
 ---
 kind: secret
@@ -301,18 +345,16 @@ spec:
           value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.kraft-cluster-id'
         - name: KAFKA_MIN_ID
           value: '0'
-        - name: KAFKA_VOLUME_DIR
-          value: {{ .Values.kafka.volumeDir }}
       image: {{ .Values.kafka.image }}
       inheritEnv: false
       livenessProbe:
         failureThreshold: 5
         initialDelaySeconds: 60
-        periodSeconds: 10
+        periodSeconds: 15
         successThreshold: 1
         tcpSocket:
           port: 9093
-        timeoutSeconds: 5
+        timeoutSeconds: 15
       memory: {{ .Values.kafka.memory }}
       ports:
         - number: {{ .Values.kafka.configurations.client_port }}
@@ -323,19 +365,22 @@ spec:
           protocol: tcp
       readinessProbe:
         failureThreshold: 20
-        initialDelaySeconds: 10
+        initialDelaySeconds: 20
         periodSeconds: 10
         successThreshold: 1
         tcpSocket:
           port: 9093
         timeoutSeconds: 5
       volumes:
-        - path: {{ .Values.kafka.volumeDir }}
+        {{- $root := . -}}
+        {{- $logDirs := split "," $root.Values.kafka.logDirs }}
+        {{- $counter := 0 }}
+        {{- range $path := $logDirs }}
+        - path: {{ $path | trim }}
           recoveryPolicy: retain
-          uri: 'cpln://volumeset/{{ .Values.kafka.name }}-data'
-        - path: /opt/bitnami/kafka/logs
-          recoveryPolicy: retain
-          uri: 'scratch://logs'
+          uri: 'cpln://volumeset/{{ $root.Values.kafka.name }}-logs-{{ $counter }}'
+        {{- $counter = add $counter 1 }}
+        {{- end }}
         - path: /configmaps/server.properties
           recoveryPolicy: retain
           uri: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration'

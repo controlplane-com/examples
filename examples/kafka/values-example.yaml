@@ -9,12 +9,22 @@ kafka:
   create_gvc: false # If deployed in existing GVC, set to false
   name: kafka-dev-cluster # Choose a unique name so you don't override other clusters on your system
   location: aws-us-east-2 # Relevant only if create_gvc=true
-  volume_size: 20 # In GB
-  replicas: 3 # Can be either 1 or 3
+  replicas: 3 # must not be 2
   debug: false
-  volumeDir: /bitnami/kafka
-  cpu: '1' # For millicores us 'm' like 500m
-  memory: 2000Mi # Gi / Mi
+  logDirs: /opt/bitnami/kafka/logs-0,/opt/bitnami/kafka/logs-1 # A comma-separated list of the directories where the log data is stored.
+  volumes:
+    logs:
+      initialCapacity: 20 # In GB
+      maxCapacity: 1000 # In GB
+      performanceClass: general-purpose-ssd # general-purpose-ssd / high-throughput-ssd (Min 1000GB)
+      fileSystemType: ext4 # ext4 / xfs
+      minFreePercentage: 10
+      snapshots:
+        createFinalSnapshot: true
+        retentionDuration: 7d
+        schedule: 0 0 9 * * # UTC 
+  cpu: '2' # For millicores us 'm' like 500m
+  memory: 4000Mi # Gi / Mi
   # To disable all traffic, comment out the corresponding rule. Docs: https://docs.controlplane.com/concepts/security#firewall
   firewall:
     internal_inboundAllowType: "same-gvc" # Options: same-org / same-gvc(Recommended)
@@ -22,11 +32,12 @@ kafka:
     # external_outboundAllowCIDR: "111.222.333.444/16,111.222.444.333/32" # Provide a comma-separated list
   configurations:
     client_port: 9092 # Ports 9093 and 9094 are Reserved for internal components
-    client_listener_security_protocol: SASL_PLAINTEXT # PLAINTEXT / SASL_PLAINTEXT # kafka.secrets.client_passwords Must be configured!!!
+    client_listener_security_protocol: PLAINTEXT # PLAINTEXT / SASL_PLAINTEXT # kafka.secrets.client_passwords Must be configured!!!
     default_replication_factor: 3 # default.replication.factor Can't be greater than the number of cluster replicas
     auto_create_topics_enable: true # auto.create.topics.enable
+    log_retention_hours: 168 # The number of hours to keep a log file before deleting it (in hours)
   secrets:
-    client_passwords: fkor3Dro52oodA # Must be for SASL_PLAINTEXT
+    # client_passwords: fkor3Dro52oodA # Must be for SASL_PLAINTEXT
     kraft_cluster_id: bkdDtS1Rsf536si7BGM0JY
     inter_broker_password: HfcgCHp32e
     controller_password: ayd8iJwqXe
