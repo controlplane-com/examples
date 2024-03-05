@@ -7,9 +7,9 @@ kong:
   suspend: false
   gvc: dev
   create_gvc: false # If deployed in existing GVC, set to false
-  name: kong-dbless # Choose a unique name so you don't override other clusters on your system
+  name: kong-gw # Choose a unique name so you don't override other clusters on your system
   location: aws-us-east-2 # Relevant only if create_gvc=true
-  replicas: 1
+  replicas: 2
   cpu: 2 # For millicores us 'm' like 500m
   memory: 4000Mi # Gi / Mi
   # To disable all traffic, comment out the corresponding rule. Docs: https://docs.controlplane.com/concepts/security#firewall

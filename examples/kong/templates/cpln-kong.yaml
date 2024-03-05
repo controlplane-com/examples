@@ -1,3 +1,11 @@
+{{- $dblessEnabled := .Values.kong.configurations.dbless -}}
+{{- $postgresEnabled := .Values.kong.configurations.postgres -}}
+
+{{- if or (and $dblessEnabled $postgresEnabled) (and (not $dblessEnabled) (not $postgresEnabled)) -}}
+{{- fail "Error: Exactly one of dbless or postgres configurations must be enabled, but not both." -}}
+{{- end }}
+
+
 {{- if .Values.kong.create_gvc }}
 kind: gvc
 name: {{ .Values.kong.gvc }}
@@ -274,9 +282,9 @@ spec:
   defaultOptions:
     autoscaling:
       maxConcurrency: 0
-      maxScale: 1
+      maxScale: {{ .Values.kong.replicas }}
       metric: cpu
-      minScale: 1
+      minScale: {{ .Values.kong.replicas }}
       scaleToZeroDelay: 300
       target: 95
     capacityAI: false
