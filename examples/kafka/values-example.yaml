@@ -10,6 +10,7 @@ kafka:
   name: kafka-dev-cluster # Choose a unique name so you don't override other clusters on your system
   location: aws-us-east-2 # Relevant only if create_gvc=true
   replicas: 3 # must not be 2
+  minReadySeconds: 60
   debug: false
   logDirs: /opt/bitnami/kafka/logs-0,/opt/bitnami/kafka/logs-1 # A comma-separated list of the directories where the log data is stored.
   volumes:
