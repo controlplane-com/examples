@@ -1,0 +1,69 @@
+kind: identity
+name: airflow-identity
+description: airflow-identity
+tags: {}
+aws:
+  cloudAccountLink: //cloudaccount/<your_cloud_account_here>
+  policyRefs:
+    - aws::AmazonS3ReadOnlyAccess
+---
+
+kind: workload
+name: airflow
+description: airflow
+tags: {}
+spec:
+  type: standard
+  containers:
+    - name: airflow
+      args:
+        - standalone
+      command: airflow
+      cpu: '1'
+      image: apache/airflow:2.5.1
+      inheritEnv: false
+      memory: 2Gi
+      ports:
+        - number: 8080
+          protocol: http
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          httpHeaders: []
+          path: /
+          port: 8080
+          scheme: HTTP
+        initialDelaySeconds: 45
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      volumes:
+        - path: /opt/airflow/dags
+          recoveryPolicy: retain
+          uri: s3://<your_s3_bucket_name_here>
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: none
+      inboundAllowWorkload: []
+  identityLink: //identity/airflow-identity
+  localOptions: []
+  supportDynamicTags: false
