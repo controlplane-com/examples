@@ -59,9 +59,10 @@ Any workload that allows access from this tailscale workload will be able to be 
 
 The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) must be installed.
 
-1. Clone this repo and update the `values.yaml` file as needed.
+1. Clone this repo and update the `values.yaml` file as indicated below.
 
    The `gvc` parameter must be an existing GVC. It is ideal for it to be an existing GVC with workloads that you would like to reach locally.
+
    The `location` parameter must be an active location for the GVC or the tailscale workload will not run in any location.
 
 1. Run the command below from this directory replacing `$TS_AUTHKEY` with the tailscale authorization key created above.
@@ -77,10 +78,14 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
 
       https://console.cpln.io/
 
+      The tailscale workload will show as `Partially Suspended` this is because a location specific option is configured to run the workload in the one location selected by the values.yaml `location` parameter.
+      All other locations are suspended so
+      there is only one replica running in one location.
+
    1. Check the Tailscale Admin UI [Machines tab](https://login.tailscale.com/admin/machines) to verify that the cpln-test machine is connected:
 
       1. Click the "..." options for the machine and select "Edit route settings...".
-  
+
          <img src="images/selectEditRouteSettings.png" alt="route-settings" width="400"/>
 
       1. Verify that the routes are all approved.

@@ -1,6 +1,6 @@
 kind: workload
 name: {{ .Values.tailscale.name }}
-gvc: {{ .Values.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 tags:
   {{- include "nginx.tags" . | nindent 2 }}
   cpln/checksum: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
@@ -23,7 +23,7 @@ spec:
         minScale: 1
         scaleToZeroDelay: 300
         target: 50
-      location: //location/{{ .Values.location }}
+      location: //location/{{ .Values.cpln.location }}
       suspend: false
       capacityAI: false
       timeoutSeconds: 5
@@ -47,13 +47,13 @@ spec:
         - name: TS_KUBE_SECRET
           value: ''
         - name: TS_ROUTES
-          value: '192.168.0.0/16,240.240.0.0/16,{{ index .Values.locationDNS .Values.location }}/32'
+          value: '192.168.0.0/16,240.240.0.0/16,{{ index .Values.locationDNS .Values.cpln.location }}/32'
         - name: TS_USERSPACE
           value: 'true'
 ---
 kind: workload
 name: httpbin
-gvc: {{ .Values.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: default
 spec:
   type: serverless
@@ -77,12 +77,12 @@ spec:
       inboundAllowType: workload-list
       # allow access from tailscale internally
       inboundAllowWorkload:
-        - //gvc/{{ .Values.gvc }}/workload/{{ .Values.tailscale.name }}
+        - //gvc/{{ .Values.cpln.gvc }}/workload/{{ .Values.tailscale.name }}
 
 ---
 kind: identity
 name: {{ .Values.tailscale.name }}
-gvc: {{ .Values.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: Identity for the workload "tailscale" used to grant access to the tailscale secret
 
 ---
@@ -93,7 +93,7 @@ bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ .Values.gvc }}/identity/{{ .Values.tailscale.name }}
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.tailscale.name }}
 targetKind: secret
 targetLinks:
   - //secret/{{ .Values.tailscale.name }}
