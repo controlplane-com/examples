@@ -2,7 +2,6 @@
 # Declare variables to be passed into your templates.
 
 cpln:
-  gvc: dne
   location: aws-us-west-2
 
 image:

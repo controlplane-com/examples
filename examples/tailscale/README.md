@@ -59,16 +59,23 @@ Any workload that allows access from this tailscale workload will be able to be 
 
 The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) must be installed.
 
-1. Clone this repo and update the `values.yaml` file as indicated below.
+1. Clone this repo and open a terminal to this directory.
 
-   The `gvc` parameter must be an existing GVC. It is ideal for it to be an existing GVC with workloads that you would like to reach locally.
+1. Select a GVC to run the tailscale workload in.
 
-   The `location` parameter must be an active location for the GVC or the tailscale workload will not run in any location.
+   Ideally the GVC you select should have at least one resource to reach locally that is not available externally (postgres, redis, etc). Make note of the GVC and also select a LOCATION that is included for the GVC that this tailscale gateway workload will be deployed to. It will only be deployed to one location even if the GVC has many locations.
 
-1. Run the command below from this directory replacing `$TS_AUTHKEY` with the tailscale authorization key created above.
+   Export the enviroment variables for the steps below.
 
    ```bash
-   cpln helm install --set AuthKey=$TS_AUTHKEY tailscale
+   export GVC=tailscale
+   export LOCATION=aws-us-west-2
+   ```
+
+1. Run the command below replacing `$TS_AUTHKEY` with the tailscale authorization key created above.
+
+   ```bash
+   cpln helm install --gvc $GVC  --set cpln.location=$LOCATION--set AuthKey=$TS_AUTHKEY tailscale
 
    ```
 
@@ -81,6 +88,8 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
       The tailscale workload will show as `Partially Suspended` this is because a location specific option is configured to run the workload in the one location selected by the values.yaml `location` parameter.
       All other locations are suspended so
       there is only one replica running in one location.
+
+   1. Check the tailscale workload logs to verify that no errors occurred connecting or authenticating to tailscale.
 
    1. Check the Tailscale Admin UI [Machines tab](https://login.tailscale.com/admin/machines) to verify that the cpln-test machine is connected:
 
