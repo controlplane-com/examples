@@ -6,7 +6,7 @@ gvc: {{ .Values.pgadmin.gvc }}
 spec:
   type: standard
   containers:
-    - name: pgadmin4
+    - name: pgadmin
       cpu: {{ .Values.pgadmin.cpu }}
       env:
         - name: PGADMIN_DEFAULT_EMAIL

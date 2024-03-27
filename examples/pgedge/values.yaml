@@ -1,0 +1,74 @@
+# Default values for pgedge.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  # custom image
+  # repository: 'pgedge/pgedge:ac51344'
+  repository: 'pgedge/pgedge:auto-ddl-preview-2'
+
+postgres:
+  dbname: defaultdb
+  dbuser:
+    name: app
+    password: kod234foD3fkD499s1AA
+  system_passwords:
+    admin: uFR44yr69C4mZa72g3JQ37GX
+    pgedge: z1Zsku10a91RS526jnVrLC39
+    pgcat_auth: 5Y306TW24540dEnyxp3mQBwH
+    pgcat_admin: k6uu4od8r0P6lA11Oep648KC
+
+pgedge:
+  - name: pg-eastus
+    NODE_NAME: n1
+    PG_DATA_DIR: /data
+    port: 5432
+    location: aws-us-east-2
+    diskCapacity: 20 # In Gigabytes
+    memory: 1000Mi
+    cpu: 500m
+    minReadySeconds: 60
+  - name: pg-westus
+    NODE_NAME: n2
+    PG_DATA_DIR: /data
+    port: 5432
+    location: gcp-us-west1
+    diskCapacity: 20 # In Gigabytes
+    memory: 1000Mi
+    cpu: 500m
+    minReadySeconds: 60
+  # - name: pgedge-aws-eu-central-1
+  #   NODE_NAME: n3
+  #   PG_DATA_DIR: /data
+  #   port: 5432
+  #   location: aws-eu-central-1
+  #   diskCapacity: 20 # In Gigabytes
+  #   memory: 1000Mi
+  #   cpu: 500m
+  #   minReadySeconds: 60
+
+pgadmin:
+  gvc: pgcat-pgedge
+  email: user@cpln.com
+  password: admin
+  memory: 300Mi
+  cpu: 150m
+  inboundCidr: 0.0.0.0/0
+
+pgcat:
+  name: pgcat
+  gvc: pgcat-pgedge
+  image: 'pgedge/pgcat:1.0'
+  image_liveness: 'igorchyts/pgcat-liveness:v0.2'
+  memory: 200Mi
+  cpu: 100m
+  pg_port: 6432
+  prom_port: 9930
+  capacityAI: false
+  autoscaling:
+    maxConcurrency: 0
+    maxScale: 2
+    metric: cpu
+    minScale: 1
+    scaleToZeroDelay: 300
+    target: 70

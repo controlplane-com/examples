@@ -1,0 +1,99 @@
+{{- range .Values.pgedge }}
+---
+kind: gvc
+name: {{ .name }}
+description: {{ .name }}
+tags: {}
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/{{ .location }}
+---
+kind: identity
+name: {{ .name }}
+gvc: {{ .name }}
+tags: {}
+---
+kind: volumeset
+name: pgedge-data
+description: pgedge-data
+gvc: {{ .name }}
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: {{ .diskCapacity }}
+  performanceClass: general-purpose-ssd
+---
+kind: policy
+name: {{ .name }}
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .name }}/identity/{{ .name }}
+targetKind: secret
+targetLinks:
+  - //secret/pgedge-db-config-{{ $.Values.pgcat.name }}-{{ $.Values.pgcat.gvc }}
+---
+kind: workload
+name: pgedge
+description: pgedge
+gvc: {{ .name }}
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: pgedge
+      env:
+        - name: NODE_NAME
+          value: {{ .NODE_NAME }}
+        # - name: PG_DATA_DIR
+        #   value: {{ .PG_DATA_DIR }}
+      cpu: '{{ .cpu }}'
+      image: '{{ $.Values.image.repository }}'
+      inheritEnv: false
+      memory: {{ .memory }}
+      ports:
+        - number: {{ .port }}
+          protocol: tcp
+      volumes:
+        - path: /data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/pgedge-data'
+        - path: /home/pgedge/db.json
+          recoveryPolicy: retain
+          uri: 'cpln://secret/pgedge-db-config-{{ $.Values.pgcat.name }}-{{ $.Values.pgcat.gvc }}'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  identityLink: //identity/{{ .name }}
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: {{ .minReadySeconds }}
+  securityOptions:
+    filesystemGroupId: 1020
+  supportDynamicTags: false
+{{- end }}
