@@ -1,0 +1,61 @@
+kind: secret
+name: pgedge-db-config-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+description: pgedge-db-config-{{ .Values.pgcat.name }}-{{ .Values.pgcat.gvc }}
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    {
+        "id": "1111",
+        "tenant_id": "7777",
+        "name": "{{ .Values.postgres.dbname }}",
+        "port": 5432,
+        "nodes": [
+{{- $length := len .Values.pgedge }}
+{{- range $index, $element := .Values.pgedge }}
+          {
+            "name": "{{ $element.NODE_NAME }}",
+            "region": "{{ $element.location }}",
+            "hostname": "pgedge.{{ $element.name }}.cpln.local"
+          }{{ if lt $index (sub $length 1) }},{{ end }}
+{{- end }}
+        ],
+        "users": [
+          {
+            "username": "{{ index .Values.postgres.dbuser.name }}",
+            "password": "{{ index .Values.postgres.dbuser.password }}",
+            "superuser": false,
+            "service": "postgres",
+            "type": "application"
+          },
+          {
+            "username": "admin",
+            "password": "{{ index .Values.postgres.system_passwords.admin }}",
+            "superuser": true,
+            "service": "postgres",
+            "type": "admin"
+          },
+          {
+            "username": "pgedge",
+            "password": "{{ index .Values.postgres.system_passwords.pgedge }}",
+            "superuser": true,
+            "service": "postgres",
+            "type": "internal_admin"
+          },
+          {
+            "username": "pgcat_auth",
+            "password": "{{ index .Values.postgres.system_passwords.pgcat_auth }}",
+            "superuser": false,
+            "service": "postgres",
+            "type": "pooler_auth"
+          },
+          {
+            "username": "pgcat_admin",
+            "password": "{{ index .Values.postgres.system_passwords.pgcat_admin }}",
+            "superuser": false,
+            "service": "pgcat",
+            "type": "other"
+          }
+        ]
+      }

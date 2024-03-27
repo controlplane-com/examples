@@ -2,16 +2,14 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-cpln:
-  gvc: dev
-  create_gvc: true # If deployed in existing GVC, set to false
-  locations:  # Relevant only if create_gvc=true
-    - aws-us-east-2
-
 kong:
   image: kong:latest
   suspend: false
-  name: kong-gw # Choose a unique name so you don't override other clusters on your system
+  gvc: dev
+  create_gvc: false # If deployed in existing GVC, set to false
+  name: kong-postgres # Choose a unique name so you don't override other clusters on your system
+  # locations:  # Relevant only if create_gvc=true
+  #   - aws-us-east-2   replicas: 2
   replicas: 2
   cpu: 2 # For millicores us 'm' like 500m
   memory: 4000Mi # Gi / Mi
@@ -27,18 +25,18 @@ kong:
       KONG_PROXY_LISTEN: "0.0.0.0:8000"
       KONG_LOG_LEVEL: "notice" # https://nginx.org/en/docs/ngx_core_module.html#error_log
     ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
-    # postgres: # This is supported in single-location GVCs, for multi region DB use pgEdge
-    #   # KONG_PG_HOST: pgcat.pgcat-pgedge.cpln.local # Provide Postgres host address if existing
-    #   POSTGRES_PORT: 5432
-    #   POSTGRES_DB: defaultdb
-    #   POSTGRES_PASSWORD: uFR44yr69C4mZa72g3JQ37GX
-    #   POSTGRES_USER: admin
-    #   image: postgres:16.2
-    #   cpu: 1 # When KONG_PG_HOST is not provided.  For millicores us 'm' like 500m
-    #   memory: 1500Mi # Gi / Mi When KONG_PG_HOST is not provided
+    postgres: # This is supported in single-location GVCs, for multi region DB use pgEdge
+      # KONG_PG_HOST: pgcat.pgcat-pgedge.cpln.local # Provide Postgres host address if existing
+      POSTGRES_PORT: 7654
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: ofk430f259409438jd923r1803j4
+      POSTGRES_USER: kong
+      image: postgres:16.2
+      cpu: 1 # When KONG_PG_HOST is not provided.  For millicores us 'm' like 500m
+      memory: 1500Mi # Gi / Mi When KONG_PG_HOST is not provided
     ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
-    dbless:
-      KONG_DECLARATIVE_CONFIG: "/opt/kong/kong.yaml"
+    # dbless:
+    #   KONG_DECLARATIVE_CONFIG: "/opt/kong/kong.yaml"
     
 
 
