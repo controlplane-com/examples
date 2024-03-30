@@ -1,15 +1,5 @@
-kind: gvc
-name: {{ .Values.gvc.name }}
-description: {{ .Values.gvc.name }}
-spec:
-  staticPlacement:
-    locationLinks:
-      {{- range .Values.gvc.locations }}
-      - {{ . }}
-      {{- end }}
----
 kind: workload
-gvc: {{ .Values.gvc.name }}
+gvc: {{ .Values.cpln.gvc }}
 name: {{ .Values.workload.name }}
 description: {{ .Values.workload.name }}
 tags: {}
@@ -21,8 +11,8 @@ spec:
       env:
         - name: DEFAULT_MODELS
           value: {{ .Values.defaultModel }}
-        - name: OLLAMA_API_BASE_URL
-          value: http://localhost:{{ .Values.workload.containers.api.port }}/api
+        - name: OLLAMA_BASE_URL
+          value: http://localhost:{{ .Values.workload.containers.api.port }}
       image: {{ .Values.workload.containers.ui.image }}
       inheritEnv: false
       memory: {{ .Values.workload.containers.ui.resources.memory }}
@@ -99,16 +89,16 @@ spec:
         - 0.0.0.0/0
       outboundAllowCIDR:
         - 0.0.0.0/0
-  identityLink: //gvc/{{ .Values.gvc.name }}/identity/{{ .Values.identity }}
+  identityLink: //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.identity }}
 ---
 kind: identity
-gvc: {{ .Values.gvc.name }}
+gvc: {{ .Values.cpln.gvc }}
 name: {{ .Values.identity }}
 description: Auto-managed identity for the workload {{ .Values.workload.name }}
 tags: {}
 ---
 kind: volumeset
-gvc: {{ .Values.gvc.name }}
+gvc: {{ .Values.cpln.gvc }}
 name: {{ .Values.volumeset.name }}
 description: {{ .Values.volumeset.name }}
 tags: {}
@@ -138,7 +128,7 @@ bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ .Values.gvc.name }}/identity/{{ .Values.identity }}
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.identity }}
 targetKind: secret
 targetLinks:
   - //secret/{{ .Values.entrypoint.name }}

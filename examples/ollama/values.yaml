@@ -4,14 +4,8 @@
 # Alternatives: llava, gemmma, mistral, etc.
 defaultModel: llama2 
 
-gvc:
-  name: ollama-example
-  locations:
-    - //location/aws-us-east-2
-    # - //location/aws-us-west-2
-    # - //location/azure-eastus2
-    # - //location/gcp-us-east1
-
+cpln:
+  gvc: ollama-example
 
 identity: ollama-example
 
@@ -30,8 +24,8 @@ workload:
       image: ollama/ollama
       port: 11434
       resources:
-        cpu: "4"
-        memory: 7Gi
+        cpu: 6000m
+        memory: 16Gi
       gpu: 
         nvidia:
           model: t4
