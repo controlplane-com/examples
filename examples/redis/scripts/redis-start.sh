@@ -11,7 +11,7 @@ ip=$(hostname -I)
 
 # e.g. "redis-cluster-0" -> "0"
 
-# PET_ORDINAL=$(echo "$POD_NAME" | rev | cut -d'-' -f 1 | rev)
+PET_ORDINAL=$(echo "$POD_NAME" | rev | cut -d'-' -f 1 | rev)
 
 WORKLOAD_NAME=$(echo $CPLN_WORKLOAD | sed 's|.*/workload/\([^/]*\)$|\1|')
 
@@ -82,9 +82,9 @@ else
             fi
         done
 
-        # If all nodes are healthy and the cluster is not initiated, create the cluster
+        # If this is replica *-0, all nodes are healthy, and the cluster is not initiated, create the cluster
 
-        if [ "$all_nodes_healthy" = true ]; then
+        if [[ $PET_ORDINAL == 0 && "$all_nodes_healthy" == true ]]; then
             cluster_status=$(redis-cli cluster info | grep "cluster_state" | cut -d':' -f2 | tr -d '\r')
 
             if [ "$cluster_status" = "ok" ]; then
