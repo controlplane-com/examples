@@ -43,7 +43,5 @@ envoy:
           - match:
               prefix: /
             requires:
-              requires_any:
-                requirements:
-                  - provider_name: provider_cognito
+              provider_name: provider_cognito
 {{- end }}

@@ -21,8 +21,7 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
 3. Run the command below from this directory.
 
    ```bash
-   cpln helm install aws-jwt-auth
-
+   cpln helm install aws-jwt-auth --gvc aws-jwt-auth
    ```
 
 4. Inspect the workload and access the external endpoint. Notice how access depends on the existance of a valid AWS Cognito JWT token.

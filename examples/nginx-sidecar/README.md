@@ -26,7 +26,7 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
 3. Run the command below from this directory.
 
    ```bash
-   cpln helm install nginx-sidecar
+   cpln helm install nginx-sidecar --gvc nginx-sidecar
 
    ```
 

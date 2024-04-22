@@ -1,6 +1,6 @@
 kind: workload
 name: {{ .Values.proxyWorkload.name }}
-gvc: {{ .Values.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 tags:
   {{- include "nginx.tags" . | nindent 2 }}
   cpln/checksum: {{ include (print $.Template.BasePath "/nginx.conf.yaml") . | sha256sum }}
@@ -45,7 +45,7 @@ spec:
 ---
 kind: workload
 name: default
-gvc: {{ .Values.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: default
 spec:
   type: serverless
@@ -70,11 +70,11 @@ spec:
       inboundAllowType: workload-list
       # allow access from envoyproxy internally
       inboundAllowWorkload:
-        - //gvc/{{ .Values.gvc }}/workload/{{ .Values.proxyWorkload.name }}
+        - //gvc/{{ .Values.cpln.gvc }}/workload/{{ .Values.proxyWorkload.name }}
 ---
 kind: workload
 name: user
-gvc: {{ .Values.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: user
 spec:
   type: serverless
@@ -100,11 +100,11 @@ spec:
       inboundAllowType: workload-list
       # allow access from envoyproxy internally
       inboundAllowWorkload:
-        - //gvc/{{ .Values.gvc }}/workload/{{ .Values.proxyWorkload.name }}
+        - //gvc/{{ .Values.cpln.gvc }}/workload/{{ .Values.proxyWorkload.name }}
 ---
 kind: identity
 name: {{ .Values.proxyWorkload.name }}
-gvc: {{ .Values.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: Identity for the workload "nginx" used to grant access to the nginx-conf secret
 
 ---
@@ -115,7 +115,7 @@ bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ .Values.gvc }}/identity/{{ .Values.proxyWorkload.name }}
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.proxyWorkload.name }}
 targetKind: secret
 targetLinks:
   - //secret/{{ .Values.proxyWorkload.name }}-conf

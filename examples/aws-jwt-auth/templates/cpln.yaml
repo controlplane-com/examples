@@ -1,6 +1,6 @@
 kind: workload
 name: {{ .Values.workload.name }}
-gvc: {{ .Values.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 tags:
 {{- include "aws-jwt-auth.tags" . | nindent 2 }}
 spec:

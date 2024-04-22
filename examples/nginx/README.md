@@ -29,7 +29,7 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
 3. Run the command below from this directory.
 
    ```bash
-   cpln helm install nginx-example
+   cpln helm install nginx-example --gvc nginx-example
 
    ```
 

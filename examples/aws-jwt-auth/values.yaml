@@ -1,16 +1,14 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-gvc: aws-jwt-auth
-
 image:
   repository: kennethreitz/httpbin
   tag: latest
 
-nameOverride: hello-world
+nameOverride: aws-jwt-auth-example
 
 workload:
-  name: hello-world
+  name: aws-jwt-auth-example
   port: 80
   capacityAI: false
   timeoutSeconds: 5
