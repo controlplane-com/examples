@@ -2,7 +2,7 @@
 # Declare variables to be passed into your templates.
 
 # Alternatives: llava, gemmma, mistral, etc.
-defaultModel: llama2 
+defaultModel: llama3
 
 cpln:
   gvc: ollama-example
@@ -25,7 +25,7 @@ workload:
       port: 11434
       resources:
         cpu: 6000m
-        memory: 16Gi
+        memory: 7Gi
       gpu: 
         nvidia:
           model: t4
