@@ -1,7 +1,7 @@
 {{- if .Values.kafka_client }}
 kind: workload
 name: {{ .Values.kafka.name }}-{{ .Values.kafka_client.name }}
-gvc: {{ .Values.kafka.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 tags: {}
 spec:
   type: standard
