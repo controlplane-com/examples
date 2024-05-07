@@ -2,7 +2,7 @@
 kind: workload
 name: {{ .Values.kafka.name }}-{{ .Values.kafka_ui.name }}
 description: kafka-ui
-gvc: {{ .Values.kafka.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 spec:
   type: standard
   containers:
@@ -12,7 +12,7 @@ spec:
         - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
           value: "{{- $kafkaName := .Values.kafka.name -}}{{- $replicas := int .Values.kafka.replicas -}}{{- $bootstrapServers := list -}}{{- range $i := until $replicas -}}{{- if $i -}},{{- end -}}{{- printf "%s-%d.%s:9092" $kafkaName $i $kafkaName -}}{{- end }}"
         - name: KAFKA_CLUSTERS_0_NAME
-          value: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}
+          value: {{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}
         - name: KAFKA_CLUSTERS_0_PROPERTIES_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM
           value: ''
         - name: LOGGING_LEVEL_ROOT

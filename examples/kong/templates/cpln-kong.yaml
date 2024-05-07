@@ -6,20 +6,20 @@
 {{- end }}
 
 
-{{- if .Values.kong.create_gvc }}
+{{- if .Values.cpln.create_gvc }}
 kind: gvc
-name: {{ .Values.kong.gvc }}
+name: {{ .Values.cpln.gvc }}
 description: {{ .Values.kong.name }}
 tags: {}
 spec:
   staticPlacement:
     locationLinks:
-      - //location/{{ .Values.kong.location }}
+      - //location/{{ .Values.cpln.location }}
 {{- end }}
 {{- if .Values.kong.configurations.dbless }}
 ---
 kind: secret
-name: {{ .Values.kong.name }}-{{ .Values.kong.gvc }}-yaml
+name: {{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-yaml
 description: kong-yaml
 tags: {}
 type: opaque
@@ -29,21 +29,21 @@ data:
 {{ .Files.Get "config/kong.yaml" | indent 4 }}
 ---
 kind: policy
-name: {{ .Values.kong.name }}-{{ .Values.kong.gvc }}-policy
+name: {{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-policy
 tags: {}
 bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ .Values.kong.gvc }}/identity/{{ .Values.kong.name }}-identity
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.kong.name }}-identity
 targetKind: secret
 targetLinks:
-  - //secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-yaml
+  - //secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-yaml
 {{- end }}
 {{- if .Values.kong.configurations.postgres }}
 ---
 kind: secret
-name: {{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret
+name: {{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret
 description: kong-postgres-secret
 tags: {}
 type: dictionary
@@ -54,25 +54,25 @@ data:
 ---
 kind: identity
 name: {{ .Values.kong.name }}-db-identity
-gvc: {{ .Values.kong.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 tags: {}
 ---
 kind: policy
-name: {{ .Values.kong.name }}-{{ .Values.kong.gvc }}-policy
+name: {{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-policy
 tags: {}
 bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ .Values.kong.gvc }}/identity/{{ .Values.kong.name }}-db-identity
-      - //gvc/{{ .Values.kong.gvc }}/identity/{{ .Values.kong.name }}-identity
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.kong.name }}-db-identity
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.kong.name }}-identity
 targetKind: secret
 targetLinks:
-  - //secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret
+  - //secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret
 ---
 kind: volumeset
 name: {{ .Values.kong.name }}-data
-gvc: {{ .Values.kong.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: kong-data
 tags: {}
 spec:
@@ -86,7 +86,7 @@ spec:
 ---
 kind: workload
 name: {{ .Values.kong.name }}-db
-gvc: {{ .Values.kong.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 tags: {}
 spec:
   type: stateful
@@ -97,11 +97,11 @@ spec:
         - name: PGDATA
           value: /var/lib/postgresql/data/pg_data
         - name: POSTGRES_DB
-          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_DB
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret.POSTGRES_DB
         - name: POSTGRES_PASSWORD
-          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_PASSWORD
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret.POSTGRES_PASSWORD
         - name: POSTGRES_USER
-          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_USER
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret.POSTGRES_USER
       image: {{ .Values.kong.configurations.postgres.image }}
       inheritEnv: false
       memory: {{ .Values.kong.configurations.postgres.memory }}
@@ -173,12 +173,12 @@ spec:
 ---
 kind: identity
 name: {{ .Values.kong.name }}-identity
-gvc: {{ .Values.kong.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 tags: {}
 ---
 kind: workload
 name: {{ .Values.kong.name }}
-gvc: {{ .Values.kong.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: kong
 tags: {}
 spec:
@@ -214,13 +214,13 @@ spec:
         - name: KONG_DATABASE
           value: postgres
         - name: KONG_PG_HOST
-          value: {{ .Values.kong.name }}-db.{{ .Values.kong.gvc }}.cpln.local
+          value: {{ .Values.kong.name }}-db.{{ .Values.cpln.gvc }}.cpln.local
         - name: KONG_PG_DATABASE
-          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_DB
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret.POSTGRES_DB
         - name: KONG_PG_PASSWORD
-          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_PASSWORD
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret.POSTGRES_PASSWORD
         - name: KONG_PG_USER
-          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_USER
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret.POSTGRES_USER
 {{- end }}
 {{- if .Values.kong.configurations.dbless }}
         - name: KONG_DATABASE
@@ -277,7 +277,7 @@ spec:
 {{- if .Values.kong.configurations.dbless }}
         - path: {{ .Values.kong.configurations.dbless.KONG_DECLARATIVE_CONFIG }}
           recoveryPolicy: retain
-          uri: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-yaml
+          uri: cpln://secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-yaml
 {{- end }}
   defaultOptions:
     autoscaling:

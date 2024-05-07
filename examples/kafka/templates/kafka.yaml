@@ -1,12 +1,12 @@
-{{- if .Values.kafka.create_gvc }}
+{{- if .Values.cpln.create_gvc }}
 kind: gvc
-name: {{ .Values.kafka.gvc }}
+name: {{ .Values.cpln.gvc }}
 description: {{ .Values.kafka.name }}
 tags: {}
 spec:
   staticPlacement:
     locationLinks:
-{{- range splitList "," .Values.kafka.location }}
+{{- range splitList "," .Values.cpln.location }}
       - //location/{{ . | trim }}
 {{- end }}
 ---
@@ -19,7 +19,7 @@ spec:
 kind: volumeset
 name: {{ $root.Values.kafka.name }}-logs-{{ $counter }}
 description: {{ $root.Values.kafka.name }} logs {{ $counter }}
-gvc: {{ $root.Values.kafka.gvc }}
+gvc: {{ $root.Values.cpln.gvc }}
 tags: {}
 spec:
   initialCapacity: {{ $root.Values.kafka.volumes.logs.initialCapacity }}
@@ -42,12 +42,12 @@ spec:
 kind: identity
 name: {{ .Values.kafka.name }}-identity
 description: {{ .Values.kafka.name }} identity
-gvc: {{ .Values.kafka.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 tags: {}
 ---
 
 kind: secret
-name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration
+name: {{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-controller-configuration
 tags: {}
 type: opaque
 data:
@@ -110,7 +110,7 @@ data:
 
 ---
 kind: secret
-name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-init
+name: {{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-init
 tags: {}
 type: opaque
 data:
@@ -279,7 +279,7 @@ data:
 
 ---
 kind: secret
-name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets
+name: {{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-secrets
 tags: {}
 type: dictionary
 data:
@@ -291,23 +291,23 @@ data:
   controller-password: {{ .Values.kafka.secrets.controller_password }}
 ---
 kind: policy
-name: {{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-policy
+name: {{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-policy
 tags: {}
 origin: default
 bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ .Values.kafka.gvc }}/identity/{{ .Values.kafka.name }}-identity
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.kafka.name }}-identity
 targetKind: secret
 targetLinks:
-  - //secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration
-  - //secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-init
-  - //secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets
+  - //secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-controller-configuration
+  - //secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-init
+  - //secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-secrets
 ---
 kind: workload
 name: {{ .Values.kafka.name }}
-gvc: {{ .Values.kafka.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 spec:
   type: stateful
   containers:
@@ -325,24 +325,24 @@ spec:
           value: '{{ .Values.kafka.debug }}'
 {{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
         - name: KAFKA_CLIENT_PASSWORDS
-          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.client-passwords'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-secrets.client-passwords'
 {{- end }}
         - name: KAFKA_CLIENT_USERS
           value: kafka-admin
         - name: KAFKA_CONTROLLER_PASSWORD
-          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.controller-password'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-secrets.controller-password'
         - name: KAFKA_CONTROLLER_USER
           value: controller_user
         - name: KAFKA_HEAP_OPTS
           value: "{{ include "kafka.heap.opts" . | trim }}"
         - name: KAFKA_INTER_BROKER_PASSWORD
-          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.inter-broker-password'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-secrets.inter-broker-password'
         - name: KAFKA_INTER_BROKER_USER
           value: inter_broker_user
         - name: KAFKA_KRAFT_BOOTSTRAP_SCRAM_USERS
           value: 'true'
         - name: KAFKA_KRAFT_CLUSTER_ID
-          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.kraft-cluster-id'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-secrets.kraft-cluster-id'
         - name: KAFKA_MIN_ID
           value: '0'
       image: {{ .Values.kafka.image }}
@@ -383,10 +383,10 @@ spec:
         {{- end }}
         - path: /configmaps/server.properties
           recoveryPolicy: retain
-          uri: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-controller-configuration'
+          uri: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-controller-configuration'
         - path: /scripts/kafka-init.sh
           recoveryPolicy: retain
-          uri: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-init'
+          uri: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-init'
 {{- if .Values.kafka_exporter }}
     - name: kafka-exporter
       args:
@@ -415,7 +415,7 @@ spec:
           value: '{{ .Values.kafka_exporter.debug }}'
   {{- if and .Values.kafka.secrets.client_passwords (eq .Values.kafka.configurations.client_listener_security_protocol "SASL_PLAINTEXT") }}
         - name: KAFKA_CLIENT_PASSWORDS
-          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.kafka.gvc }}-secrets.client-passwords'
+          value: 'cpln://secret/{{ .Values.kafka.name }}-{{ .Values.cpln.gvc }}-secrets.client-passwords'
   {{- end }}
       image: {{ .Values.kafka_exporter.image }}
       inheritEnv: false

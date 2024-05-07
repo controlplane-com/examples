@@ -2,13 +2,15 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+cpln:
+  gvc: dev
+  create_gvc: false # If deployed in existing GVC, set to false
+  location: aws-us-east-2 # Relevant only if create_gvc=true
+
 kong:
   image: kong:latest
   suspend: false
-  gvc: dev
-  create_gvc: false # If deployed in existing GVC, set to false
   name: kong-gw # Choose a unique name so you don't override other clusters on your system
-  location: aws-us-east-2 # Relevant only if create_gvc=true
   replicas: 2
   cpu: 2 # For millicores us 'm' like 500m
   memory: 4000Mi # Gi / Mi

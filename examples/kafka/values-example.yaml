@@ -2,13 +2,15 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+cpln:
+  gvc: dev
+  create_gvc: false # If deployed in existing GVC, set to false
+  location: aws-us-east-2 # Relevant only if create_gvc=true
+
 kafka:
   image: docker.io/bitnami/kafka:3.6-debian-11
   suspend: false
-  gvc: dev
-  create_gvc: false # If deployed in existing GVC, set to false
   name: kafka-dev-cluster # Choose a unique name so you don't override other clusters on your system
-  location: aws-us-east-2 # Relevant only if create_gvc=true
   replicas: 3 # must not be 2
   minReadySeconds: 60
   debug: false

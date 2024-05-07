@@ -10,7 +10,7 @@ Before you begin, ensure that the [Helm CLI](https://helm.sh/docs/intro/install/
 
 2. Modify the `values.yaml` as needed. Guidelines for modifications:
 
-   - `kong.gvc` - A GVC where Kong will be created. If a GVC does not exist, you can create one by setting `kong.create_gvc` to `true`.
+   - `cpln.gvc` - A GVC where Kong will be created. If a GVC does not exist, you can create one by setting `cpln.create_gvc` to `true`.
    - `kong.name` - This is the unique name for your deployment, for example, **kong-dev**.
    - Only one of the options, `kong.configurations.kong.postgres` or `kong.configurations.kong.dbless`, can be used per deployment. Comment out the option that is not in use, depending on the type of backend you need.
    - Make any necessary changes to the rest of the configuration to suit your needs. Optionally, change the values of the Secrets to be unique.

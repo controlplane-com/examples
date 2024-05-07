@@ -12,7 +12,7 @@ Before you begin, ensure that the [Helm CLI](https://helm.sh/docs/intro/install/
 
 3. Modify the `values-kafka-dev.yaml` as needed. Guidelines for modifications:
 
-   - `kafka.gvc` - It's recommended to use an existing GVC where Kafka clients are deployed. If a GVC does not exist, you can create one by setting `kafka.create_gvc` to `true`.
+   - `cpln.gvc` - It's recommended to use an existing GVC where Kafka clients are deployed. If a GVC does not exist, you can create one by setting `cpln.create_gvc` to `true`.
    - `kafka.name` - This is the unique name for your cluster, for example, **kafka-dev-cluster**.
    - `kafka.replicas` - Choose either 1 or 3 for replicas. For high availability (HA), use 3.
    - `kafka.configurations.client_listener_security_protocol` - Choose **PLAINTEXT** or **SASL_PLAINTEXT**. This is the client security protocol configuration.
