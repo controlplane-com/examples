@@ -7,10 +7,9 @@ data:
   encoding: plain
   payload: |
     {
-        "id": "1111",
-        "tenant_id": "7777",
         "name": "{{ .Values.postgres.dbname }}",
         "port": 5432,
+        "options": ["autoddl:{{ .Values.postgres.autoddl }}"],
         "nodes": [
 {{- $length := len .Values.pgedge }}
 {{- range $index, $element := .Values.pgedge }}

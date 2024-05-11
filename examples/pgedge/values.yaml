@@ -4,12 +4,13 @@
 
 image:
   # custom image
-  # repository: 'pgedge/pgedge:ac51344'
-  repository: 'pgedge/pgedge:auto-ddl-preview-2'
+  repository: 'pgedge/pgedge:f0f0250'
+
 
 postgres:
   dbname: defaultdb
-  dbuser:
+  autoddl: enabled # enabled/disabled https://github.com/pgEdge/pgedge-docker#automatic-ddl-replication
+  dbuser: # If autoddl is enabled, use admin user instead of dbuser for the client side.
     name: app
     password: kod234foD3fkD499s1AA
   system_passwords:
@@ -19,22 +20,22 @@ postgres:
     pgcat_admin: k6uu4od8r0P6lA11Oep648KC
 
 pgedge:
-  - name: pg-eastus
+  - name: pgedge-us-east
     NODE_NAME: n1
     PG_DATA_DIR: /data
     port: 5432
-    location: aws-us-east-2
+    location: gcp-us-east1
     diskCapacity: 20 # In Gigabytes
-    memory: 1000Mi
+    memory: 1500Mi
     cpu: 500m
     minReadySeconds: 60
-  - name: pg-westus
+  - name: pgedge-us-west
     NODE_NAME: n2
     PG_DATA_DIR: /data
     port: 5432
-    location: gcp-us-west1
+    location: aws-us-west-2
     diskCapacity: 20 # In Gigabytes
-    memory: 1000Mi
+    memory: 1500Mi
     cpu: 500m
     minReadySeconds: 60
   # - name: pgedge-aws-eu-central-1

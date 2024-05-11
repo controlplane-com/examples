@@ -27,7 +27,7 @@ kong:
       KONG_PROXY_LISTEN: "0.0.0.0:8000"
       KONG_LOG_LEVEL: "notice" # https://nginx.org/en/docs/ngx_core_module.html#error_log
     ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
-    # postgres: # This is supported in single-location GVCs, for multi region DB use pgEdge
+    postgres: false # This is supported in single-location GVCs, for multi region DB use pgEdge
     #   # KONG_PG_HOST: pgcat.pgcat-pgedge.cpln.local # Provide Postgres host address if existing
     #   POSTGRES_PORT: 5432
     #   POSTGRES_DB: defaultdb

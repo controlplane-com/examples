@@ -27,15 +27,15 @@ kong:
     ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
     postgres: # This is supported in single-location GVCs, for multi region DB use pgEdge
       KONG_PG_HOST: pgcat.pgcat-pgedge.cpln.local # Provide Postgres host address if postgres exists, if it doesn't it will be created
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: 6432
       POSTGRES_DB: defaultdb
       POSTGRES_PASSWORD: uFR44yr69C4mZa72g3JQ37GX
       POSTGRES_USER: admin
       image: postgres:16.2
       cpu: 1 # When KONG_PG_HOST is not provided.  For millicores us 'm' like 500m
       memory: 1500Mi # Gi / Mi When KONG_PG_HOST is not provided
-    ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
-    # dbless:
+    ### IMPORTANT: Only 'postgres' or 'dbless' can be used; 
+    dbless: false
     #   KONG_DECLARATIVE_CONFIG: "/opt/kong/kong.yaml"
     
 

@@ -24,7 +24,7 @@ kong:
       KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444"
       KONG_PROXY_LISTEN: "0.0.0.0:8000"
       KONG_LOG_LEVEL: "notice" # https://nginx.org/en/docs/ngx_core_module.html#error_log
-    ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
+    ### IMPORTANT: Only 'postgres' or 'dbless' can be used; 
     postgres: # This is supported in single-location GVCs, for multi region DB use pgEdge
       # KONG_PG_HOST: pgcat.pgcat-pgedge.cpln.local # Provide Postgres host address if existing
       POSTGRES_PORT: 7654
@@ -34,8 +34,8 @@ kong:
       image: postgres:16.2
       cpu: 1 # When KONG_PG_HOST is not provided.  For millicores us 'm' like 500m
       memory: 1500Mi # Gi / Mi When KONG_PG_HOST is not provided
-    ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
-    # dbless:
+    ### IMPORTANT: Only 'postgres' or 'dbless' can be used; 
+    dbless: false
     #   KONG_DECLARATIVE_CONFIG: "/opt/kong/kong.yaml"
     
 

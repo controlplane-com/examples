@@ -1,5 +1,5 @@
-{{- $dblessEnabled := .Values.kong.configurations.dbless -}}
-{{- $postgresEnabled := .Values.kong.configurations.postgres -}}
+{{- $dblessEnabled := and .Values.kong.configurations.dbless -}}
+{{- $postgresEnabled := and .Values.kong.configurations.postgres -}}
 
 {{- if or (and $dblessEnabled $postgresEnabled) (and (not $dblessEnabled) (not $postgresEnabled)) -}}
 {{- fail "Error: Exactly one of dbless or postgres configurations must be enabled, but not both." -}}
