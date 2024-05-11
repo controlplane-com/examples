@@ -1,0 +1,75 @@
+# Default values for pgedge.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  # custom image
+  repository: 'pgedge/pgedge:f0f0250'
+
+
+postgres:
+  dbname: defaultdb
+  autoddl: enabled # enabled/disabled https://github.com/pgEdge/pgedge-docker#automatic-ddl-replication
+  dbuser: # If autoddl is enabled, use admin user instead of dbuser for the client side.
+    name: app
+    password: kod234foD3fkD499s1AA
+  system_passwords:
+    admin: uFR44yr69C4mZa72g3JQ37GX
+    pgedge: z1Zsku10a91RS526jnVrLC39
+    pgcat_auth: 5Y306TW24540dEnyxp3mQBwH
+    pgcat_admin: k6uu4od8r0P6lA11Oep648KC
+
+pgedge:
+  - name: pgedge-us-east
+    NODE_NAME: n1
+    PG_DATA_DIR: /data
+    port: 5432
+    location: gcp-us-east1
+    diskCapacity: 20 # In Gigabytes
+    memory: 1500Mi
+    cpu: 500m
+    minReadySeconds: 60
+  - name: pgedge-us-west
+    NODE_NAME: n2
+    PG_DATA_DIR: /data
+    port: 5432
+    location: aws-us-west-2
+    diskCapacity: 20 # In Gigabytes
+    memory: 1500Mi
+    cpu: 500m
+    minReadySeconds: 60
+  # - name: pgedge-aws-eu-central-1
+  #   NODE_NAME: n3
+  #   PG_DATA_DIR: /data
+  #   port: 5432
+  #   location: aws-eu-central-1
+  #   diskCapacity: 20 # In Gigabytes
+  #   memory: 1000Mi
+  #   cpu: 500m
+  #   minReadySeconds: 60
+
+pgadmin:
+  gvc: pgcat-pgedge
+  email: user@cpln.com
+  password: admin
+  memory: 300Mi
+  cpu: 150m
+  inboundCidr: 0.0.0.0/0
+
+pgcat:
+  name: pgcat
+  gvc: pgcat-pgedge
+  image: 'pgedge/pgcat:1.0'
+  image_liveness: 'igorchyts/pgcat-liveness:v0.2'
+  memory: 200Mi
+  cpu: 100m
+  pg_port: 6432
+  prom_port: 9930
+  capacityAI: false
+  autoscaling:
+    maxConcurrency: 0
+    maxScale: 2
+    metric: cpu
+    minScale: 1
+    scaleToZeroDelay: 300
+    target: 70

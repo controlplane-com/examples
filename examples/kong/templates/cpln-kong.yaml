@@ -1,5 +1,5 @@
-{{- $dblessEnabled := .Values.kong.configurations.dbless -}}
-{{- $postgresEnabled := .Values.kong.configurations.postgres -}}
+{{- $dblessEnabled := and .Values.kong.configurations.dbless -}}
+{{- $postgresEnabled := and .Values.kong.configurations.postgres -}}
 
 {{- if or (and $dblessEnabled $postgresEnabled) (and (not $dblessEnabled) (not $postgresEnabled)) -}}
 {{- fail "Error: Exactly one of dbless or postgres configurations must be enabled, but not both." -}}
@@ -14,7 +14,9 @@ tags: {}
 spec:
   staticPlacement:
     locationLinks:
-      - //location/{{ .Values.cpln.location }}
+{{- range .Values.cpln.locations }}
+      - //location/{{ . }}
+{{- end }}
 {{- end }}
 {{- if .Values.kong.configurations.dbless }}
 ---
@@ -51,11 +53,22 @@ data:
   POSTGRES_DB: {{ .Values.kong.configurations.postgres.POSTGRES_DB }}
   POSTGRES_PASSWORD: {{ .Values.kong.configurations.postgres.POSTGRES_PASSWORD }}
   POSTGRES_USER: {{ .Values.kong.configurations.postgres.POSTGRES_USER }}
+<<<<<<< HEAD
 ---
 kind: identity
 name: {{ .Values.kong.name }}-db-identity
 gvc: {{ .Values.cpln.gvc }}
 tags: {}
+=======
+{{- if not .Values.kong.configurations.postgres.KONG_PG_HOST }}
+  KONG_PG_HOST: {{ .Values.kong.name }}-db.{{ .Values.kong.gvc }}.cpln.local
+  POSTGRES_PORT: "5432"
+{{- else if .Values.kong.configurations.postgres.KONG_PG_HOST }}
+  KONG_PG_HOST: {{ .Values.kong.configurations.postgres.KONG_PG_HOST }}
+  POSTGRES_PORT: "{{ .Values.kong.configurations.postgres.POSTGRES_PORT }}"
+{{- end }}
+
+>>>>>>> 1e667a6 (pgedge ddl and kong)
 ---
 kind: policy
 name: {{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-policy
@@ -64,11 +77,29 @@ bindings:
   - permissions:
       - reveal
     principalLinks:
+<<<<<<< HEAD
       - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.kong.name }}-db-identity
       - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.kong.name }}-identity
 targetKind: secret
 targetLinks:
   - //secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret
+=======
+{{- if not .Values.kong.configurations.postgres.KONG_PG_HOST }}
+      - //gvc/{{ .Values.kong.gvc }}/identity/{{ .Values.kong.name }}-db-identity
+{{- end }}
+      - //gvc/{{ .Values.kong.gvc }}/identity/{{ .Values.kong.name }}-identity
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret
+{{- end }}
+
+{{- if and .Values.kong.configurations.postgres (not .Values.kong.configurations.postgres.KONG_PG_HOST) }}
+---
+kind: identity
+name: {{ .Values.kong.name }}-db-identity
+gvc: {{ .Values.kong.gvc }}
+tags: {}
+>>>>>>> 1e667a6 (pgedge ddl and kong)
 ---
 kind: volumeset
 name: {{ .Values.kong.name }}-data
@@ -96,6 +127,8 @@ spec:
       env:
         - name: PGDATA
           value: /var/lib/postgresql/data/pg_data
+        - name: POSTGRES_PORT
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_PORT
         - name: POSTGRES_DB
           value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret.POSTGRES_DB
         - name: POSTGRES_PASSWORD
@@ -188,8 +221,8 @@ spec:
       args:
         - '-c'
         - |-
-          kong migrations bootstrap && \
-          kong migrations up && kong migrations finish && \
+          kong migrations bootstrap -vv && \
+          kong migrations up -vv; kong migrations finish -vv && \
           kong start -vv && tail -f /usr/local/kong/logs/error.log
       command: /bin/bash
       cpu: '{{ .Values.kong.cpu }}'
@@ -213,8 +246,14 @@ spec:
 {{- if .Values.kong.configurations.postgres }}
         - name: KONG_DATABASE
           value: postgres
+        - name: KONG_PG_PORT
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.POSTGRES_PORT
         - name: KONG_PG_HOST
+<<<<<<< HEAD
           value: {{ .Values.kong.name }}-db.{{ .Values.cpln.gvc }}.cpln.local
+=======
+          value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.kong.gvc }}-postgres-secret.KONG_PG_HOST
+>>>>>>> 1e667a6 (pgedge ddl and kong)
         - name: KONG_PG_DATABASE
           value: cpln://secret/{{ .Values.kong.name }}-{{ .Values.cpln.gvc }}-postgres-secret.POSTGRES_DB
         - name: KONG_PG_PASSWORD
