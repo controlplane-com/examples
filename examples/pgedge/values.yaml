@@ -4,7 +4,7 @@
 
 image:
   # custom image
-  repository: 'pgedge/pgedge:f0f0250'
+  repository: 'pgedge/pgedge:3.3.3-rc1'
 
 
 postgres:
