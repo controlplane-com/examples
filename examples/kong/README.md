@@ -55,12 +55,19 @@ Steps to run this example:
    #### Use Highly-Available Multi-Master pgEdge Workload with Control Plane
    1. Create a **pgEdge cluster** by following the [instructions here](../pgedge).
 
-   2. Use the `values-pgedge.yaml` file and ensure `kong.configurations.postgres.KONG_PG_HOST` holds the value of a reachable `pgcat` that is deployed with `pgedge`. Make any necessary changes to the rest of the parameters.   
+   2. Use the `values-pgedge.yaml` file and ensure `kong.configurations.postgres.KONG_PG_HOST` holds the value of a reachable `pgcat` that is deployed with `pgedge`. Make any necessary changes to the rest of the parameters. 
 
-3. When ready. Install the helm chart.
+3. If the GVC does not exist, create it and select location(s).
+
+   If you changed the `gvc` parameter in the values file, also update the GVC for the command below.
 
    ```bash
-   cpln helm install kong-dev -f values.yaml
+   cpln gvc create --name dev --location aws-us-west-2
+   ```
+4. When ready. Install the helm chart.
+
+   ```bash
+   cpln helm install kong-dev --gvc dev -f values.yaml
    ```
 
    Note: You can modify the values at any time and apply these changes by running the same install command again.

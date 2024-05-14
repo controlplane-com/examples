@@ -2,12 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-cpln:
-  gvc: dev
-  create_gvc: true # If deployed in existing GVC, set to false
-  locations:  # Relevant only if create_gvc=true
-    - aws-us-east-2
-
 kong:
   image: kong:latest
   suspend: false
@@ -27,7 +21,8 @@ kong:
       KONG_PROXY_LISTEN: "0.0.0.0:8000"
       KONG_LOG_LEVEL: "notice" # https://nginx.org/en/docs/ngx_core_module.html#error_log
     ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
-    postgres: false # This is supported in single-location GVCs, for multi region DB use pgEdge
+    postgres: # This is supported in single-location GVCs, for multi region DB use pgEdge
+      enabled: false
     #   # KONG_PG_HOST: pgcat.pgcat-pgedge.cpln.local # Provide Postgres host address if existing
     #   POSTGRES_PORT: 5432
     #   POSTGRES_DB: defaultdb
@@ -38,7 +33,5 @@ kong:
     #   memory: 1500Mi # Gi / Mi When KONG_PG_HOST is not provided
     ### IMPORTANT: Only 'postgres' or 'dbless' can be used; comment out the option that is not in use below.
     dbless:
+      enabled: true
       KONG_DECLARATIVE_CONFIG: "/opt/kong/kong.yaml"
-    
-
-
