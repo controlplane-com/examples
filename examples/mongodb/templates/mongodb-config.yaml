@@ -1,0 +1,27 @@
+kind: secret
+name: {{ .Values.mongodb.name }}-{{ .Values.cpln.gvc }}-config
+description: {{ .Values.mongodb.name }}-{{ .Values.cpln.gvc }} config
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+    rs.initiate(
+    {
+        _id: "{{ .Values.mongodb.replSetName }}",
+        version: 1,
+        members: [
+            { 
+                _id: 0, 
+                host : "{{ .Values.mongodb.name }}-0.{{ .Values.mongodb.name }}.___CPLN_GVC_ALIAS___.svc.cluster.local:{{ .Values.mongodb.port }}" 
+            },
+            { 
+                _id: 1, 
+                host : "{{ .Values.mongodb.name }}-1.{{ .Values.mongodb.name }}.___CPLN_GVC_ALIAS___.svc.cluster.local:{{ .Values.mongodb.port }}" 
+            },
+            { 
+                _id: 2, 
+                host : "{{ .Values.mongodb.name }}-2.{{ .Values.mongodb.name }}.___CPLN_GVC_ALIAS___.svc.cluster.local:{{ .Values.mongodb.port }}" 
+            }
+        ]
+    }
+    )

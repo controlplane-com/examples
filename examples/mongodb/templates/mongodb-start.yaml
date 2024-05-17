@@ -1,0 +1,9 @@
+kind: secret
+name: {{ .Values.mongodb.name }}-{{ .Values.cpln.gvc }}-start
+description: {{ .Values.mongodb.name }}-{{ .Values.cpln.gvc }} start script
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+{{ .Files.Get "scripts/mongodb-start.sh" | indent 4 }}
