@@ -1,0 +1,144 @@
+---
+kind: identity
+name: {{ .Values.mongodb.name }}-identity
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.mongodb.name }}
+---
+kind: policy
+name: {{ .Values.mongodb.name }}-{{ .Values.cpln.gvc }}
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.mongodb.name }}-identity
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.mongodb.name }}-{{ .Values.cpln.gvc }}-config
+  - //secret/{{ .Values.mongodb.name }}-{{ .Values.cpln.gvc }}-start
+---
+kind: volumeset
+name: {{ .Values.mongodb.name }}-data
+description: {{ .Values.mongodb.name }}-data
+gvc: {{ .Values.cpln.gvc }}
+tags: {}
+spec:
+  fileSystemType: {{ .Values.mongodb.volume.fileSystemType }}
+  initialCapacity: {{ .Values.mongodb.volume.initialCapacity }}
+  performanceClass: {{ .Values.mongodb.volume.performanceClass }}
+  snapshots:
+    createFinalSnapshot: {{ .Values.mongodb.snapshots.createFinalSnapshot }}
+    retentionDuration: {{ .Values.mongodb.snapshots.retentionDuration }}
+    schedule: {{ .Values.mongodb.snapshots.schedule }}
+---
+kind: workload
+name: {{ .Values.mongodb.name }}
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.mongodb.name }}
+spec:
+  type: stateful
+  containers:
+    - name: mongodb
+      args:
+        - '-c'
+        - /scripts/mongodb-start.sh
+      command: /bin/sh
+      cpu: {{ .Values.mongodb.cpu }}
+      image: {{ .Values.mongodb.image }}
+      env:
+        - name: CUSTOM_NUM_NODES
+          value: '{{ .Values.mongodb.replicas }}'
+        - name: CUSTOM_MONGODB_PORT
+          value: '{{ .Values.mongodb.port }}'
+        - name: CUSTOM_REPL_SET_NAME
+          value: '{{ .Values.mongodb.replSetName }}'
+      livenessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - |-
+              if command -v mongo &> /dev/null; then
+                  mongo --eval 'db.runCommand("ping").ok' localhost:{{ .Values.mongodb.port }} --quiet
+              else
+                  if command -v mongosh &> /dev/null; then
+                      mongosh --eval 'db.runCommand("ping").ok' localhost:{{ .Values.mongodb.port }}
+                  else
+                      exit 1
+                  fi
+              fi
+        failureThreshold: 10
+        initialDelaySeconds: 25
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 4
+      readinessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - |-
+              if command -v mongo &> /dev/null; then
+                  mongo --eval 'db.runCommand("ping").ok' localhost:{{ .Values.mongodb.port }} --quiet
+              else
+                  if command -v mongosh &> /dev/null; then
+                      mongosh --eval 'db.runCommand("ping").ok' localhost:{{ .Values.mongodb.port }}
+                  else
+                      exit 1
+                  fi
+              fi
+        failureThreshold: 10
+        initialDelaySeconds: 20
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 4
+      inheritEnv: false
+      memory: {{ .Values.mongodb.memory }}
+      ports:
+        - number: {{ .Values.mongodb.port }}
+          protocol: tcp
+      volumes:
+        - path: /data/db
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/{{ .Values.mongodb.name }}-data'
+        - path: /scripts/mongodb-start.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.mongodb.name }}-{{ .Values.cpln.gvc }}-start'
+        - path: /scripts/initiate.cfg
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.mongodb.name }}-{{ .Values.cpln.gvc }}-config'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: {{ .Values.mongodb.replicas }}
+      metric: disabled
+      minScale: {{ .Values.mongodb.replicas }}
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+{{- if .Values.mongodb.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.mongodb.firewall "external_inboundAllowCIDR") (hasKey .Values.mongodb.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.mongodb.firewall.external_inboundAllowCIDR }}{{ .Values.mongodb.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.mongodb.firewall.external_outboundAllowCIDR }}{{ .Values.mongodb.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.mongodb.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.mongodb.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  identityLink: //identity/{{ .Values.mongodb.name }}-identity
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: Parallel
+  securityOptions:
+    filesystemGroupId: 1001
+  supportDynamicTags: false
