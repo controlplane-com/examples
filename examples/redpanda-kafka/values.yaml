@@ -1,0 +1,43 @@
+# Default values for redpanda_kafka.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+redpanda:
+  name: redpanda
+  image: docker.redpanda.com/redpandadata/redpanda:v24.1.3
+  replicas: 3
+  port: 9200
+  loglevel: info
+  memory: 2Gi # EX. 3000Mi = 3Gi
+  cpu: 1 # use Integer values, 1/2/3/4 etc.. Can't be 1.5
+
+  #https://docs.redpanda.com/current/reference/properties/cluster-properties
+  # custom_configurations: "--set redpanda.alter_topic_cfg_timeout_ms=6000 --set redpanda.auto_create_topics_enabled=true"
+  custom_configurations: ""
+
+  volume:
+    initialCapacity: 50 # In Gigabytes. For high-throughput-ssd minimum is '1000'
+    fileSystemType: xfs # Redpanda recommends using XFS
+    performanceClass: general-purpose-ssd # high-throughput-ssd / general-purpose-ssd
+  snapshots:
+    createFinalSnapshot: 'true'
+    retentionDuration: 7d
+    schedule: '0 1 * * *'
+  # To disable all traffic, comment out the corresponding rule. Docs: https://docs.controlplane.com/concepts/security#firewall
+  firewall:
+    internal_inboundAllowType: "same-org" # Options: same-org / same-gvc(Recommended)
+    # external_inboundAllowCIDR: 0.0.0.0/0 # Provide a comma-separated list
+    external_outboundAllowCIDR: "0.0.0.0/0" # Provide a comma-separated list
+
+redpanda_console:
+  image: docker.redpanda.com/redpandadata/console:v2.5.2
+  replicas: 1
+  port: 8080
+  memory: 250Mi # EX. 3000Mi = 3Gi
+  cpu: 150m # vCPU or milicores with; EX. 1.5 = 1500m
+  env:
+    CONFIG_FILEPATH: /tmp/config.yml
+  firewall:
+    internal_inboundAllowType: "same-gvc" # Options: same-org / same-gvc(Recommended)
+    # external_inboundAllowCIDR: xx.xx.xx.xx/32 # Provide a comma-separated list
+    external_outboundAllowCIDR: "0.0.0.0/0" # Provide a comma-separated list
