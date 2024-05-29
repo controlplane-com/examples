@@ -1,0 +1,9 @@
+kind: secret
+name: {{ .Values.redpanda.name }}-{{ .Values.cpln.gvc }}-start
+description: {{ .Values.redpanda.name }}-{{ .Values.cpln.gvc }} start script
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+{{ .Files.Get "scripts/redpanda-start.sh" | indent 4 }}

@@ -1,0 +1,9 @@
+kind: secret
+name: {{ .Values.redpanda.name }}-{{ .Values.cpln.gvc }}-console-start
+description: {{ .Values.redpanda.name }}-{{ .Values.cpln.gvc }} console start script
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+{{ .Files.Get "scripts/console-start.sh" | indent 4 }}

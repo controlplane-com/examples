@@ -1,0 +1,177 @@
+---
+kind: identity
+name: {{ .Values.redpanda.name }}-identity
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.redpanda.name }}
+---
+kind: policy
+name: {{ .Values.redpanda.name }}-{{ .Values.cpln.gvc }}
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.redpanda.name }}-identity
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.redpanda.name }}-{{ .Values.cpln.gvc }}-start
+  - //secret/{{ .Values.redpanda.name }}-{{ .Values.cpln.gvc }}-console-start
+---
+kind: volumeset
+name: {{ .Values.redpanda.name }}-data
+description: {{ .Values.redpanda.name }}-data
+gvc: {{ .Values.cpln.gvc }}
+tags: {}
+spec:
+  fileSystemType: {{ .Values.redpanda.volume.fileSystemType }}
+  initialCapacity: {{ .Values.redpanda.volume.initialCapacity }}
+  performanceClass: {{ .Values.redpanda.volume.performanceClass }}
+  snapshots:
+    createFinalSnapshot: {{ .Values.redpanda.snapshots.createFinalSnapshot }}
+    retentionDuration: {{ .Values.redpanda.snapshots.retentionDuration }}
+    schedule: {{ .Values.redpanda.snapshots.schedule }}
+---
+kind: workload
+name: {{ .Values.redpanda.name }}
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.redpanda.name }}
+spec:
+  type: stateful
+  containers:
+    - name: redpanda
+      cpu: '{{ .Values.redpanda.cpu }}'
+      memory: {{ .Values.redpanda.memory }}
+      env:
+        - name: CUSTOM_RPK_LOGLVL
+          value: '{{ .Values.redpanda.loglevel }}'
+        - name: CUSTOM_RPK_PORT
+          value: '{{ .Values.redpanda.port }}'
+        {{- if .Values.redpanda.custom_configurations }}
+        - name: CUSTOM_CONFIGURATIONS
+          value: '{{ .Values.redpanda.custom_configurations }}'
+        {{- end}}
+      ports:
+        - number: 9644
+          protocol: http
+        - number: 8081
+          protocol: http
+        - number: 8082
+          protocol: http
+        - number: {{ .Values.redpanda.port }}
+          protocol: tcp
+        - number: 33145
+          protocol: tcp
+      livenessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - curl --silent --fail -m 5 localhost:9644/v1/status/ready
+        failureThreshold: 5
+        initialDelaySeconds: 100
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 2
+      command: /bin/bash
+      args:
+        - '-c'
+        - cp /scripts/redpanda-start.sh /tmp/redpanda-start.sh && chmod +x /tmp/redpanda-start.sh && /tmp/redpanda-start.sh
+      image: {{ .Values.redpanda.image }}
+      volumes:
+        - path: /var/lib/redpanda/data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/{{ .Values.redpanda.name }}-data'
+        - path: /scripts/redpanda-start.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.redpanda.name }}-{{ .Values.cpln.gvc }}-start'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: {{ .Values.redpanda.replicas }}
+      metric: disabled
+      minScale: {{ .Values.redpanda.replicas }}
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+{{- if .Values.redpanda.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.redpanda.firewall "external_inboundAllowCIDR") (hasKey .Values.redpanda.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.redpanda.firewall.external_inboundAllowCIDR }}{{ .Values.redpanda.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.redpanda.firewall.external_outboundAllowCIDR }}{{ .Values.redpanda.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.redpanda.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.redpanda.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  identityLink: //identity/{{ .Values.redpanda.name }}-identity
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: Parallel
+  securityOptions:
+    filesystemGroupId: 101
+---
+kind: workload
+name: {{ .Values.redpanda.name }}-console
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.redpanda.name }}-console
+spec:
+  type: standard
+  containers:
+    - name: console
+      cpu: {{ .Values.redpanda_console.cpu }}
+      memory: {{ .Values.redpanda_console.memory }}
+      image: {{ .Values.redpanda_console.image }}
+      env:
+        - name: CONFIG_FILEPATH
+          value: '{{ .Values.redpanda_console.env.CONFIG_FILEPATH }}'
+        - name: CUSTOM_RPK_REPLICAS
+          value: '{{ .Values.redpanda.replicas }}'
+        - name: CUSTOM_RPK_WORKLOAD_NAME
+          value: '{{ .Values.redpanda.name }}'
+        - name: CUSTOM_RPK_PORT
+          value: '{{ .Values.redpanda.port }}'
+      ports:
+        - number: '{{ .Values.redpanda_console.port }}'
+          protocol: http
+      command: /bin/sh
+      args:
+        - '-c'
+        - cp /scripts/console-start.sh /tmp/console-start.sh && chmod +x /tmp/console-start.sh && sh /tmp/console-start.sh
+      volumes:
+        - path: /scripts/console-start.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/{{ .Values.redpanda.name }}-{{ .Values.cpln.gvc }}-console-start'
+  defaultOptions:
+    autoscaling:
+      maxScale: {{ .Values.redpanda_console.replicas }}
+      metric: disabled
+      minScale: {{ .Values.redpanda_console.replicas }}
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 15
+{{- if .Values.redpanda_console.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.redpanda_console.firewall "external_inboundAllowCIDR") (hasKey .Values.redpanda_console.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.redpanda_console.firewall.external_inboundAllowCIDR }}{{ .Values.redpanda_console.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.redpanda_console.firewall.external_outboundAllowCIDR }}{{ .Values.redpanda_console.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.redpanda_console.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.redpanda_console.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  identityLink: //identity/{{ .Values.redpanda.name }}-identity
+
