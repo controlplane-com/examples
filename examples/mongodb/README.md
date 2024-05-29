@@ -37,7 +37,7 @@ Syntax2: `<REPLICA_NAME>.<WORKLOAD_NAME>.<GVC_ALIAS>.svc.cluster.local`
 Example2: `mongodb1-1.mongodb1.j3i2ddut40d.svc.cluster.local`  
 Look for the GVC Alias on the info page of the GVC in the console, or query using the CLI.
 
-**Note**: All communication between workloads on Control Plane happens within an Istio-based service mesh with enforced mTLS and least privileged access managed using the [firewall](https://docs.controlplane.com/reference/workload#internal) feature. The method described in this example allows only internal communication, which is secured with mTLS and a firewall.
+**Note**: All communication between workloads on Control Plane happens within an Istio-based service mesh with enforced mTLS and least privileged access managed using the [firewall](https://docs.controlplane.com/reference/workload#internal) feature. The method described in this example allows only internal communication, secured with mTLS and a firewall, unless this Helm template is modified to support public access.
 
 ### Cleanup
 
