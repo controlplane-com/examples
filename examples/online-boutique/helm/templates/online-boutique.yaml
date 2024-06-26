@@ -707,8 +707,8 @@ spec:
 {{- if not .Values.online_boutique.db_postgres }}
 ---
 kind: secret
-name: redis-boutique-conf
-description: redis-boutique-conf
+name: redis-boutique-conf-{{ .Values.online_boutique.gvc }}
+description: redis-boutique-conf-{{ .Values.online_boutique.gvc }}
 tags: {}
 type: opaque
 data:
@@ -722,7 +722,7 @@ description: redis-identity
 tags: {}
 ---
 kind: policy
-name: redis-cart
+name: redis-cart-{{ .Values.online_boutique.gvc }}
 tags: {}
 origin: default
 bindings:
@@ -732,7 +732,7 @@ bindings:
       - //gvc/{{ .Values.online_boutique.gvc }}/identity/redis-identity
 targetKind: secret
 targetLinks:
-  - //secret/redis-boutique-conf
+  - //secret/redis-boutique-conf-{{ .Values.online_boutique.gvc }}
 ---
 kind: volumeset
 name: redis-volume
@@ -782,7 +782,7 @@ spec:
           uri: 'cpln://volumeset/redis-volume'
         - path: /etc/redis/redis.conf
           recoveryPolicy: retain
-          uri: 'cpln://secret/redis-boutique-conf'
+          uri: 'cpln://secret/redis-boutique-conf-{{ .Values.online_boutique.gvc }}'
   defaultOptions:
     autoscaling:
       maxConcurrency: 0
