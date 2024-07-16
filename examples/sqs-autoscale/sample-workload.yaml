@@ -1,0 +1,50 @@
+kind: identity
+name: sqs
+description: sqs
+tags: {}
+aws:
+  cloudAccountLink: //cloudaccount/CLOUD_ACCOUNT
+  policyRefs:
+    - aws::AmazonSQSFullAccess
+----
+kind: workload
+name: sqs-autoscale
+description: sqs-autoscale
+tags: {}
+spec:
+  type: cron
+  containers:
+    - name: sqs-autoscale
+      cpu: 50m
+      env:
+        - name: AWS_REGION
+          value: us-west-2
+      image: //image/sqs-autoscale:0.1
+      inheritEnv: false
+      memory: 128Mi
+      volumes:
+        - path: /usr/src/app/config.json
+          recoveryPolicy: retain
+          uri: cpln://secret/sqs-autoscale
+  defaultOptions:
+    capacityAI: true
+    debug: false
+    suspend: true
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: none
+      inboundAllowWorkload: []
+  identityLink: //gvc/GVC_NAME/identity/sqs
+  job:
+    concurrencyPolicy: Forbid
+    historyLimit: 5
+    restartPolicy: Never
+    schedule: '* * * * *'
+  supportDynamicTags: false

@@ -1,0 +1,13 @@
+[
+  {
+    "gvc": "default-gvc",
+    "workloadName": "test-workload",
+    "sqsEndpoint": "https://sqs.us-east-1.amazonaws.com/123456789012/queue1",
+    "scalingRules": [
+      { "length": 0, "scaleAmount": 2 },
+      { "length": 10, "scaleAmount": 3 },
+      { "length": 50, "scaleAmount": 4 },
+      { "length": 101, "scaleAmount": 5 }
+    ]
+  }
+]
