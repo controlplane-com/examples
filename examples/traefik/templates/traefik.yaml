@@ -1,0 +1,21 @@
+kind: secret
+name: {{ .Values.traefik.name }}-{{ .Values.cpln.gvc }}-conf
+description: {{ .Values.traefik.name }}-{{ .Values.cpln.gvc }}-conf
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    providers:
+      file:
+        directory: /configurations
+        watch: true
+
+    log:
+      level: DEBUG
+
+    entryPoints:
+      web:
+        address: ":80"
+
+    ping:
+      entryPoint: "web"

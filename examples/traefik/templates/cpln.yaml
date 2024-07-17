@@ -1,0 +1,88 @@
+kind: identity
+name: {{ .Values.traefik.name }}-identity
+description: {{ .Values.traefik.name }}-identity
+tags: {}
+---
+kind: policy
+name: {{ .Values.traefik.name }}-{{ .Values.cpln.gvc }}-policy
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.traefik.name }}-identity
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.traefik.name }}-{{ .Values.cpln.gvc }}-dynamic1-conf
+  - //secret/{{ .Values.traefik.name }}-{{ .Values.cpln.gvc }}-conf
+---
+kind: workload
+name: {{ .Values.traefik.name }}
+description: {{ .Values.traefik.name }}
+spec:
+  type: standard
+  containers:
+    - name: traefik
+      cpu: {{ .Values.traefik.cpu }}
+      image: {{ .Values.traefik.image }}
+      inheritEnv: false
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          httpHeaders: []
+          path: /ping
+          port: 80
+          scheme: HTTP
+        initialDelaySeconds: 50
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 2
+      memory: {{ .Values.traefik.memory }}
+      ports:
+        - number: 80
+          protocol: http
+      readinessProbe:
+        failureThreshold: 12
+        httpGet:
+          httpHeaders: []
+          path: /ping
+          port: 80
+          scheme: HTTP
+        initialDelaySeconds: 0
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 2
+      volumes:
+        - path: /etc/traefik/traefik.yml
+          recoveryPolicy: retain
+          uri: cpln://secret/{{ .Values.traefik.name }}-{{ .Values.cpln.gvc }}-conf
+        - path: /configurations/dynamic.yml
+          recoveryPolicy: retain
+          uri: cpln://secret/{{ .Values.traefik.name }}-{{ .Values.cpln.gvc }}-dynamic1-conf
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: {{ .Values.traefik.autoscaling.maxConcurrency }}
+      maxScale: {{ .Values.traefik.autoscaling.maxScale }}
+      metric: cpu
+      minScale: {{ .Values.traefik.autoscaling.minScale }}
+      scaleToZeroDelay: 300
+      target: 50
+    capacityAI: {{ .Values.traefik.capacityAI }}
+    debug: false
+    suspend: {{ .Values.traefik.suspend }}
+    timeoutSeconds: 5
+{{- if .Values.traefik.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.traefik.firewall "external_inboundAllowCIDR") (hasKey .Values.traefik.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.traefik.firewall.external_inboundAllowCIDR }}{{ .Values.traefik.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.traefik.firewall.external_outboundAllowCIDR }}{{ .Values.traefik.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.traefik.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.traefik.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  identityLink: //identity/{{ .Values.traefik.name }}-identity
+  supportDynamicTags: false

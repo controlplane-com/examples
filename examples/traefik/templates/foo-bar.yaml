@@ -1,0 +1,89 @@
+kind: workload
+name: foo
+description: foo
+spec:
+  type: standard
+  containers:
+    - name: nginx
+      cpu: 60m
+      image: nginx
+      inheritEnv: false
+      lifecycle:
+        postStart:
+          exec:
+            command:
+              - /bin/sh
+              - '-c'
+              - 'echo ''Hostname: ''${HOSTNAME} > /usr/share/nginx/html/index.html'
+      memory: 100Mi
+      ports:
+        - number: 80
+          protocol: http
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  supportDynamicTags: false
+---
+kind: workload
+name: bar
+description: bar
+spec:
+  type: standard
+  containers:
+    - name: nginx
+      cpu: 60m
+      image: nginx
+      inheritEnv: false
+      lifecycle:
+        postStart:
+          exec:
+            command:
+              - /bin/sh
+              - '-c'
+              - 'echo ''Hostname: ''${HOSTNAME} > /usr/share/nginx/html/index.html'
+      memory: 100Mi
+      ports:
+        - number: 80
+          protocol: http
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  supportDynamicTags: false
