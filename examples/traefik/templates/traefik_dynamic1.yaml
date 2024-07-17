@@ -1,0 +1,51 @@
+kind: secret
+name: {{ .Values.traefik.name }}-{{ .Values.cpln.gvc }}-dynamic1-conf
+description: {{ .Values.traefik.name }}-{{ .Values.cpln.gvc }}-dynamic1-conf
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    http:
+      routers:
+        router0:
+          service: service-bar
+          middlewares:
+          - bar-prefix
+          - test-auth
+          rule: "PathPrefix(`/bar`)"
+          entryPoints:
+          - web
+        router1:
+          service: service-foo
+          middlewares:
+          - foo-prefix
+          - test-auth
+          rule: "PathPrefix(`/foo`)"
+          entryPoints:
+          - web
+
+      middlewares:
+        test-auth:
+          basicAuth:
+            users:
+              - test1:$apr1$p9SmSOad$tXcx39CQ4Fj2h026/D3sU/
+              - test2:$apr1$4uHFePSe$RG6Mms2472kZwJpXOZOdz0
+        foo-prefix:
+          stripPrefix:
+            prefixes:
+            - /foo
+        bar-prefix:
+          stripPrefix:
+            prefixes:
+            - /bar
+
+      # Add the service
+      services:
+        service-foo:
+          loadBalancer:
+            servers:
+            - url: http://foo.{{ .Values.cpln.gvc }}.cpln.local:80/
+        service-bar:
+          loadBalancer:
+            servers:
+            - url: http://bar.{{ .Values.cpln.gvc }}.cpln.local:80/

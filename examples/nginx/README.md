@@ -1,6 +1,6 @@
 ## nginx custom routing example
 
-Creates an nginx proxy which routes traffic to different internally accessable workloads for different request paths.
+Creates an nginx proxy which routes traffic to different internally accessible workloads for different request paths.
 
 ### Default Routing Rules
 

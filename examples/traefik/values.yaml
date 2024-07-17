@@ -1,0 +1,20 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+traefik:
+  image: traefik:v3.1.0
+  capacityAI: false
+  suspend: false
+  name: traefik # Choose a unique name in the GVC you are deploying to
+  replicas: 2
+  cpu: 100m
+  memory: 150Mi # Gi / Mi
+  autoscaling:
+    minScale: 1
+    maxScale: 3
+    maxConcurrency: 1000
+  # To disable all traffic, comment out the corresponding rule. Docs: https://docs.controlplane.com/concepts/security#firewall
+  firewall:
+    internal_inboundAllowType: "same-org" # Options: same-org / same-gvc
+    external_inboundAllowCIDR: 0.0.0.0/0 # Provide a comma-separated list
+    external_outboundAllowCIDR: "0.0.0.0/0" # Provide a comma-separated list
