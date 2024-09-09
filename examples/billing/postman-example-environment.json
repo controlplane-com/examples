@@ -1,0 +1,45 @@
+{
+	"id": "dedf32da-c057-4577-8b4b-935e8d025986",
+	"name": "Example",
+	"values": [
+		{
+			"key": "cplnTokenServerPort",
+			"value": "43200",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "cplnTokenServerToken",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "profile",
+			"value": "default",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "accountId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "org",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment",
+	"_postman_exported_at": "2024-09-09T19:27:05.150Z",
+	"_postman_exported_using": "Postman/11.11.1"
+}
