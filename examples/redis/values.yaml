@@ -7,10 +7,8 @@ image:
 
 redis:
   name: redis-cluster
-  gvc: redis-cluster-example
   replicas: 6
   port: 6379
-  location: aws-us-east-2
   diskCapacity: 20 # In Gigabytes
   memory: 250Mi # EX. 3000Mi = 3Gi
   cpu: 200m # vCPU or milicores with; EX. 1.5 = 1500m

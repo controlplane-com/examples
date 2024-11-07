@@ -1,6 +1,6 @@
 kind: secret
-name: {{ .Values.redis.name }}-default-config
-description: {{ .Values.redis.name }} default config
+name: {{ .Values.redis.name }}-{{ .Values.cpln.gvc }}-default-config
+description: {{ .Values.redis.name }}-{{ .Values.cpln.gvc }} default config
 type: opaque
 data:
   encoding: plain
