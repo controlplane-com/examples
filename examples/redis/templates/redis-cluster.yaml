@@ -1,34 +1,25 @@
-kind: gvc
-name: {{ .Values.redis.gvc }}
-description: {{ .Values.redis.name }}
-tags: {}
-spec:
-  staticPlacement:
-    locationLinks:
-      - //location/{{ .Values.redis.location }}
----
 kind: identity
 name: {{ .Values.redis.name }}-identity
-gvc: {{ .Values.redis.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: {{ .Values.redis.name }}
 ---
 kind: policy
-name: {{ .Values.redis.name }}
+name: {{ .Values.redis.name }}-{{ .Values.cpln.gvc }}
 tags: {}
 origin: default
 bindings:
   - permissions:
       - reveal
     principalLinks:
-      - //gvc/{{ .Values.redis.gvc }}/identity/{{ .Values.redis.name }}-identity
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.redis.name }}-identity
 targetKind: secret
 targetLinks:
-  - //secret/{{ .Values.redis.name }}-default-config
-  - //secret/{{ .Values.redis.name }}-start
+  - //secret/{{ .Values.redis.name }}-{{ .Values.cpln.gvc }}-default-config
+  - //secret/{{ .Values.redis.name }}-{{ .Values.cpln.gvc }}-start
 ---
 kind: volumeset
 name: {{ .Values.redis.name }}
-gvc: {{ .Values.redis.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: {{ .Values.redis.name }}
 spec:
   fileSystemType: ext4
@@ -37,7 +28,7 @@ spec:
 ---
 kind: workload
 name: {{ .Values.redis.name }}
-gvc: {{ .Values.redis.gvc }}
+gvc: {{ .Values.cpln.gvc }}
 description: {{ .Values.redis.name }}
 spec:
   type: stateful
@@ -47,7 +38,7 @@ spec:
         - '-c'
         - /scripts/redis-start.sh
       command: /bin/sh
-      cpu: {{ .Values.redis.cpu }}
+      cpu: '{{ .Values.redis.cpu }}'
       env:
         - name: NUM_SHARDS
           value: '3'
@@ -91,10 +82,10 @@ spec:
           uri: 'cpln://volumeset/{{ .Values.redis.name }}'
         - path: /scripts/redis-start.sh
           recoveryPolicy: retain
-          uri: 'cpln://secret/{{ .Values.redis.name }}-start'
+          uri: 'cpln://secret/{{ .Values.redis.name }}-{{ .Values.cpln.gvc }}-start'
         - path: /usr/local/etc/redis/redis-default.conf
           recoveryPolicy: retain
-          uri: 'cpln://secret/{{ .Values.redis.name }}-default-config'
+          uri: 'cpln://secret/{{ .Values.redis.name }}-{{ .Values.cpln.gvc }}-default-config'
   defaultOptions:
     autoscaling:
       maxConcurrency: 0

@@ -1,6 +1,6 @@
 kind: secret
-name: {{ .Values.redis.name }}-start
-description: {{ .Values.redis.name }} start script
+name: {{ .Values.redis.name }}-{{ .Values.cpln.gvc }}-start
+description: {{ .Values.redis.name }}-{{ .Values.cpln.gvc }} start script
 tags: {}
 type: opaque
 data:
