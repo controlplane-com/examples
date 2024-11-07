@@ -9,7 +9,7 @@ Supported MongoDB versions for the chart: 4.4.29, 5, 6, 7
 
 The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and [Control Plane CLI](https://docs.controlplane.com/reference/cli#install-npm) must be installed.
 
-1. Clone this repo and update the [values.yaml](./values.yaml) file as needed.
+1. Clone this repo and update the [values.yaml](helm/values.yaml) file as needed.
 
 2. If advanced replica-set configuration is required, make sure to edit [mongodb-config.yaml](./templates/mongodb-config.yaml) file in templates directory. Please refer to [MongoDB documentation](https://www.mongodb.com/docs/v7.0/reference/replica-configuration/#replica-set-configuration-document) for further instructions.
 
