@@ -1,0 +1,101 @@
+kind: secret
+name: mongodb-development-secret
+description: mongodb-development-secret
+tags: {}
+type: dictionary
+data:
+  password: mongodbsecret1
+  username: mongodb
+---
+kind: identity
+name: mongodb
+description: mongodb
+tags: {}
+---
+kind: policy
+name: mongodb-development-policy
+description: mongodb-development-policy
+tags: {}
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/development/identity/mongodb
+targetKind: secret
+targetLinks:
+  - //secret/mongodb-development-secret
+---
+kind: volumeset
+name: mongodb
+description: mongodb
+tags: {}
+spec:
+  fileSystemType: ext4
+  initialCapacity: 50
+  performanceClass: general-purpose-ssd
+  snapshots:
+    createFinalSnapshot: true
+    retentionDuration: 7d
+---
+kind: workload
+name: mongodb
+description: mongodb
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: mongo
+      cpu: 200m
+      env:
+        - name: MONGO_INITDB_DATABASE
+          value: exampledb1
+        - name: MONGO_INITDB_PWD
+          value: cpln://secret/mongodb-development-secret.password
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: cpln://secret/mongodb-development-secret.password
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: cpln://secret/mongodb-development-secret.username
+        - name: MONGO_INITDB_USER
+          value: cpln://secret/mongodb-development-secret.username
+      image: mongo:6.0
+      inheritEnv: false
+      memory: 250Mi
+      ports:
+        - number: 27017
+          protocol: tcp
+      volumes:
+        - path: /data/db
+          recoveryPolicy: retain
+          uri: cpln://volumeset/mongodb
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 60
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  identityLink: //gvc/development/identity/mongodb
+  loadBalancer:
+    direct:
+      enabled: true
+      ports:
+        - containerPort: 27017
+          externalPort: 27017
+          protocol: TCP
+          scheme: tcp
+  supportDynamicTags: false
