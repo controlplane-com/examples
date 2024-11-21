@@ -5,5 +5,5 @@ tags: {}
 type: opaque
 data:
   encoding: plain
-  payload: >
+  payload: |-
 {{ .Files.Get "scripts/redis-start.sh" | indent 4 }}
