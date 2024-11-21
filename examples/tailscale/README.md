@@ -75,7 +75,7 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) mus
 1. Run the command below replacing `$TS_AUTHKEY` with the tailscale authorization key created above.
 
    ```bash
-   cpln helm install --gvc $GVC  --set cpln.location=$LOCATION--set AuthKey=$TS_AUTHKEY tailscale
+   cpln helm install --gvc $GVC --set cpln.location=$LOCATION --set AuthKey=$TS_AUTHKEY tailscale
 
    ```
 
