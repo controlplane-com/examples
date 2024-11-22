@@ -1,6 +1,6 @@
 ## Redis example
 
-This example creates a Redis cluster with 6 nodes on the Control Plane Platform and can be further customized as needed.
+This example creates a single node Redis Control Plane Platform and can be further customized as needed.
 
 ### Steps to run this example:
 
@@ -13,33 +13,26 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and
 2. Run the command below from this directory.
 
    ```bash
-   cpln helm install redis-cluster --gvc mygvc
+   cpln helm install redis-dev --gvc mygvc
    ```
-   Note:  Typically, it takes 5 minutes for all replicas of the workload to become ready and for the cluster to be created.
 
-### Accessing redis-cluster
+### Accessing redis
 
-Workloads are allowed to access Redis Cluster based on the `firewallConfig` you specify. You can learn more about in our [documentation](https://docs.controlplane.com/reference/workload#internal).
-
-Improtant: To access workloads listening on a TCP port, the client workload must be in the same GVC. Thus, the Redis cluster is accessible to clients running within the same GVC.
+Workloads are allowed to access Redis based on the `firewallConfig` you specify. You can learn more about in our [documentation](https://docs.controlplane.com/reference/workload#internal).
 
 #### Option 1:
 
 Syntax: <WORKLOAD_NAME>
 ```
-redis-cli -c -h redis-cluster -p 6379 set mykey "test"
-redis-cli -c -h redis-cluster -p 6379 get mykey
+redis-cli -c -h redis-dev -p 6379 set mykey "test"
+redis-cli -c -h redis-dev -p 6379 get mykey
 ```
 #### Option 2: (By replica)
 
 Syntax: <REPLICA_NAME>.<WORKLOAD_NAME>
 ```
-redis-cli -c -h redis-cluster-0.redis-cluster -p 6379 set mykey "test"
-redis-cli -c -h redis-cluster-1.redis-cluster -p 6379 get mykey
-redis-cli -c -h redis-cluster-2.redis-cluster -p 6379 get mykey
-redis-cli -c -h redis-cluster-3.redis-cluster -p 6379 get mykey
-redis-cli -c -h redis-cluster-4.redis-cluster -p 6379 get mykey
-redis-cli -c -h redis-cluster-5.redis-cluster -p 6379 get mykey
+redis-cli -c -h redis-dev-0.redis-dev -p 6379 set mykey "test"
+redis-cli -c -h redis-dev-1.redis-dev -p 6379 get mykey
 ```
 
 ### Cleanup
@@ -47,5 +40,5 @@ redis-cli -c -h redis-cluster-5.redis-cluster -p 6379 get mykey
 **HELM**
 
 ```bash
-cpln helm uninstall redis-cluster
+cpln helm uninstall redis-dev
 ```

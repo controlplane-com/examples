@@ -8,9 +8,6 @@ spec:
     - name: {{ .Values.name }}
       cpu: '{{ .Values.cpu }}'
       memory: {{ .Values.memory }}
-      env:
-        - name: CUSTOM_REDIS_PORT
-          value: '{{ .Values.port }}'
       image: {{ .Values.image.repository }}
       livenessProbe:
         exec:
