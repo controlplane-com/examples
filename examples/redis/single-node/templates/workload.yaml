@@ -1,0 +1,81 @@
+kind: workload
+name: {{ .Values.name }}
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.name }}
+spec:
+  type: stateful
+  containers:
+    - name: {{ .Values.name }}
+      cpu: '{{ .Values.cpu }}'
+      memory: {{ .Values.memory }}
+      env:
+        - name: CUSTOM_REDIS_PORT
+          value: '{{ .Values.port }}'
+      image: {{ .Values.image.repository }}
+      livenessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - redis-cli ping
+        failureThreshold: 10
+        initialDelaySeconds: 25
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 4
+      readinessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - redis-cli ping
+        failureThreshold: 10
+        initialDelaySeconds: 20
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 4
+      inheritEnv: {{ .Values.inheritEnv }}
+      ports:
+        - number: {{ .Values.port }}
+          protocol: tcp
+      volumes:
+    {{- if .Values.volumeset }}
+        - path: /data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/volumeset-{{ .Values.name }}'
+    {{- else }}
+       []
+    {{- end }}
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: disabled
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: {{ .Values.capacityAI}}
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+{{- if .Values.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.firewall "external_inboundAllowCIDR") (hasKey .Values.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.firewall.external_inboundAllowCIDR }}{{ .Values.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.firewall.external_outboundAllowCIDR }}{{ .Values.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: OrderedReady
+  securityOptions:
+    filesystemGroupId: 1001
+  supportDynamicTags: {{ .Values.supportDynamicTags }}
