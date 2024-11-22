@@ -1,0 +1,14 @@
+{{- if .Values.volumeset }}
+kind: volumeset
+name: volumeset-{{ .Values.name }}
+description: volumeset-{{ .Values.name }}
+tags: {}
+spec:
+  fileSystemType: {{ .Values.volumeset.volume.fileSystemType }}
+  initialCapacity: {{ .Values.volumeset.volume.initialCapacity }}
+  performanceClass: {{ .Values.volumeset.volume.performanceClass }}
+  snapshots:
+    createFinalSnapshot: {{ .Values.volumeset.snapshots.createFinalSnapshot }}
+    retentionDuration: {{ .Values.volumeset.snapshots.retentionDuration }}
+    schedule: {{ .Values.volumeset.snapshots.schedule }}
+{{- end }}

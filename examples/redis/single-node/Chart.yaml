@@ -1,0 +1,6 @@
+apiVersion: v2
+name: redis
+description: A single replica Redis helm chart for Control Plan
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

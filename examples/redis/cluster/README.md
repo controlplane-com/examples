@@ -8,7 +8,7 @@ This example creates a Redis cluster with 6 nodes on the Control Plane Platform 
 
 The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and [Control Plane CLI](https://docs.controlplane.com/reference/cli#install-npm) must be installed.
 
-1. Clone this repo and update the [values.yaml](./values.yaml) file as needed.
+1. Clone this repo and update the [values.yaml](redis-clsuter/values.yaml) file as needed.
 
 2. Run the command below from this directory.
 
