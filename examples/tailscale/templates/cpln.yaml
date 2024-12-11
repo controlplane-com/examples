@@ -43,13 +43,15 @@ spec:
         - name: TS_AUTHKEY
           value: cpln://secret/{{ .Values.tailscale.name }}.authkey
         - name: TS_HOSTNAME
-          value: cpln-test
+          value: "{{ .Values.tailscale.machineName }}"
         - name: TS_KUBE_SECRET
           value: ''
         - name: TS_ROUTES
           value: '192.168.0.0/16,240.240.0.0/16,{{ index .Values.locationDNS .Values.cpln.location }}/32'
         - name: TS_USERSPACE
           value: 'true'
+
+{{- if .Values.httpbin.enabled }}
 ---
 kind: workload
 name: httpbin
@@ -78,6 +80,7 @@ spec:
       # allow access from tailscale internally
       inboundAllowWorkload:
         - //gvc/{{ .Values.cpln.gvc }}/workload/{{ .Values.tailscale.name }}
+{{- end }}
 
 ---
 kind: identity

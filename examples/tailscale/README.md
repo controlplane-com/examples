@@ -34,12 +34,18 @@ Any workload that allows access from this tailscale workload will be able to be 
          "192.168.0.0/16": ["autogroup:member"],
          "240.240.0.0/16": ["autogroup:member"],
          "10.0.0.0/16": ["autogroup:member"],
-         // aws
+
+         // AWS DNS servers
          "172.20.0.10/32": ["autogroup:member"],
-         // azure
-         "10.1.0.10/32": ["autogroup:member"],
-         // gcp-us-east1
-         "10.194.112.10/32": ["autogroup:member"]
+
+         // GCP DNS servers
+         "10.67.224.10/32": ["autogroup:member"],
+         "10.194.112.10/32": ["autogroup:member"],
+         "10.228.48.10/32": ["autogroup:member"],
+         "10.110.48.10/32": ["autogroup:member"],
+
+         // Azure DNS servers
+         "10.1.0.10/32": ["autogroup:member"]
        }
      }
    }
