@@ -35,4 +35,4 @@ locationDNS:
 
 # do you want to enable httpbin for testing?
 httpbin:
-  enabled: false
+  enabled: true
