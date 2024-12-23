@@ -12,6 +12,7 @@ nameOverride: tailscale
 
 tailscale:
   name: tailscale
+  machineName: cpln-nonprod
 
 resources:
   cpu: 500m
@@ -31,3 +32,7 @@ locationDNS:
   gcp-me-west1: 10.110.48.10
   azure-centralus: 10.1.0.10
   azure-eastus2: 10.1.0.10
+
+# do you want to enable httpbin for testing?
+httpbin:
+  enabled: true
