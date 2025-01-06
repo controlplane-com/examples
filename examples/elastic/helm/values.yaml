@@ -1,0 +1,68 @@
+metadata:
+  tags:
+    cpln/release: cpln-release-elasticsearch
+
+elasticsearch:
+  image:
+    repository: docker.elastic.co/elasticsearch/elasticsearch
+    tag: 8.16.2
+  
+  identity:
+    name: elasticsearch
+
+  volume:
+    fileSystemType: ext4
+    performanceClass: general-purpose-ssd
+    master:
+      initialCapacity: 10
+    data:
+      initialCapacity: 20
+    ingest:
+      initialCapacity: 10
+
+  config:
+    clusterName: "elasticsearch-cluster"
+    networkHost: "0.0.0.0"
+    nodeStore:
+      allowMmap: false
+    security:
+      enabled: false
+
+  nodes:
+    master:
+      enabled: true
+      replicas: 3
+      roles: master # Comma separated list https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
+      resources:
+        cpu: 2000m
+        memory: 4Gi
+    data:
+      enabled: true
+      replicas: 3
+      roles: data # Comma separated list https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
+      resources:
+        cpu: 4000m
+        memory: 16Gi
+    ingest:
+      enabled: true
+      replicas: 2
+      roles: ingest # Comma separated list https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
+      resources:
+        cpu: 2000m
+        memory: 8Gi
+
+  probes:
+    liveness:
+      initialDelay: 60
+      period: 15
+      timeout: 3
+    readiness:
+      initialDelay: 10
+      period: 5
+      timeout: 3
+
+  ports:
+    - number: 9200
+      protocol: http
+    - number: 9300
+      protocol: tcp

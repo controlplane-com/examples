@@ -1,0 +1,93 @@
+{{- range $nodeType, $config := .Values.elasticsearch.nodes }}
+{{- if $config.enabled }}
+---
+kind: workload
+name: es-{{ $nodeType }}
+description: "Elasticsearch {{ $nodeType }} node"
+spec:
+  type: stateful
+  containers:
+    - name: elasticsearch
+      args:
+        - '-c'
+        - >-
+          cp /scripts/elasticsearch-init.sh /tmp/elasticsearch-start.sh && chmod +x /tmp/elasticsearch-start.sh && /tmp/elasticsearch-start.sh
+      command: /bin/bash
+      cpu: {{ $config.resources.cpu }}
+      image: "{{ $.Values.elasticsearch.image.repository }}:{{ $.Values.elasticsearch.image.tag }}"
+      inheritEnv: false
+      env:
+        - name: NODE_ROLES
+          value: "[{{ $config.roles }}]"
+      livenessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - 'curl -s http://localhost:9200'
+        failureThreshold: 3
+        initialDelaySeconds: {{ $.Values.elasticsearch.probes.liveness.initialDelay }}
+        periodSeconds: {{ $.Values.elasticsearch.probes.liveness.period }}
+        successThreshold: 1
+        timeoutSeconds: {{ $.Values.elasticsearch.probes.liveness.timeout }}
+      memory: {{ $config.resources.memory }}
+      ports:
+      {{- range $.Values.elasticsearch.ports }}
+        - number: {{ .number }}
+          protocol: {{ .protocol }}
+      {{- end }}
+      readinessProbe:
+        exec:
+          command:
+            - /bin/bash
+            - '-c'
+            - 'curl -s http://localhost:9200'
+        failureThreshold: 3
+        initialDelaySeconds: {{ $.Values.elasticsearch.probes.readiness.initialDelay }}
+        periodSeconds: {{ $.Values.elasticsearch.probes.readiness.period }}
+        successThreshold: 1
+        timeoutSeconds: {{ $.Values.elasticsearch.probes.readiness.timeout }}
+      volumes:
+        - path: /usr/share/elasticsearch/data
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/es-{{ $nodeType }}-data'
+        - path: /usr/share/elasticsearch/config-custom/elasticsearch.yml
+          recoveryPolicy: retain
+          uri: 'cpln://secret/elasticsearch-config-{{ $.Values.cpln.gvc }}'
+        - path: /scripts/elasticsearch-init.sh
+          recoveryPolicy: retain
+          uri: 'cpln://secret/elasticsearch-init-{{ $.Values.cpln.gvc }}'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: {{ $config.replicas }}
+      metric: disabled
+      minScale: {{ $config.replicas }}
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 30
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  identityLink: //identity/{{ $.Values.elasticsearch.identity.name }}
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: Parallel
+  securityOptions:
+    filesystemGroupId: 1000
+  supportDynamicTags: false
+{{- end }}
+{{- end }}

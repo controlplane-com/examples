@@ -4,6 +4,7 @@
 * [Control Plane Account](https://controlplane.com)
 
 ### Content
+* Deploy with [Helm](./helm/) (Recommended)
 * Deploy [single-node Elasticsearch](#elasticsearch-single-node)
 * Deploy [Elasticsearch cluster](#elasticsearch-cluster)
 
