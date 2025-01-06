@@ -1,0 +1,12 @@
+kind: policy
+name: elasticsearch-policy-{{ .Values.cpln.gvc }}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.elasticsearch.identity.name }}
+targetKind: secret
+targetLinks:
+  - //secret/elasticsearch-config-{{ .Values.cpln.gvc }}
+  - //secret/elasticsearch-init-{{ .Values.cpln.gvc }}

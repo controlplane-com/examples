@@ -1,0 +1,12 @@
+{{- range $nodeType, $config := .Values.elasticsearch.nodes }}
+{{- if $config.enabled }}
+---
+kind: volumeset
+name: es-{{ $nodeType }}-data
+description: "Elasticsearch {{ $nodeType }} volume"
+spec:
+  fileSystemType: {{ $.Values.elasticsearch.volume.fileSystemType }}
+  initialCapacity: {{ index $.Values.elasticsearch.volume $nodeType "initialCapacity" }}
+  performanceClass: {{ $.Values.elasticsearch.volume.performanceClass }}
+{{- end }}
+{{- end }}
