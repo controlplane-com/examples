@@ -1,0 +1,77 @@
+kind: volumeset
+name: {{ .Values.minio.name }}-vs
+description: minio-vs
+tags: {}
+spec:
+  fileSystemType: xfs
+  initialCapacity: 10
+  performanceClass: general-purpose-ssd
+  snapshots:
+    createFinalSnapshot: true
+    retentionDuration: 7d
+---
+
+kind: workload
+name: {{ .Values.minio.name }}
+description: minio
+tags: {}
+spec:
+  type: stateful
+  containers:
+    - name: {{ .Values.minio.name }}
+      args:
+        - server
+        - http://{{ .Values.minio.name }}-{0...{{ sub .Values.minio.replicas 1 }}}.{{ .Values.minio.name }}/data
+        - '--console-address'
+        - ':{{ .Values.minio.consolePort }}'
+      command: minio
+      cpu: {{ .Values.minio.cpu }}
+      env:
+        - name: MINIO_ACCESS_KEY
+          value: {{ .Values.minio.accessKey }}
+        - name: MINIO_SECRET_KEY
+          value: {{ .Values.minio.secretKey }}
+      image: {{ .Values.minio.image }}
+      inheritEnv: false
+      memory: {{ .Values.minio.memory }}
+      ports:
+        - number: {{ .Values.minio.consolePort }}
+          protocol: http
+        - number: {{ .Values.minio.port }}
+          protocol: http
+      volumes:
+        - path: /data
+          recoveryPolicy: retain
+          uri: cpln://volumeset/{{ .Values.minio.name }}-vs
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: {{ .Values.minio.replicas }}
+      metric: disabled
+      minScale: {{ .Values.minio.replicas }}
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 10
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - {{ .Values.minio.firewallConfig.external.inboundAllowCIDR }}
+      outboundAllowCIDR:
+        - {{ .Values.minio.firewallConfig.external.outboundAllowCIDR }}
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: {{ .Values.minio.firewallConfig.internal.inboundAllowType }}
+      inboundAllowWorkload: []
+  loadBalancer:
+    direct:
+      enabled: false
+      ports: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    minReadySeconds: 0
+    scalingPolicy: Parallel
+  supportDynamicTags: false

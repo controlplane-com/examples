@@ -1,0 +1,24 @@
+# Default values for redis-sentinel.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+minio:
+  name: minio
+  image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+  replicas: 4
+
+  # In production, these secrets should be carefully managed
+  accessKey: some-key
+  secretKey: some-secret
+
+  port: 9000
+  consolePort: 9900
+  diskCapacity: 10 # In Gigabytes
+  memory: 250Mi # EX. 3000Mi = 3Gi
+  cpu: 200m # vCPU or milicores with; EX. 1.5 = 1500m
+  firewallConfig:
+    external:
+      inboundAllowCIDR: 0.0.0.0/0 # In production, you may want to restrict this to a list of well-known ip addresses, or disable external access entirely.
+      outboundAllowCIDR: 0.0.0.0/0
+    internal:
+      inboundAllowType: same-org # same-gvc / same-org / none / workload-list - https://docs.controlplane.com/reference/workload#internal
