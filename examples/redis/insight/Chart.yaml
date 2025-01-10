@@ -1,0 +1,6 @@
+apiVersion: v2
+name: redis-insight
+description: A helm chart for Redis Insight on Control Plane
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

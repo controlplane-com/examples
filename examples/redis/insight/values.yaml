@@ -1,0 +1,14 @@
+# Default values for redis-sentinel.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+insight:
+  name: redis-insight
+  image: redis/redisinsight:latest
+  replicas: 1
+  diskCapacity: 20 # In Gigabytes
+  memory: 250Mi # EX. 3000Mi = 3Gi
+  cpu: 200m # vCPU or milicores with; EX. 1.5 = 1500m
+  firewallConfig:
+    internal:
+      inboundAllowType: same-org # same-gvc / same-org / none / workload-list - https://docs.controlplane.com/reference/workload#internal

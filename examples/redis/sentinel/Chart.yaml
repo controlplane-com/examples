@@ -1,0 +1,6 @@
+apiVersion: v2
+name: redis-sentinel
+description: A helm chart for Redis + Sentinel on Control Plane
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

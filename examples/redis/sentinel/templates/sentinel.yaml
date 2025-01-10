@@ -1,0 +1,202 @@
+kind: identity
+name: {{ .Values.redis.name }}
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.redis.name }}
+tags: {}
+---
+
+kind: policy
+name: {{ .Values.redis.name }}-{{ .Values.cpln.gvc }}
+description: {{ .Values.redis.name }}
+tags: {}
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.redis.name }}
+targetKind: secret
+targetLinks: []
+targetQuery:
+  kind: secret
+  fetch: items
+  spec:
+    match: any
+    terms:
+      - op: '='
+        tag: app
+        value: {{ .Values.redis.name }}
+---
+kind: secret
+name: {{ .Values.redis.name }}-sentinel-conf
+description: {{ .Values.redis.name }}-sentinel-conf
+tags:
+  app: {{ .Values.redis.name }}
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+    port {{ .Values.redis.sentinel.port }}
+    dir /tmp
+    sentinel announce-hostnames yes
+    sentinel resolve-hostnames yes
+    sentinel down-after-milliseconds {{ .Values.redis.sentinel.master }} 5000
+    sentinel failover-timeout {{ .Values.redis.sentinel.master }} 10000
+    sentinel parallel-syncs {{ .Values.redis.sentinel.master }} 1
+---
+kind: secret
+name: {{ .Values.redis.name }}-conf
+description: {{ .Values.redis.name }}-conf
+tags:
+  app: {{ .Values.redis.name }}
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+    bind 0.0.0.0
+    protected-mode no
+    port {{ .Values.redis.port }}
+    save 900 1
+    save 300 10
+    save 60 10000
+    appendonly yes
+---
+kind: volumeset
+gvc: {{ .Values.cpln.gvc }}
+name: {{ .Values.redis.name }}
+description: {{ .Values.redis.name }} storage
+tags: {}
+spec:
+  fileSystemType: xfs
+  initialCapacity: {{ .Values.redis.diskCapacity }}
+  performanceClass: general-purpose-ssd
+  snapshots:
+    createFinalSnapshot: true
+    retentionDuration: 7d
+---
+kind: workload
+name: {{ .Values.redis.name }}
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.redis.name }}
+tags: {
+   app: {{ .Values.redis.name }}
+}
+spec:
+  type: stateful
+  containers:
+    - name: {{ .Values.redis.name }}
+      args:
+        - '-c'
+        - >-
+          mkdir /etc/redis;
+          cp /config/redis.conf /etc/redis/redis.conf;
+          echo "\nreplica-announce-ip ${HOSTNAME}.{{ .Values.redis.name }}" >> /etc/redis/redis.conf;
+
+          if [ "$(hostname)" = "{{ .Values.redis.name }}-0" ]; then
+            redis-server /etc/redis/redis.conf --appendonly yes;
+          else
+            redis-server /etc/redis/redis.conf --appendonly yes --replicaof {{ .Values.redis.name }}-0.{{ .Values.redis.name }} {{ .Values.redis.port }};
+          fi
+      command: /bin/sh
+      cpu: {{ .Values.redis.cpu }}
+      image: {{ .Values.redis.image }}
+      inheritEnv: false
+      memory: {{ .Values.redis.memory }}
+      ports:
+        - number: {{ .Values.redis.port }} 
+          protocol: tcp
+      volumes:
+        - path: /data
+          recoveryPolicy: retain
+          uri: cpln://volumeset/{{ .Values.redis.name }}
+        - path: /config/redis.conf
+          recoveryPolicy: retain
+          uri: cpln://secret/{{ .Values.redis.name }}-conf.payload
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: cpu
+      minScale: 3
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      inboundBlockedCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+      outboundBlockedCIDR: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  identityLink: //identity/{{ .Values.redis.name }}
+  loadBalancer:
+    direct:
+      enabled: false
+      ports: []
+  supportDynamicTags: false
+---
+kind: workload
+name: {{ .Values.redis.name }}-sentinel
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.redis.name }}-sentinel
+tags: {
+  app: {{ .Values.redis.name }}
+}
+spec:
+  type: stateful
+  containers:
+    - name: {{ .Values.redis.name }}-sentinel
+      args:
+        - '-c'
+        - >-
+          mkdir /etc/sentinel;
+          cp /config/sentinel.conf /etc/sentinel/sentinel.conf;
+          echo "\nsentinel announce-ip ${HOSTNAME}.{{ .Values.redis.name }}-sentinel" >> /etc/sentinel/sentinel.conf;
+          echo "sentinel monitor {{ .Values.redis.sentinel.master }} {{ .Values.redis.name }}-0.{{ .Values.redis.name }} {{ .Values.redis.port }} {{ .Values.redis.sentinel.quorum }}" >> /etc/sentinel/sentinel.conf;
+          redis-sentinel /etc/sentinel/sentinel.conf;
+      command: /bin/sh
+      cpu: {{ .Values.redis.sentinel.cpu }}
+      image: {{ .Values.redis.image }}
+      memory: {{ .Values.redis.sentinel.memory }}
+      ports:
+        - number: {{ .Values.redis.sentinel.port }}
+          protocol: tcp
+      volumes:
+        - path: /config/sentinel.conf
+          recoveryPolicy: retain
+          uri: cpln://secret/{{ .Values.redis.name }}-sentinel-conf.payload
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: disabled
+      minScale: 3
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      inboundBlockedCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+      outboundBlockedCIDR: []
+    internal:
+      inboundAllowType: {{ .Values.redis.firewallConfig.internal.inboundAllowType }}
+      inboundAllowWorkload: []
+  identityLink: //identity/{{ .Values.redis.name }}
+  loadBalancer:
+    direct:
+      enabled: false
+      ports: []
+  supportDynamicTags: false
