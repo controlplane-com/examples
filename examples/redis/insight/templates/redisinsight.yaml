@@ -1,0 +1,63 @@
+kind: volumeset
+name: {{ .Values.insight.name }}-vs
+description: {{ .Values.insight.name }}
+tags: {}
+spec:
+  fileSystemType: shared
+  initialCapacity: {{ .Values.insight.diskCapacity }}
+  performanceClass: shared
+---
+kind: workload
+name: {{ .Values.insight.name }}
+description: Redis Insight
+tags: {}
+spec:
+  type: standard
+  containers:
+    - name: {{ .Values.insight.name }}
+      cpu: {{ .Values.insight.cpu }}
+      env:
+        - name: RI_APP_HOST
+          value: 0.0.0.0
+        - name: RI_APP_PORT
+          value: '5540'
+      image: redis/redisinsight:latest
+      inheritEnv: false
+      memory: {{ .Values.insight.memory }}
+      ports:
+        - number: 5540
+          protocol: tcp
+      volumes:
+        - path: /data
+          recoveryPolicy: retain
+          uri: cpln://volumeset/{{ .Values.insight.name }}-vs
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: {{ .Values.insight.replicas }}
+      metric: disabled
+      minScale: {{ .Values.insight.replicas }}
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      inboundBlockedCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+      outboundBlockedCIDR: []
+    internal:
+      inboundAllowType: same-org
+      inboundAllowWorkload: []
+  loadBalancer:
+    direct:
+      enabled: false
+      ports: []
+  supportDynamicTags: true
