@@ -1,0 +1,11 @@
+kind: secret
+name: {{ .Values.name }}-conf-{{ .Values.cpln.gvc }}
+description: {{ .Values.name }}-conf-{{ .Values.cpln.gvc }}
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+    listeners.tcp.default = {{ .Values.rabbitmq_conf.listeners_tcp_default }}
+    default_user = {{ .Values.rabbitmq_conf.default_user }}
+    default_pass = {{ .Values.rabbitmq_conf.default_pass }}

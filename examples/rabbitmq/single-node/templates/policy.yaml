@@ -1,0 +1,12 @@
+kind: policy
+name: {{ .Values.name }}-conf-{{ .Values.cpln.gvc }}
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.cpln.gvc }}/identity/{{ .Values.name }}
+targetKind: secret
+targetLinks:
+  - //secret/{{ .Values.name }}-conf-{{ .Values.cpln.gvc }}

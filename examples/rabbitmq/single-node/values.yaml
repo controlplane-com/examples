@@ -1,0 +1,36 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: rabbitmq:3-management
+
+name: rabbitmq-dev
+diskCapacity: 10 # In Gigabytes
+memory: 250Mi # EX. 3000Mi = 3Gi
+cpu: 200m # vCPU or milicores with; EX. 1.5 = 1500m
+inheritEnv: false
+capacityAI: false
+firewall:
+    internal_inboundAllowType: "same-gvc" # Options: same-org / same-gvc(Recommended)
+    # external_inboundAllowCIDR: 0.0.0.0/0 # Provide a comma-separated list
+    # external_outboundAllowCIDR: "0.0.0.0/0" # "111.222.333.444/16,111.222.444.333/32" # Provide a comma-separated list
+supportDynamicTags: false
+timeoutSeconds: 30
+
+rabbitmq_conf:
+  listeners_tcp_default: 5672
+  default_user: 'user'
+  default_pass: 'changeMe'
+  
+env:
+  RABBITMQ_CONFIG_FILE: /etc/rabbitmq/rabbitmq.conf
+
+volumeset:
+  volume:
+      initialCapacity: 10 # In Gigabytes. For high-throughput-ssd minimum is '1000'
+      fileSystemType: ext4 # ext4 / xfs
+      performanceClass: general-purpose-ssd # high-throughput-ssd / general-purpose-ssd
+  snapshots:
+      createFinalSnapshot: 'false'
+      # retentionDuration: 7d
+      # schedule: '0 1 * * *'
