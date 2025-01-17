@@ -1,0 +1,77 @@
+kind: workload
+name: {{ .Values.name }}
+gvc: {{ .Values.cpln.gvc }}
+description: {{ .Values.name }}
+spec:
+  type: stateful
+  containers:
+    - name: {{ .Values.name }}
+      cpu: '{{ .Values.cpu }}'
+      memory: {{ .Values.memory }}
+      image: {{ .Values.image.repository }}
+      metrics:
+        path: /metrics
+        port: 15692
+      {{- if .Values.env }}
+      env:
+      {{- range $key, $value := .Values.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+      {{- end }}
+      {{- end }}
+      readinessProbe:
+        failureThreshold: 10
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: {{ .Values.rabbitmq_conf.listeners_tcp_default }}
+        timeoutSeconds: 3
+      inheritEnv: {{ .Values.inheritEnv }}
+      ports:
+        - number: 15672
+          protocol: http
+        - number: {{ .Values.rabbitmq_conf.listeners_tcp_default }}
+          protocol: tcp
+        - number: 15692
+          protocol: http
+      volumes:
+        - path: {{ .Values.env.RABBITMQ_CONFIG_FILE }}
+          uri: 'cpln://secret/{{ .Values.name }}-conf-{{ .Values.cpln.gvc }}'
+    {{- if .Values.volumeset }}
+        - path: /var/lib/rabbitmq
+          recoveryPolicy: retain
+          uri: 'cpln://volumeset/{{ .Values.name }}-data'
+    {{- end }}
+  identityLink: //identity/{{ .Values.name }}
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: disabled
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: {{ .Values.capacityAI}}
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+{{- if .Values.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.firewall "external_inboundAllowCIDR") (hasKey .Values.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.firewall.external_inboundAllowCIDR }}{{ .Values.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.firewall.external_outboundAllowCIDR }}{{ .Values.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  localOptions: []
+  rolloutOptions:
+    maxSurgeReplicas: 25%
+    maxUnavailableReplicas: '1'
+    minReadySeconds: 0
+    scalingPolicy: OrderedReady
+  supportDynamicTags: {{ .Values.supportDynamicTags }}

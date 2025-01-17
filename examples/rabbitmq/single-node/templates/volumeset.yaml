@@ -1,0 +1,20 @@
+{{- if .Values.volumeset }}
+kind: volumeset
+name: {{ .Values.name }}-data
+description: {{ .Values.name }}-data
+tags: {}
+spec:
+  fileSystemType: {{ .Values.volumeset.volume.fileSystemType }}
+  initialCapacity: {{ .Values.volumeset.volume.initialCapacity }}
+  performanceClass: {{ .Values.volumeset.volume.performanceClass }}
+  snapshots:
+  {{- if .Values.volumeset.snapshots.createFinalSnapshot }}
+    createFinalSnapshot: {{ .Values.volumeset.snapshots.createFinalSnapshot }}
+  {{- end }}
+  {{- if .Values.volumeset.snapshots.retentionDuration }}
+    retentionDuration: {{ .Values.volumeset.snapshots.retentionDuration }}
+  {{- end }}
+  {{- if .Values.volumeset.snapshots.schedule }}
+    schedule: {{ .Values.volumeset.snapshots.schedule }}
+  {{- end }}
+{{- end }}
