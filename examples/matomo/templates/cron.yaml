@@ -1,0 +1,95 @@
+
+kind: workload
+name: {{ .Values.name }}-matomo-archive
+gvc: {{ .Values.cpln.gvc }}
+spec:
+  type: cron
+  containers:
+    - name: {{ .Values.name }}-matomo-archive
+      image: {{ .Values.image.repository }}
+      cpu: {{ .Values.cron.archive.cpu }}
+      memory: {{ .Values.cron.archive.memory }}
+      command: /bin/bash
+      args:
+        - '-c'
+        - >-
+          . /opt/bitnami/scripts/matomo-env.sh && .
+          /opt/bitnami/scripts/libbitnami.sh && . /opt/bitnami/scripts/liblog.sh
+          && /opt/bitnami/scripts/apache/setup.sh &&
+          /opt/bitnami/scripts/php/setup.sh &&
+          /opt/bitnami/scripts/mysql-client/setup.sh &&
+          /opt/bitnami/scripts/matomo/setup.sh && /post-init.sh &&
+          /opt/bitnami/php/bin/php /opt/bitnami/matomo/console core:archive
+      env:
+        - name: BITNAMI_DEBUG
+          value: '{{ .Values.image.debug }}'
+        - name: MATOMO_DATABASE_HOST
+          value: '{{ .Values.externalDatabase.host }}'
+        - name: MATOMO_DATABASE_PORT_NUMBER
+          value: '{{ .Values.externalDatabase.port }}'
+        - name: MATOMO_DATABASE_NAME
+          value: '{{ .Values.externalDatabase.database }}'
+        - name: MATOMO_DATABASE_USER
+          value: '{{ .Values.externalDatabase.user }}'
+        - name: MATOMO_DATABASE_PASSWORD
+          value: 'cpln://secret/{{ .Values.existingSecret }}.db-password'
+      volumes:
+        - uri: 'cpln://volumeset/{{ .Values.name }}-data'
+          path: /bitnami/matomo
+  defaultOptions:
+    capacityAI: false
+    suspend: '{{ .Values.cron.archive.suspend }}'
+  job:
+    schedule: '{{ .Values.cron.archive.schedule }}'
+    concurrencyPolicy: Forbid
+    historyLimit: {{ .Values.cron.archive.historyLimit }}
+    restartPolicy: OnFailure
+  identityLink: //identity/{{ .Values.name }}
+---
+kind: workload
+name: {{ .Values.name }}-matomo-scheduled-tasks
+gvc: {{ .Values.cpln.gvc }}
+spec:
+  type: cron
+  containers:
+    - name: {{ .Values.name }}-matomo-scheduled-tasks
+      image: {{ .Values.image.repository }}
+      cpu: {{ .Values.cron.scheduledTasks.cpu }}
+      memory: {{ .Values.cron.scheduledTasks.memory }}
+      command: /bin/bash
+      args:
+        - '-c'
+        - >-
+          . /opt/bitnami/scripts/matomo-env.sh && .
+          /opt/bitnami/scripts/libbitnami.sh && . /opt/bitnami/scripts/liblog.sh
+          && /opt/bitnami/scripts/apache/setup.sh &&
+          /opt/bitnami/scripts/php/setup.sh &&
+          /opt/bitnami/scripts/mysql-client/setup.sh &&
+          /opt/bitnami/scripts/matomo/setup.sh && /post-init.sh &&
+          /opt/bitnami/php/bin/php /opt/bitnami/matomo/console
+          core:run-scheduled-tasks
+      env:
+        - name: BITNAMI_DEBUG
+          value: '{{ .Values.image.debug }}'
+        - name: MATOMO_DATABASE_HOST
+          value: '{{ .Values.externalDatabase.host }}'
+        - name: MATOMO_DATABASE_PORT_NUMBER
+          value: '{{ .Values.externalDatabase.port }}'
+        - name: MATOMO_DATABASE_NAME
+          value: '{{ .Values.externalDatabase.database }}'
+        - name: MATOMO_DATABASE_USER
+          value: '{{ .Values.externalDatabase.user }}'
+        - name: MATOMO_DATABASE_PASSWORD
+          value: 'cpln://secret/{{ .Values.existingSecret }}.db-password'
+      volumes:
+        - uri: 'cpln://volumeset/{{ .Values.name }}-data'
+          path: /bitnami/matomo
+  defaultOptions:
+    capacityAI: false
+    suspend: '{{ .Values.cron.scheduledTasks.suspend }}'
+  job:
+    schedule: '{{ .Values.cron.scheduledTasks.schedule }}'
+    concurrencyPolicy: Forbid
+    historyLimit: {{ .Values.cron.scheduledTasks.historyLimit }}
+    restartPolicy: OnFailure
+  identityLink: //identity/{{ .Values.name }}

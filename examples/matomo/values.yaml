@@ -1,0 +1,62 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: docker.io/bitnami/matomo:5.2.1-debian-12-r2
+  debug: false
+
+name: matomo-dev
+memory: 1536Mi # EX. 3000Mi = 3Gi
+cpu: 750m # vCPU or milicores with; EX. 1.5 = 1500m
+inheritEnv: false
+capacityAI: false
+suspend: false
+firewall:
+    internal_inboundAllowType: "same-gvc" # Options: same-org / same-gvc(Recommended)
+    external_inboundAllowCIDR: 0.0.0.0/0 # Provide a comma-separated list
+    external_outboundAllowCIDR: "0.0.0.0/0" # "111.222.333.444/16,111.222.444.333/32" # Provide a comma-separated list
+supportDynamicTags: false
+timeoutSeconds: 30
+
+# Matomo configurations
+replicaCount: 3
+matomoUsername: am_matomo
+existingSecret: matomo-dev-secret
+matomoEmail: myemail@domain.com
+matomoWebsiteName: Website1
+matomoWebsiteHost: https://website.com
+resourcesPreset: "medium"
+
+externalDatabase:
+  host: "mysql.matomo.cpln.local"
+  port: 3306
+  user: matomo
+  database: "matomodb"
+  # Control Plane Agent name to be used to connect to the database. Docs: https://docs.controlplane.com/reference/agent#agents
+  cplnAgent: ""
+
+volumeset:
+  volume:
+      initialCapacity: 10 # In Gigabytes.
+  # autoscaling:
+  #   maxCapacity: 100
+  #   minFreePercentage: 20
+  #   scalingFactor: 1.1
+
+cron:
+  scheduledTasks:
+    suspend: false
+    schedule: "*/5 * * * *"
+    cpu: 100m
+    memory: 128Mi
+    historyLimit: 5
+  archive:
+    suspend: false
+    schedule: "*/5 * * * *"
+    cpu: 100m
+    memory: 128Mi
+    historyLimit: 5
+ 
+
+
+
