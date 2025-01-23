@@ -1,0 +1,10 @@
+kind: identity
+name: {{ .Values.name }}
+{{- if .Values.externalDatabase.cplnAgent }}
+networkResources:
+  - name: {{ .Values.externalDatabase.database }}
+    FQDN: {{ .Values.externalDatabase.host }}
+    agentLink: //agent/{{ .Values.externalDatabase.cplnAgent }}
+    ports:
+      - {{ .Values.externalDatabase.port }}
+{{- end }}

@@ -1,0 +1,97 @@
+
+kind: workload
+name: {{ .Values.name }}
+gvc: {{ .Values.cpln.gvc }}
+spec:
+  type: standard
+  containers:
+    - name: {{ .Values.name }}-matomo
+      image: {{ .Values.image.repository }}
+      cpu: '{{ .Values.cpu }}'
+      memory: {{ .Values.memory }}
+      inheritEnv: {{ .Values.inheritEnv }}
+      ports:
+        - protocol: http
+          number: 8080
+        - protocol: http
+          number: 8443
+      env:
+        - name: BITNAMI_DEBUG
+          value: '{{ .Values.image.debug }}'
+        - name: ALLOW_EMPTY_PASSWORD
+          value: 'yes'
+        - name: APACHE_HTTP_PORT_NUMBER
+          value: '8080'
+        - name: APACHE_HTTPS_PORT_NUMBER
+          value: '8443'
+        - name: MATOMO_DATABASE_HOST
+          value: '{{ .Values.externalDatabase.host }}'
+        - name: MATOMO_DATABASE_PORT_NUMBER
+          value: '{{ .Values.externalDatabase.port }}'
+        - name: MATOMO_DATABASE_NAME
+          value: '{{ .Values.externalDatabase.database }}'
+        - name: MATOMO_DATABASE_USER
+          value: '{{ .Values.externalDatabase.user }}'
+        - name: MATOMO_DATABASE_PASSWORD
+          value: 'cpln://secret/{{ .Values.existingSecret }}.db-password'
+        - name: MATOMO_SKIP_BOOTSTRAP
+          value: 'no'
+        - name: MATOMO_USERNAME
+          value: '{{ .Values.matomoUsername }}'
+        - name: MATOMO_PASSWORD
+          value: 'cpln://secret/{{ .Values.existingSecret }}.matomo-password'
+        - name: MATOMO_EMAIL
+          value: '{{ .Values.matomoEmail }}'
+        - name: MATOMO_WEBSITE_NAME
+          value: '{{ .Values.matomoWebsiteName }}'
+        - name: MATOMO_WEBSITE_HOST
+          value: '{{ .Values.matomoWebsiteHost }}'
+      volumes:
+        - uri: 'cpln://volumeset/{{ .Values.name }}-data'
+          path: /bitnami/matomo
+      livenessProbe:
+        initialDelaySeconds: 600
+        periodSeconds: 10
+        timeoutSeconds: 5
+        successThreshold: 1
+        failureThreshold: 5
+        tcpSocket:
+          port: 8080
+      readinessProbe:
+        initialDelaySeconds: 30
+        periodSeconds: 5
+        timeoutSeconds: 3
+        successThreshold: 1
+        failureThreshold: 5
+        httpGet:
+          httpHeaders: []
+          path: /matomo.php
+          port: 8080
+          scheme: HTTP
+  defaultOptions:
+    autoscaling:
+      minScale: '{{ .Values.replicaCount }}'
+      maxScale: '{{ .Values.replicaCount }}'
+      metric: disabled
+    capacityAI: {{ .Values.capacityAI}}
+    timeoutSeconds: '{{ .Values.timeoutSeconds }}'
+    suspend: '{{ .Values.cron.archive.suspend }}'
+  rolloutOptions:
+    minReadySeconds: 0
+    maxUnavailableReplicas: '1'
+    maxSurgeReplicas: 25%
+    scalingPolicy: OrderedReady
+{{- if .Values.firewall }}
+  firewallConfig:
+    {{- if or (hasKey .Values.firewall "external_inboundAllowCIDR") (hasKey .Values.firewall "external_outboundAllowCIDR") }}
+    external:
+      inboundAllowCIDR: {{- if .Values.firewall.external_inboundAllowCIDR }}{{ .Values.firewall.external_inboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+      outboundAllowCIDR: {{- if .Values.firewall.external_outboundAllowCIDR }}{{ .Values.firewall.external_outboundAllowCIDR | splitList "," | toYaml | nindent 8 }}{{- else }} []{{- end }}
+    {{- end }}
+    {{- if hasKey .Values.firewall "internal_inboundAllowType" }}
+    internal:
+      inboundAllowType: {{ default "[]" .Values.firewall.internal_inboundAllowType }}
+    {{- end }}
+{{- end }}
+  identityLink: //identity/{{ .Values.name }}
+  supportDynamicTags: {{ .Values.supportDynamicTags }}

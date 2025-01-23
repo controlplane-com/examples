@@ -1,0 +1,19 @@
+kind: volumeset
+name: {{ .Values.name }}-data
+description: {{ .Values.name }}-data
+spec:
+  initialCapacity: {{ .Values.volumeset.volume.initialCapacity }}
+  fileSystemType: shared
+  performanceClass: shared
+  {{- if .Values.volumeset.autoscaling }}
+  autoscaling:
+    {{- if .Values.volumeset.autoscaling.maxCapacity }}
+    maxCapacity: {{ .Values.volumeset.autoscaling.maxCapacity }}
+    {{- end }}
+    {{- if .Values.volumeset.autoscaling.minFreePercentage }}
+    minFreePercentage: {{ .Values.volumeset.autoscaling.minFreePercentage }}
+    {{- end }}
+    {{- if .Values.volumeset.autoscaling.scalingFactor }}
+    scalingFactor: {{ .Values.volumeset.autoscaling.scalingFactor }}
+    {{- end }}
+  {{- end }}
