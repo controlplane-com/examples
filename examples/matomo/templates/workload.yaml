@@ -68,6 +68,9 @@ spec:
           path: /matomo.php
           port: 8080
           scheme: HTTP
+    {{- if .Values.sidecars }}
+    {{- toYaml .Values.sidecars | nindent 4 }}
+    {{- end }}
   defaultOptions:
     autoscaling:
       minScale: '{{ .Values.replicaCount }}'

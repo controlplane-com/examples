@@ -14,7 +14,36 @@ The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and
    - `matomo-password`: Set this to your desired Matomo password.
    - `db-password`: Set this to your desired database password.
 
-3. From this directory, run the following command to install the Helm chart:
+3. **Optional:** If you need to enable a sidecar, follow these steps:
+
+   3.1 **Enable Sidecar:** Update the `sidecars` section in the [values.yaml](./values.yaml) file to include the sidecar configuration. Below is an example configuration for a cloud-sql-proxy sidecar:
+
+   Example:
+   ```yaml
+   sidecars:
+     - name: cloud-sql-proxy
+       image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
+       args:
+         - --structured-logs
+         - --port=3306
+         - mydb-dev:us-central1:matomo
+         - --credentials-file=/secrets/credentials.json
+       cpu: "500m"
+       memory: 1Gi
+       volumes:
+         - uri: 'cpln://secret/matomo-dev-cloud-sql-secret'
+           path: /secrets/credentials.json
+   ```
+
+   3.2 **Create Secrets for Sidecar:** If your sidecar requires additional secrets, create them in Control Plane and update the `extraSecrets` section in the [values.yaml](./values.yaml) file. Each secret should be listed under the `extraSecrets` array. Be sure to use the [correct type of secret](https://docs.controlplane.com/reference/secret), such as Opaque, Dictionary, or others.
+
+   Example:
+   ```yaml
+   extraSecrets:
+     - matomo-dev-cloud-sql-secret
+   ```
+
+4. From this directory, run the following command to install the Helm chart:
 
    ```bash
    cpln helm install matomo-dev --gvc <YOUR_GVC_NAME>
