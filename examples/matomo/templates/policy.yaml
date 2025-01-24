@@ -10,3 +10,8 @@ bindings:
 targetKind: secret
 targetLinks:
   - //secret/{{ .Values.existingSecret }}
+  {{- if .Values.extraSecrets }}
+  {{- range .Values.extraSecrets }}
+  - //secret/{{ . }}
+  {{- end }}
+  {{- end }}

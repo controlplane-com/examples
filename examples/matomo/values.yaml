@@ -20,12 +20,11 @@ timeoutSeconds: 30
 
 # Matomo configurations
 replicaCount: 3
-matomoUsername: am_matomo
+matomoUsername: matomo_admin
 existingSecret: matomo-dev-secret
 matomoEmail: myemail@domain.com
 matomoWebsiteName: Website1
 matomoWebsiteHost: https://website.com
-resourcesPreset: "medium"
 
 externalDatabase:
   host: "mysql.matomo.cpln.local"
@@ -57,6 +56,23 @@ cron:
     memory: 128Mi
     historyLimit: 5
  
+# Add sidecar container configuration
+sidecars: []
+  # - name: cloud-sql-proxy
+  #   image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
+  #   args:
+  #     - --structured-logs
+  #     - --port=3306
+  #     - mydb-dev:us-central1:matomo
+  #     - --credentials-file=/secrets/credentials.json
+  #   cpu: "500m"
+  #   memory: 1Gi
+  #   volumes:
+  #     - uri: 'cpln://secret/matomo-dev-cloud-sql-secret'
+  #       path: /secrets/credentials.json
 
+# Add the additional secret for the sidecar to the policy
+extraSecrets: []
+  # - matomo-dev-cloud-sql-secret
 
 
