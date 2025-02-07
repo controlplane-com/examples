@@ -1,0 +1,120 @@
+kind: secret
+name: datadog-metrics-scraping-openmetrics-conf
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+    init_config:
+    instances:
+      - openmetrics_endpoint: "https://metrics.cpln.io/metrics/org/<YOUR_CPLN_ORG_NAME>/api/v1/federate?match[]=cpu_used&match[]=mem_used"
+        namespace: "cpln"
+        ignore_timestamps: true
+        log_requests: false
+        empty_default_hostname: false
+        min_collection_interval: 15
+        max_returned_metrics: 1000
+        metrics:
+          - cpu_used:
+              type: gauge
+          - mem_used:
+              type: gauge
+        exclude_labels:
+          - timestamp
+          - instance
+        tags:
+          - env:production
+          - team:devops
+        headers:
+          Authorization: "Bearer <YOUR_CPLN_TOKEN>"
+          Accept: "text/plain"
+---
+kind: secret
+name: datadog-metrics-scraping
+type: dictionary
+data:
+  DD_API_KEY: <YOUR_DD_API_KEY>
+---
+kind: gvc
+name: datadog-metrics-scraping
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-eu-central-1 # Adjust as needed
+---
+kind: identity
+name: datadog
+gvc: datadog-metrics-scraping
+---
+kind: workload
+name: datadog
+gvc: datadog-metrics-scraping
+spec:
+  type: standard
+  identityLink: //gvc/datadog-metrics-scraping/identity/datadog
+  containers:
+    - name: agent
+      image: gcr.io/datadoghq/agent:7
+      cpu: 100m
+      memory: 128Mi
+      env:
+        - name: DD_API_KEY
+          value: cpln://secret/datadog-metrics-scraping.DD_API_KEY
+        - name: DD_SITE
+          value: datadoghq.eu # Adjust as needed
+        - name: DD_ENV
+          value: production # Adjust as needed
+        - name: DD_HOSTNAME
+          value: cpln://reference/spec.nodeName
+        - name: DD_USE_DOGSTATSD
+          value: "true"
+        - name: DD_DOGSTATSD_NON_LOCAL_TRAFFIC
+          value: "true"
+        - name: DD_APM_ENABLED
+          value: "false"
+        - name: DD_KUBELET_TLS_VERIFY
+          value: "false"
+        - name: KUBERNETES_SERVICE_PORT
+          value: ""
+        - name: KUBERNETES_SERVICE_PORT_HTTPS
+          value: ""
+      ports: []
+      volumes:
+        - path: /etc/datadog-agent/conf.d/openmetrics.d/conf.yaml
+          uri: cpln://secret/datadog-metrics-scraping-openmetrics-conf.payload
+  defaultOptions:
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+    autoscaling:
+      metric: disabled
+      minScale: 1
+      maxScale: 1
+      maxConcurrency: 0
+      scaleToZeroDelay: 300
+      target: 95
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      inboundBlockedCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+      outboundBlockedCIDR: []
+    internal:
+      inboundAllowType: none
+      inboundAllowWorkload: []
+---
+kind: policy
+name: datadog-metrics-scraping
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/datadog-metrics-scraping/identity/datadog
+targetKind: secret
+targetLinks:
+  - //secret/datadog-metrics-scraping
+  - //secret/datadog-metrics-scraping-openmetrics-conf
