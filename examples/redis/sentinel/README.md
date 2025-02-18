@@ -4,8 +4,7 @@ This example creates highly-available Redis workload on the Control Plane platfo
 others are read-only replicas. A trio of sentinels monitors the master. In the event of a master failure, the sentinels
 will elect and promote one of the read-only replicas to master.
 
-### Steps to run this example:
-~~~~
+### Steps to run this example:~~~~
 **HELM**
 
 The [Helm CLI](https://helm.sh/docs/intro/install/#through-package-managers) and [Control Plane CLI](https://docs.controlplane.com/reference/cli#install-npm) must be installed.
