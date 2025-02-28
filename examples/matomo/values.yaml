@@ -61,10 +61,10 @@ sidecars: []
   # - name: cloud-sql-proxy
   #   image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
   #   args:
-  #     - --structured-logs
-  #     - --port=3306
-  #     - mydb-dev:us-central1:matomo
+  #     - --address=0.0.0.0
   #     - --credentials-file=/secrets/credentials.json
+  #     - mydb-dev:us-central1:matomo
+  #     - --port=3306
   #   cpu: "500m"
   #   memory: 1Gi
   #   volumes:
