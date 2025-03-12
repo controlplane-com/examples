@@ -13,12 +13,6 @@ elasticsearch:
   volume:
     fileSystemType: ext4
     performanceClass: general-purpose-ssd
-    master:
-      initialCapacity: 10
-    data:
-      initialCapacity: 20
-    ingest:
-      initialCapacity: 10
 
   config:
     clusterName: "elasticsearch-cluster"
@@ -32,24 +26,50 @@ elasticsearch:
     master:
       enabled: true
       replicas: 3
-      roles: master # Comma separated list https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
+      roles: master
       resources:
         cpu: 2000m
         memory: 4Gi
+      volume:
+        initialCapacity: 10
+        fileSystemType: ext4          # Optional: override default if needed
+        performanceClass: general-purpose-ssd  # Optional: override default if needed
+    
     data:
       enabled: true
       replicas: 3
-      roles: data # Comma separated list https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
+      roles: data
       resources:
         cpu: 4000m
         memory: 16Gi
+      volume:
+        initialCapacity: 20
+        fileSystemType: ext4
+        performanceClass: general-purpose-ssd
+    
     ingest:
       enabled: true
       replicas: 2
-      roles: ingest # Comma separated list https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
+      roles: ingest
       resources:
         cpu: 2000m
         memory: 8Gi
+      volume:
+        initialCapacity: 10
+        fileSystemType: ext4
+        performanceClass: general-purpose-ssd
+    
+    coordinator:
+      enabled: true
+      replicas: 2
+      roles: "remote_cluster_client"
+      resources:
+        cpu: 2000m
+        memory: 4Gi
+      volume:
+        initialCapacity: 10
+        fileSystemType: ext4
+        performanceClass: general-purpose-ssd
 
   probes:
     liveness:

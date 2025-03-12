@@ -5,8 +5,8 @@ kind: volumeset
 name: es-{{ $nodeType }}-data
 description: "Elasticsearch {{ $nodeType }} volume"
 spec:
-  fileSystemType: {{ $.Values.elasticsearch.volume.fileSystemType }}
-  initialCapacity: {{ index $.Values.elasticsearch.volume $nodeType "initialCapacity" }}
-  performanceClass: {{ $.Values.elasticsearch.volume.performanceClass }}
+  fileSystemType: {{ $config.volume.fileSystemType | default $.Values.elasticsearch.volume.fileSystemType }}
+  initialCapacity: {{ $config.volume.initialCapacity }}
+  performanceClass: {{ $config.volume.performanceClass | default $.Values.elasticsearch.volume.performanceClass }}
 {{- end }}
 {{- end }}
