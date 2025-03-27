@@ -19,6 +19,15 @@ spec:
       env:
         - name: NODE_ROLES
           value: "[{{ $config.roles }}]"
+        {{- if $config.jvm }}
+        - name: ES_JAVA_OPTS
+          value: >-
+            -Xms{{ $config.jvm.heapSize }}
+            -Xmx{{ $config.jvm.heapSize }}
+            -XX:MaxDirectMemorySize={{ $config.jvm.maxDirectMemorySize }}
+            -XX:InitiatingHeapOccupancyPercent={{ $config.jvm.initiatingHeapOccupancyPercent }}
+            -XX:G1ReservePercent={{ $config.jvm.g1ReservePercent }}
+        {{- end }}
       livenessProbe:
         exec:
           command:
