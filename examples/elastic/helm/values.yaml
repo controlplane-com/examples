@@ -113,3 +113,5 @@ elasticsearch:
       protocol: http
     - number: 9300
       protocol: tcp
+
+  nameSuffix: "-test"

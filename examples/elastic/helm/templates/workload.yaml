@@ -2,7 +2,7 @@
 {{- if $config.enabled }}
 ---
 kind: workload
-name: es-{{ $nodeType }}
+name: es-{{ $nodeType }}{{ $.Values.elasticsearch.nameSuffix }}
 description: "Elasticsearch {{ $nodeType }} node"
 spec:
   type: stateful
@@ -59,7 +59,7 @@ spec:
       volumes:
         - path: /usr/share/elasticsearch/data
           recoveryPolicy: retain
-          uri: 'cpln://volumeset/es-{{ $nodeType }}-data'
+          uri: 'cpln://volumeset/es-{{ $nodeType }}-data{{ $.Values.elasticsearch.nameSuffix }}'
         - path: /usr/share/elasticsearch/config-custom/elasticsearch.yml
           recoveryPolicy: retain
           uri: 'cpln://secret/elasticsearch-config-{{ $.Values.cpln.gvc }}'

@@ -2,7 +2,7 @@
 {{- if $config.enabled }}
 ---
 kind: volumeset
-name: es-{{ $nodeType }}-data
+name: es-{{ $nodeType }}-data{{ $.Values.elasticsearch.nameSuffix }}
 description: "Elasticsearch {{ $nodeType }} volume"
 spec:
   fileSystemType: {{ $config.volume.fileSystemType | default $.Values.elasticsearch.volume.fileSystemType }}
