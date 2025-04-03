@@ -11,7 +11,7 @@ elasticsearch:
     name: elasticsearch
 
   volume:
-    fileSystemType: ext4
+    fileSystemType: xfs
     performanceClass: general-purpose-ssd
 
   config:
@@ -45,45 +45,35 @@ elasticsearch:
       enabled: true
       replicas: 3
       resources:
-        cpu: "2000m"
-        memory: "12Gi"
+        cpu: "3000m"
+        memory: "16Gi"
       roles: "master,remote_cluster_client"
-      jvm:
-        heapSize: "6144m"
-        maxDirectMemorySize: "3g"
-        initiatingHeapOccupancyPercent: 30
-        g1ReservePercent: 25
       volume:
-        fileSystemType: "ext4"
+        fileSystemType: "xfs"
         size: "100Gi"
         initialCapacity: 100
     data:
       enabled: true
       replicas: 3
       resources:
-        cpu: "2000m"
-        memory: "12Gi"
-      roles: "data,data_content,data_hot"
-      jvm:
-        heapSize: "6144m"
-        maxDirectMemorySize: "3g"
-        initiatingHeapOccupancyPercent: 30
-        g1ReservePercent: 25
+        cpu: "4000m"
+        memory: "16Gi"
+      roles: "data,data_content,data_hot,data_warm,data_cold"
       volume:
-        fileSystemType: "ext4"
+        fileSystemType: "xfs"
         size: "100Gi"
         initialCapacity: 100
     
     ingest:
       enabled: true
       replicas: 2
-      roles: ingest
+      roles: "ingest,remote_cluster_client"
       resources:
-        cpu: "2000m"
-        memory: "8Gi"
+        cpu: "3000m"
+        memory: "16Gi"
       volume:
         initialCapacity: 10
-        fileSystemType: ext4
+        fileSystemType: xfs
         performanceClass: general-purpose-ssd
     
     coordinator:
@@ -91,11 +81,11 @@ elasticsearch:
       replicas: 2
       roles: "remote_cluster_client"
       resources:
-        cpu: "2000m"
-        memory: "4Gi"
+        cpu: "3000m"
+        memory: "16Gi"
       volume:
         initialCapacity: 10
-        fileSystemType: ext4
+        fileSystemType: xfs
         performanceClass: general-purpose-ssd
 
   probes:
@@ -114,4 +104,4 @@ elasticsearch:
     - number: 9300
       protocol: tcp
 
-  nameSuffix: "-test"
+  nameSuffix: ""
