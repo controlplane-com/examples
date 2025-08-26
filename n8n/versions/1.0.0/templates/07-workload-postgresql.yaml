@@ -1,0 +1,45 @@
+kind: workload
+name: {{ .Values.postgres.name }}
+gvc: {{ .Values.gvc.name }}
+tags:
+  {{- include "pg.tags" . | nindent 2 }}
+spec:
+  type: stateful
+  identityLink: //identity/{{ include "pg.name" . }}
+  containers:
+    - name: postgresql
+      env:
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pg_data"
+        - name: POSTGRES_DB
+          value: test
+        - name: POSTGRES_PASSWORD
+          value: 'cpln://secret/{{ include "pg.secretName" . }}.password'
+        - name: POSTGRES_USER
+          value: 'cpln://secret/{{ include "pg.secretName" . }}.username'
+      image: 'postgres:15'
+      inheritEnv: false
+      cpu: {{ .Values.postgres.resources.cpu }}
+      memory: {{ .Values.postgres.resources.memory }}
+      ports:
+        - number: 5432
+          protocol: tcp
+      volumes:
+        - path: /var/lib/postgresql/data
+          uri: 'cpln://volumeset/{{ .Values.workload.name  }}'
+  defaultOptions:
+    autoscaling:
+      metric: disabled
+      minScale: 1
+      maxScale: 1
+    capacityAI: false
+  firewallConfig:
+    internal:
+      inboundAllowType: same-gvc
+
+
+
+
+
+
+

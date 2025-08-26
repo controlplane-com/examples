@@ -1,0 +1,20 @@
+gvc: 
+  name: monday-gvc
+  description: monday-gvc
+  tags: {}
+  locationLinks:
+  - //location/gcp-me-west1
+postgres:
+  name: postgres
+  resources:
+    cpu: 500m
+    memory: 1024Mi
+  config:
+    username: username
+    password: password   
+workload:
+  name: devleap-n8n
+  resources:
+    cpu: 500m
+    memory: 1000Mi
+  n8n_encryption_key:  ChangeMePlease

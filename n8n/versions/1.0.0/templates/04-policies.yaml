@@ -1,0 +1,15 @@
+# Helm template for Airflow policies
+---
+kind: policy
+name: {{ include "pg.name" . }}
+description: {{ include "pg.name" . }}
+tags:
+  {{- include "pg.tags" . | nindent 4 }}
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/{{ .Values.gvc.name }}/identity/{{ include "pg.name" . }}
+targetKind: secret
+targetLinks:
+  - //secret/{{ include "pg.secretName" . }}
