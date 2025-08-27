@@ -1,0 +1,137 @@
+kind: gvc
+name: online-boutique
+spec:
+  staticPlacement:
+    locationLinks:
+      - //location/aws-eu-central-1
+      - //location/azure-eastus2
+      - //location/gcp-us-west1
+  tracing:
+    provider:
+      otel:
+        endpoint: 'otel-collector.online-boutique.cpln.local:4317'
+    sampling: 100
+---
+kind: identity
+name: otel-collector-online-boutique
+tags: {}
+---
+kind: secret
+name: otel-collector-config
+description: otel-collector-config
+type: opaque
+data:
+  encoding: plain
+  payload: |-
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+
+    processors:
+      filter/httpmetrics:
+        spans:
+          exclude:
+            match_type: strict
+            attributes:
+              - key: upstream_cluster.name
+                value: "inbound|9090||"
+
+      batch:
+        timeout: 5s
+        send_batch_size: 500
+
+    exporters:
+      datadog:
+        api: 
+          site: ${DD_SITE}
+          key: ${DD_API_KEY}
+
+    service:
+      telemetry:
+        logs:
+          level: "info"
+          
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [filter/httpmetrics, batch]
+          exporters: [datadog]
+---
+kind: secret
+name: datadog-config
+description: datadog-config
+tags: {}
+type: dictionary
+data:
+  # Do not set DD_API_KEY_VALUE and DD_SITE_VALUE below inside quotation mark
+  DD_API_KEY: ___DD_API_KEY_VALUE___
+  DD_SITE: ___DD_SITE_VALUE___
+---
+kind: policy
+name: otel-collector-online-boutique
+tags: {}
+origin: default
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/online-boutique/identity/otel-collector-online-boutique
+targetKind: secret
+targetLinks:
+  - //secret/datadog-config
+  - //secret/otel-collector-config
+---
+kind: workload
+name: otel-collector
+description: otel-collector
+spec:
+  type: standard
+  containers:
+    - name: otel-collector
+      args:
+        - '--config=/etc/otel-collector-config.yaml'
+      cpu: 100m
+      env:
+        - name: DD_API_KEY
+          value: 'cpln://secret/datadog-config.DD_API_KEY'
+        - name: DD_SITE
+          value: 'cpln://secret/datadog-config.DD_SITE'
+      image: 'otel/opentelemetry-collector-contrib:0.83.0'
+      inheritEnv: false
+      memory: 200Mi
+      ports:
+        - number: 4317
+          protocol: grpc
+        - number: 4318
+          protocol: http
+      volumes:
+        - path: /etc/otel-collector-config.yaml
+          recoveryPolicy: retain
+          uri: 'cpln://secret/otel-collector-config'
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 1
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+    internal:
+      inboundAllowType: same-gvc
+      inboundAllowWorkload: []
+  identityLink: //identity/otel-collector-online-boutique
+  localOptions: []
+  supportDynamicTags: false
