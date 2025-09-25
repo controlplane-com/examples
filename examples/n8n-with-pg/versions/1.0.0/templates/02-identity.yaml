@@ -1,0 +1,9 @@
+---
+kind: identity
+name: {{ include "pg.name" . }}
+description: {{ include "pg.name" . }}
+tags: {}
+# Include the GVC name as a field
+gvc: {{ .Values.gvc.name }}
+
+

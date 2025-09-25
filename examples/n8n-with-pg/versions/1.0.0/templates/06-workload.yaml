@@ -1,0 +1,73 @@
+kind: workload
+name: {{ .Values.workload.name }}
+description: {{ .Values.workload.name }}
+gvc: {{ .Values.gvc.name }}
+tags:
+  {{- include "pg.tags" . | nindent 2 }}
+spec:
+  type: standard
+  identityLink: //identity/{{ include "pg.name" . }}
+  containers:
+    - name: devleap
+      cpu: {{ .Values.workload.resources.cpu }}
+      env:
+        - name: DB_POSTGRESDB_DATABASE
+          value: test
+        - name: DB_POSTGRESDB_HOST
+          value: {{ .Values.postgres.name  }}.{{ .Values.gvc.name }}.cpln.local
+        - name: DB_POSTGRESDB_PASSWORD
+          value:  'cpln://secret/{{ include "pg.secretName" . }}.password'
+        - name: DB_POSTGRESDB_USER
+          value:  'cpln://secret/{{ include "pg.secretName" . }}.username'
+        - name: DB_TYPE
+          value: postgresdb
+        - name: N8N_ENCRYPTION_KEY
+          value: 'cpln://secret/{{ include "pg.secretName" . }}.n8n_encryption_key'
+        - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+          value: 'true'
+        - name: N8N_HOST
+          value: $CPLN_GLOBAL_ENDPOINT
+        - name: N8N_PROTOCOL
+          value: https
+        - name: N8N_RUNNERS_ENABLED
+          value: 'true'
+        - name: WEBHOOK_URL
+          value: $CPLN_GLOBAL_ENDPOINT
+      image: n8nio/n8n:latest
+      inheritEnv: false
+      memory: {{ .Values.workload.resources.memory }}
+      ports:
+        - number: 5678
+          protocol: http
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 3
+      metric: cpu
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 100
+    capacityAI: false
+    debug: false
+    timeoutSeconds: 5
+  firewallConfig:
+    external:
+      inboundAllowCIDR:
+        - 0.0.0.0/0
+      inboundBlockedCIDR: []
+      outboundAllowCIDR:
+        - 0.0.0.0/0
+      outboundAllowHostname: []
+      outboundAllowPort: []
+      outboundBlockedCIDR: []
+    internal:
+      inboundAllowType: none
+      inboundAllowWorkload: []
+  loadBalancer:
+    direct:
+      enabled: false
+      ports: []
+    replicaDirect: false
+  supportDynamicTags: false
+
+

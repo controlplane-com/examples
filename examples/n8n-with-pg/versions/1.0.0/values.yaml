@@ -1,0 +1,20 @@
+gvc: 
+  name: my-new-gvc
+  description: change the gvc name to something meaningful
+  tags: {}
+  locationLinks:
+  - //location/azure-eastus2
+postgres:
+  name: postgres
+  resources:
+    cpu: 500m
+    memory: 1024Mi
+  config:
+    username: username
+    password: password   
+workload:
+  name: n8n
+  resources:
+    cpu: 500m
+    memory: 1000Mi
+  n8n_encryption_key:  use_strong_password

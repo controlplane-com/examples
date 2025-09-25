@@ -1,0 +1,17 @@
+kind: gvc
+name: {{ .Values.gvc.name }}
+description: {{ default .Values.gvc.name }}
+{{- if .Values.gvc.tags }}
+tags:
+{{ toYaml .Values.gvc.tags | indent 2 }}
+{{- else }}
+tags: {}
+{{- end }}
+spec:
+  endpointNamingFormat: org
+  staticPlacement:
+    locationLinks:
+{{- range $location := .Values.gvc.locationLinks }}
+      - {{ $location }}
+{{- end }}
+
