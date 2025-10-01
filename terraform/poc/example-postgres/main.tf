@@ -100,7 +100,7 @@ resource "cpln_identity" "terraform-identity-example" {
 
     agent_link = cpln_agent.terraform-aws-agent-example.self_link
 
-    name = module.aws-postgres.postgres_address
+    name = "main-db"
     fqdn = module.aws-postgres.postgres_address
 
     # Multiple ports must be entered in ascending order (e.g., [80, 8080, 5439])
