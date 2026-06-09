@@ -1,0 +1,208 @@
+kind: secret
+name: restart-all-workloads-sh
+description: restart-all-workloads-sh
+tags: {}
+type: opaque
+data:
+  encoding: plain
+  payload: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    API_ENDPOINT="${CPLN_ENDPOINT:-https://api.cpln.io}"
+    ORG="${CPLN_ORG:-}"
+    GVC="${CPLN_GVC:-}"
+    TOKEN="${CPLN_TOKEN:-}"
+    CURRENT_WORKLOAD="${CPLN_WORKLOAD##*/}"
+
+    if [[ -z "${CURRENT_WORKLOAD}" ]]; then
+      CURRENT_WORKLOAD="restart-all-workloads"
+    fi
+
+    if [[ -z "${ORG}" || -z "${GVC}" || -z "${TOKEN}" ]]; then
+      echo "Missing required context."
+      echo "Set CPLN_ORG, CPLN_GVC, and CPLN_TOKEN before running this script."
+      exit 1
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+      echo "curl is required."
+      exit 1
+    fi
+
+    if ! command -v jq >/dev/null 2>&1; then
+      echo "jq is required."
+      exit 1
+    fi
+
+    echo "Starting workload redeploy for GVC ${GVC} in org ${ORG}."
+
+    auth_header="Authorization: Bearer ${TOKEN}"
+
+    fetch_body="$(mktemp)"
+    fetch_err="$(mktemp)"
+    fetch_status="$(
+      curl -sS \
+        -o "${fetch_body}" \
+        -w '%{http_code}' \
+        -H "${auth_header}" \
+        "${API_ENDPOINT}/org/${ORG}/gvc/${GVC}/workload" \
+        2>"${fetch_err}" || true
+    )"
+
+    if [[ ! "${fetch_status}" =~ ^2 ]]; then
+      echo "Failed to fetch workloads for GVC ${GVC} in org ${ORG}." >&2
+      if [[ -s "${fetch_err}" ]]; then
+        cat "${fetch_err}" >&2
+      fi
+      if [[ -s "${fetch_body}" ]]; then
+        cat "${fetch_body}" >&2
+      fi
+      rm -f "${fetch_body}" "${fetch_err}"
+      printf '\n' >&2
+      echo "Finished workload redeploy for GVC ${GVC} with failures." \
+        >&2
+      exit 1
+    fi
+
+    workloads_json="$(cat "${fetch_body}")"
+    rm -f "${fetch_body}" "${fetch_err}"
+
+    workloads=()
+    while IFS= read -r workload_name; do
+      if [[ -n "${workload_name}" && "${workload_name}" != "${CURRENT_WORKLOAD}" ]]; then
+        workloads+=("${workload_name}")
+      fi
+    done < <(
+      jq -r '
+        .items[]
+        | .name
+      ' <<<"${workloads_json}" | sort -u
+    )
+
+    if [[ "${#workloads[@]}" -eq 0 ]]; then
+      echo "No workloads found in GVC ${GVC}."
+      echo "Finished workload redeploy for GVC ${GVC}."
+      exit 0
+    fi
+
+    printf 'Workloads to redeploy: %s\n' "$(IFS=', '; echo "${workloads[*]}")"
+    sleep 20
+
+    redeploy_body() {
+      local timestamp
+      timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+      printf '{"tags":{"cpln/deployTimestamp":"%s"}}' "${timestamp}"
+    }
+
+    redeploy_workload() {
+      local workload_name="$1"
+      local response status tmpfile
+
+      tmpfile="$(mktemp)"
+
+      response="$(
+        curl -sS -o "${tmpfile}" -w '%{http_code}' \
+          -X PATCH \
+          -H "${auth_header}" \
+          -H 'Content-Type: application/json' \
+          --data-binary "$(redeploy_body)" \
+          "${API_ENDPOINT}/org/${ORG}/gvc/${GVC}/workload/${workload_name}" || true
+      )"
+      status="${response}"
+
+      if [[ "${status}" =~ ^2 ]]; then
+        echo "Redeployed: ${workload_name}"
+        rm -f "${tmpfile}"
+        return 0
+      fi
+
+      echo "Failed to redeploy ${workload_name} (HTTP ${status})."
+      if [[ -f "${tmpfile}" ]]; then
+        cat "${tmpfile}"
+        rm -f "${tmpfile}"
+        echo
+      fi
+      return 1
+    }
+
+    failed_workloads=()
+
+    for workload in "${workloads[@]}"; do
+      if ! redeploy_workload "${workload}"; then
+        echo "Error redeploying workload: ${workload}"
+        failed_workloads+=("${workload}")
+      fi
+    done
+
+    if [[ "${#failed_workloads[@]}" -gt 0 ]]; then
+      echo "One or more workloads failed to redeploy: $(IFS=', '; echo "${failed_workloads[*]}")" >&2
+      echo "Finished workload redeploy for GVC ${GVC} with failures." >&2
+      exit 1
+    fi
+
+    echo "Finished workload redeploy for GVC ${GVC}."
+
+---
+kind: identity
+name: restart-all-workloads
+description: restart-all-workloads
+tags: {}
+---
+kind: workload
+name: restart-all-workloads
+description: restart-all-workloads
+tags: {}
+spec:
+  type: cron
+  containers:
+    - name: alpine-with-tools
+      args:
+        - '-c'
+        - >-
+          cd /tmp && cp restart.sh restart1.sh && chmod 755 restart1.sh &&
+          ./restart1.sh
+      command: /bin/sh
+      cpu: 50m
+      image: //image/alpine-with-tools:0.1
+      inheritEnv: false
+      memory: 128Mi
+      ports:
+        - number: 8080
+          protocol: http
+      volumes:
+        - path: /tmp/restart.sh
+          recoveryPolicy: retain
+          uri: cpln://secret/restart-all-workloads-sh
+  defaultOptions:
+    autoscaling:
+      maxConcurrency: 0
+      maxScale: 5
+      metric: concurrency
+      minScale: 1
+      scaleToZeroDelay: 300
+      target: 95
+    capacityAI: false
+    debug: false
+    suspend: false
+    timeoutSeconds: 5
+  identityLink: //gvc/CPLN_GVC/identity/restart-all-workloads
+  job:
+    concurrencyPolicy: Forbid
+    historyLimit: 10
+    restartPolicy: OnFailure
+    schedule: 0 * * * *
+  supportDynamicTags: false
+---
+kind: policy
+name: restart-all-workloads-secret
+description: restart-all-workloads-secret
+tags: {}
+bindings:
+  - permissions:
+      - reveal
+    principalLinks:
+      - //gvc/CPLN_GVC/identity/restart-all-workloads
+targetKind: secret
+targetLinks:
+  - //secret/restart-all-workloads-sh
