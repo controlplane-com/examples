@@ -1,2 +1,2 @@
 kind: identity
-name: {{ .Values.elasticsearch.identity.name }}
+name: {{ .Values.elasticsearch.identity.name }}{{ .Values.elasticsearch.nameSuffix }}

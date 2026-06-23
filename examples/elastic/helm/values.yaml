@@ -11,14 +11,8 @@ elasticsearch:
     name: elasticsearch
 
   volume:
-    fileSystemType: ext4
+    fileSystemType: xfs
     performanceClass: general-purpose-ssd
-    master:
-      initialCapacity: 10
-    data:
-      initialCapacity: 20
-    ingest:
-      initialCapacity: 10
 
   config:
     clusterName: "elasticsearch-cluster"
@@ -27,42 +21,87 @@ elasticsearch:
       allowMmap: false
     security:
       enabled: false
+    recovery:
+      incomingRecoveries: 50
+      outgoingRecoveries: 50
+      maxBytesPerSec: "2000mb"
+    discovery:
+      initialMasterNodes: ["es-master-0.es-master", "es-master-1.es-master", "es-master-2.es-master"]
+      zen:
+        minimumMasterNodes: 2
+        pingTimeout: 10s
+        joinTimeout: 30s
+    cluster:
+      initialMasterNodes: ["es-master-0.es-master", "es-master-1.es-master", "es-master-2.es-master"]
+      waitForActiveShards: "majority"
+    network:
+      host: "0.0.0.0"
+      publish_host: "${HOSTNAME}.${WORKLOAD_NAME}"
+    bootstrap:
+      memory_lock: true
 
   nodes:
     master:
       enabled: true
       replicas: 3
-      roles: master # Comma separated list https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
       resources:
-        cpu: 2000m
-        memory: 4Gi
+        cpu: "3000m"
+        memory: "16Gi"
+      roles: "master,remote_cluster_client"
+      volume:
+        fileSystemType: "xfs"
+        size: "100Gi"
+        initialCapacity: 100
     data:
       enabled: true
       replicas: 3
-      roles: data # Comma separated list https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
       resources:
-        cpu: 4000m
-        memory: 16Gi
+        cpu: "4000m"
+        memory: "16Gi"
+      roles: "data,data_content,data_hot,data_warm,data_cold"
+      volume:
+        fileSystemType: "xfs"
+        size: "100Gi"
+        initialCapacity: 100
+    
     ingest:
       enabled: true
       replicas: 2
-      roles: ingest # Comma separated list https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
+      roles: "ingest,remote_cluster_client"
       resources:
-        cpu: 2000m
-        memory: 8Gi
+        cpu: "3000m"
+        memory: "16Gi"
+      volume:
+        initialCapacity: 10
+        fileSystemType: xfs
+        performanceClass: general-purpose-ssd
+    
+    coordinator:
+      enabled: true
+      replicas: 2
+      roles: "remote_cluster_client"
+      resources:
+        cpu: "3000m"
+        memory: "16Gi"
+      volume:
+        initialCapacity: 10
+        fileSystemType: xfs
+        performanceClass: general-purpose-ssd
 
   probes:
     liveness:
-      initialDelay: 60
-      period: 15
-      timeout: 3
+      initialDelay: 120
+      period: 30
+      timeout: 5
     readiness:
-      initialDelay: 10
-      period: 5
-      timeout: 3
+      initialDelay: 30
+      period: 10
+      timeout: 5
 
   ports:
     - number: 9200
       protocol: http
     - number: 9300
       protocol: tcp
+
+  nameSuffix: ""
