@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -66,11 +66,11 @@ resource "aws_security_group" "allow_vpc_only" {
 resource "aws_db_instance" "cpln-database-terraform" {
 
   identifier        = "cpln-database-terraform"
-  instance_class    = "db.t2.micro"
+  instance_class    = "db.t3.micro"
   allocated_storage = 20
 
   engine         = "postgres"
-  engine_version = "12.6"
+  engine_version = "17.6"
 
   username = "postgres"
   password = var.db_password

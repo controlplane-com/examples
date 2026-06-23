@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -64,7 +64,7 @@ data "aws_ami" "cpln-latest-agent" {
 resource "aws_instance" "cpln-aws-agent" {
   
   ami           = data.aws_ami.cpln-latest-agent.id
-  instance_type = "t2.micro"
+  instance_type = "t3.micro"
 
   subnet_id = var.subnet_id
   vpc_security_group_ids = [aws_security_group.allow_outbound_only.id]
