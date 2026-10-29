@@ -54,7 +54,7 @@ function renderServed(status) {
 
   const global = $('global-endpoint');
   global.hidden = !status.globalEndpoint;
-  global.href = status.globalEndpoint ? `https://${status.globalEndpoint}` : '#';
+  global.href = status.globalEndpoint ?? '#';
 
   $('footer-workload').textContent = [status.workload, `version ${status.version}`, status.image]
     .filter(Boolean)

@@ -4,6 +4,15 @@ function lastSegment(value: string | undefined): string | undefined {
   return value ? value.split('/').filter(Boolean).pop() : undefined;
 }
 
+// The docs show CPLN_GLOBAL_ENDPOINT as a bare host, but it arrives with its scheme; a bare host gets https.
+function urlOf(value: string | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? value : `https://${value}`;
+}
+
 export function providerOf(location: string): string {
   return location.split('-')[0] ?? location;
 }
@@ -18,8 +27,8 @@ export const runtime = {
   provider: process.env.CPLN_PROVIDER ?? (location === 'local' ? 'local' : providerOf(location)),
   version: process.env.CPLN_WORKLOAD_VERSION ?? 'dev',
   image: process.env.CPLN_IMAGE ?? null,
-  // The canonical host the workload answers on, routed to the nearest healthy location.
-  globalEndpoint: process.env.CPLN_GLOBAL_ENDPOINT ?? null,
+  // The workload's global URL, routed to the nearest healthy location.
+  globalEndpoint: urlOf(process.env.CPLN_GLOBAL_ENDPOINT),
   // The Control Plane API as seen from inside the workload; the token works only from this workload.
   apiEndpoint: process.env.CPLN_ENDPOINT,
   apiToken: process.env.CPLN_TOKEN,
