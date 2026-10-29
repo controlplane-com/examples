@@ -1,6 +1,6 @@
 {
   "name": "phonebook",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "The demo app of the Control Plane onboarding: a phone book that shows where it is served from, every location it runs in, and whether a PostgreSQL database is connected.",
   "license": "Apache-2.0",
