@@ -1,0 +1,24 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The waitlist API built in the Control Plane quickstart: keeps signups in memory, or in PostgreSQL once a database is connected.",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/pg": "^8",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
