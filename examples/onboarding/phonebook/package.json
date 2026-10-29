@@ -1,0 +1,30 @@
+{
+  "name": "phonebook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The demo app of the Control Plane onboarding: a phone book that shows where it is served from, every location it runs in, and whether a PostgreSQL database is connected.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/controlplane-com/examples.git",
+    "directory": "examples/onboarding/phonebook"
+  },
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/pg": "^8",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

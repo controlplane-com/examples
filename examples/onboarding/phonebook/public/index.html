@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Phone book on Control Plane</title>
+    <link rel="icon" href="/control-plane-mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/app.css" />
+    <script>
+      // Set before the first paint, so a saved or system dark theme never flashes light.
+      document.documentElement.dataset.theme =
+        localStorage.getItem('phonebook-theme') ||
+        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    </script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <img src="/control-plane-mark.svg" alt="" width="24" height="27" />
+          <h1>Phone book</h1>
+        </div>
+        <button type="button" id="theme" class="icon-button" aria-label="Switch to dark theme">
+          <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+          <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" /></svg>
+        </button>
+      </header>
+
+      <main class="layout">
+        <section class="hero" aria-label="Where this app runs">
+          <h2 class="hero-location">Served from <span id="served-place">…</span></h2>
+          <p class="hero-id" id="served-location"></p>
+          <div class="hero-locations">
+            <div class="hero-locations-head">
+              <p class="hero-label" id="locations-title">Locations</p>
+              <a class="global" id="global-endpoint" href="#" target="_blank" rel="noopener" hidden>
+                Global endpoint
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" /></svg>
+              </a>
+            </div>
+            <ul class="locations" id="locations"></ul>
+            <p class="note" id="locations-note" hidden></p>
+          </div>
+        </section>
+        <div class="right">
+          <section class="db" id="database" aria-label="Database" aria-live="polite">
+            <span class="db-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.5" /><path d="M4.5 5.5v13c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-13M4.5 12c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5" /></svg>
+            </span>
+            <div>
+              <p class="db-title" id="database-title">…</p>
+              <p class="db-detail" id="database-detail"></p>
+            </div>
+          </section>
+
+          <section class="card book" aria-labelledby="contacts-title">
+            <div class="book-head">
+              <h2 id="contacts-title">Contacts <span class="muted" id="contacts-count"></span></h2>
+              <label class="search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                <input id="search" type="search" placeholder="Search" aria-label="Search contacts" />
+              </label>
+            </div>
+
+            <form id="add" class="add" novalidate>
+              <input name="name" autocomplete="off" maxlength="80" placeholder="Name" aria-label="Name" required />
+              <input name="phone" type="tel" autocomplete="off" maxlength="32" placeholder="Phone" aria-label="Phone" required />
+              <button type="submit" class="primary">Add</button>
+            </form>
+            <p class="error" id="add-error" role="alert" hidden></p>
+
+            <ul class="contacts" id="contacts" aria-live="polite"></ul>
+            <p class="empty" id="empty" hidden></p>
+          </section>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <span id="footer-workload"></span>
+        <span aria-hidden="true">·</span>
+        <span>Runs on <a href="https://controlplane.com" target="_blank" rel="noopener">Control Plane</a></span>
+      </footer>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
