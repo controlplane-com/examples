@@ -1,0 +1,55 @@
+name: Publish the phonebook image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - examples/onboarding/phonebook/**
+      - '!examples/onboarding/phonebook/README.md'
+      - .github/workflows/phonebook-image.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/controlplane-com/examples/phonebook
+  CONTEXT: examples/onboarding/phonebook
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the version
+        id: version
+        run: echo "value=$(jq -r .version "$CONTEXT/package.json")" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The onboarding deploys a pinned version, so a published version is never replaced
+      - name: Refuse to overwrite a published version
+        run: |
+          if docker manifest inspect "$IMAGE:${{ steps.version.outputs.value }}" > /dev/null 2>&1; then
+            echo "::error::$IMAGE:${{ steps.version.outputs.value }} is already published. Bump the version in $CONTEXT/package.json."
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.CONTEXT }}
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.version.outputs.value }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
